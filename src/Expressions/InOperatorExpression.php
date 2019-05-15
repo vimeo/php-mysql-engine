@@ -27,9 +27,9 @@ final class InOperatorExpression extends Expression {
 
     //
     // Handle NULL as a special case: MySQL evaluates both "IN (NULL)" and "NOT IN (NULL)" to false,
-    // but while "IN (NULL)" is a fairly common pattern in our code (it's what lib_qprintf produces
-    // when you do "IN (%list:foo)" with an empty array), "NOT IN (NULL)" almost certainly doesn't
-    // match what the developer is expecting. To avoid confusion, we just throw an DBMockException here.
+    // but while "IN (NULL)" might make sense when running a query with an empty IN list,
+    // "NOT IN (NULL)" almost certainly doesn't match what the developer is expecting.
+    // To avoid confusion, we just throw an DBMockException here.
     //
     if (C\count($inList) === 1 && $inList[0]->evaluate($row, $conn) === null) {
       if (!$this->negated) {

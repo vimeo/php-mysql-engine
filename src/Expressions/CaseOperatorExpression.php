@@ -140,7 +140,7 @@ final class CaseOperatorExpression extends Expression {
     $ret = dict[
       'type' => (string)$this->type,
       'whenExpressions' => $when_list,
-      'else' => $this->else ? \var_dump($this->else, true) : array(),
+      'else' => $this->else ? \var_dump($this->else, true) : dict[],
     ];
 
     if ($this->name) {

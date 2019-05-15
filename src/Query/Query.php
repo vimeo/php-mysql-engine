@@ -159,7 +159,7 @@ abstract class Query {
       $right = $expression->right as nonnull;
       $column = $left->name;
 
-      # If we know the valid fields for this table, only allow setting those
+      // If we know the valid fields for this table, only allow setting those
       if ($valid_fields !== null) {
         if (!C\contains($valid_fields, $column)) {
           throw new DBMockRuntimeException("Invalid update column {$column}");

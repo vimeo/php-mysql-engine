@@ -53,7 +53,7 @@ final class UnaryExpression extends Expression {
 
   <<__Override>>
   public function __debugInfo(): dict<string, mixed> {
-    $subject = $this->subject ? \var_dump($this->subject, true) : array();
+    $subject = $this->subject ? \var_dump($this->subject, true) : dict[];
     return dict[
       'type' => 'unary',
       'operator' => $this->operator,

@@ -57,8 +57,8 @@ final class InsertQuery extends Query {
           if (!C\is_empty($this->updateExpressions)) {
             // TODO apply update here
 
-            #$update_expression !== null && $database !== null) {
-            # manual update expression is used when the UPDATE clause contains more than just scalars in an INSERT ... ON DUPLICATE KEY UPDATE. in this case, we need to apply that expression
+            // $update_expression !== null && $database !== null) {
+            // manual update expression is used when the UPDATE clause contains more than just scalars in an INSERT ... ON DUPLICATE KEY UPDATE. in this case, we need to apply that expression
             $old_row['db_mock_row_id'] = $row_num;
             $table_schema = db_tables_get_schema(_db_mock_get_cluster_type($cluster), $table_name);
             $rows_affected = db_mock_query_apply_set(

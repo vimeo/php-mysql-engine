@@ -124,7 +124,9 @@ abstract final class Metrics {
       }
 
       // as soon as we find an item in the trace that isn't in the ignore list, we're done
-      if (!$matched) { break; }
+      if (!$matched) {
+        break;
+      }
     }
 
     return Vec\reverse($trace)
@@ -146,17 +148,17 @@ abstract final class Metrics {
 
     $formatted = "";
 
-    # my_file.php
+    // my_file.php
     if (!Str\is_empty($file)) {
       $formatted = Str\split($file, '/') |> $$[C\count($$) - 1];
     }
 
-    # :123
+    // :123
     if ($line is nonnull) {
       $formatted .= ':'.$line;
     }
 
-    # Foo::function() or my_function()
+    // Foo::function() or my_function()
     if (!Str\is_empty($function)) {
       if (!Str\is_empty($class)) {
         $formatted .= '#'.$class.'::'.$function.'()';

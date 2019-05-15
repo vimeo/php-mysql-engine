@@ -5,8 +5,8 @@ namespace Slack\DBMock;
 use namespace HH\Lib\{C, Dict, Str};
 
 /**
-* Join two data sets using a specified join type and join conditions
-*/
+ * Join two data sets using a specified join type and join conditions
+ */
 abstract final class JoinProcessor {
 
   public static function process(
@@ -49,10 +49,10 @@ abstract final class JoinProcessor {
         // for left outer joins, the null placeholder represents an appropriate number of nulled-out columns
         // for the case where no rows in the right table match the left table,
         // this null placeholder row is merged into the data set for that row
-        $null_placeholder = Map {};
+        $null_placeholder = dict[];
         if ($right_schema !== null) {
           foreach ($right_schema['fields'] as $field) {
-            $null_placeholder->set("{$right_table_name}.{$field['name']}", null);
+            $null_placeholder["{$right_table_name}.{$field['name']}"] = null;
           }
         }
 
@@ -81,12 +81,15 @@ abstract final class JoinProcessor {
         }
         break;
       case JoinType::RIGHT:
-        // TODO
-        // to calculate the null placeholder here, I think we just need to look at the count of columns that are NOT this table
-        //$null_placeholder = Vector{};
-        //foreach ($columns as $column){
-        //if ($column['table'] !== $right_table_name) $null_placeholder[] = null;
-        //}
+        // TODO: calculating the null placeholder set here is actually complex,
+        // we need to get a list of all columns from the schemas for all previous tables in the join sequence
+
+        $null_placeholder = dict[];
+        if ($right_schema !== null) {
+          foreach ($right_schema['fields'] as $field) {
+            $null_placeholder["{$right_table_name}.{$field['name']}"] = null;
+          }
+        }
 
         foreach ($right_dataset as $raw) {
           $any_match = false;
@@ -101,8 +104,7 @@ abstract final class JoinProcessor {
 
           if (!$any_match) {
             $out[] = $raw;
-            //$left_row = $null_placeholder->toVector();
-            //$out[] = $left_row->setAll($raw);
+            // TODO set null placeholder
           }
         }
         break;

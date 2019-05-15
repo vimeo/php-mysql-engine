@@ -4,15 +4,60 @@ namespace Slack\DBMock;
 
 use namespace HH\Lib\{C, Keyset, Vec, Str};
 
+/**
+ * Manages data integrity checks for a table based on its schema
+ *
+ * Primary and unique keys
+ * Ensuring all fields are present with appropriate data types
+ * Nullable vs. not nullable
+ * Default values
+ */
 abstract final class DataIntegrity {
-
-  #
-  # Ensure that a row has all of the fields specified in the table schema.
-  #
 
   <<__Memoize>>
   public static function namesForSchema(table_schema $schema): keyset<string> {
     return Keyset\map($schema['fields'], $field ==> $field['name']);
+  }
+
+  protected static function getDefaultValueForField(
+    string $field_type,
+    bool $nullable,
+    ?string $default,
+    string $field_name,
+    string $table_name,
+  ): mixed {
+
+    if (QueryContext::$strictMode && !$nullable) {
+      throw new DBMockRuntimeException("Column {$field_name} on {$table_name} does not allow null values");
+    }
+
+    if ($default !== null) {
+      switch ($field_type) {
+        case 'int':
+          return Str\to_int($default);
+          break;
+        case 'double':
+          return (float)$default;
+          break;
+        default:
+          return $default;
+          break;
+      }
+    } else if ($nullable) {
+      return null;
+    }
+
+    switch ($field_type) {
+      case 'int':
+        return 0;
+        break;
+      case 'double':
+        return 0.0;
+        break;
+      default:
+        return '';
+        break;
+    }
   }
 
   /**
@@ -26,42 +71,58 @@ abstract final class DataIntegrity {
       $field_name = $field['name'];
       $field_type = $field['hack_type'];
       $field_nullable = $field['null'] ?? false;
+      $field_default = $field['default'] ?? null;
 
       if (!C\contains_key($row, $field_name)) {
-        if (Shapes::keyExists($field, 'default') && $field['default'] !== 'NULL') {
-          switch ($field_type) {
-            case 'int':
-              $row[$field_name] = Str\to_int($field['default']);
-              break;
-            case 'double':
-              $row[$field_name] = (float)$field['default'];
-              break;
-            default:
-              $row[$field_name] = $field['default'];
-              break;
-          }
-        } else if ($field_nullable) {
-          $row[$field_name] = null;
-        } else {
-          switch ($field_type) {
-            case 'int':
-              $row[$field_name] = 0;
-              break;
-            case 'double':
-              $row[$field_name] = 0.0;
-              break;
-            default:
-              $row[$field_name] = '';
-              break;
-          }
+        $row[$field_name] =
+          self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema['name']);
+      } else if ($row[$field_name] === null && !$field_nullable) {
+        $row[$field_name] =
+          self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema['name']);
+      } else {
+        // TODO more integrity constraints, check field length for varchars, check timestamps
+        switch ($field_type) {
+          case 'int':
+            if ($row[$field_name] is bool) {
+              $row[$field_name] = (int)$row[$field_name];
+            } else if (!$row[$field_name] is int) {
+              if (QueryContext::$strictMode) {
+                $field_str = \var_export($row[$field_name], true);
+                throw new DBMockRuntimeException(
+                  "Invalid value {$field_str} for column {$field_name} on {$schema['name']}, expected int",
+                );
+              } else {
+                $row[$field_name] = (int)$row[$field_name];
+              }
+            }
+            break;
+          case 'double':
+            if (!$row[$field_name] is float) {
+              if (QueryContext::$strictMode) {
+                $field_str = \var_export($row[$field_name], true);
+                throw new DBMockRuntimeException(
+                  "Invalid value {$field_str} for column {$field_name} on {$schema['name']}, expected float",
+                );
+              } else {
+                $row[$field_name] = (float)$row[$field_name];
+              }
+            }
+            break;
+          default:
+            if (!$row[$field_name] is string) {
+              if (QueryContext::$strictMode) {
+                $field_str = \var_export($row[$field_name], true);
+                throw new DBMockRuntimeException(
+                  "Invalid value {$field_str} for column {$field_name} on {$schema['name']}, expected string",
+                );
+              } else {
+                $row[$field_name] = (float)$row[$field_name];
+              }
+            }
+            break;
         }
       }
     }
-
-    #
-    # TODO(leah): This should really also include a check that all fields that aren't ok being null/unset, e.g. primary key,
-    #             were supplied. For now, rely on the opt-in approach + per table review to avoid doing that.
-    #
 
     return $row;
   }
@@ -75,18 +136,12 @@ abstract final class DataIntegrity {
     table_schema $schema,
   ): dict<string, mixed> {
 
-    #
-    # This call shouldn't be necessary, as ideally we'd always ensure full rows on inserts for anything using typed fetches,
-    # but the transition is a little rough, so just do it separately. The extra loop is pretty trivial given this is for tests.
-    #
-
     $fields = self::namesForSchema($schema);
     $bad_fields = Keyset\keys($row) |> Keyset\diff($$, $fields);
     if (!C\is_empty($bad_fields)) {
       $bad_fields = Str\join($bad_fields, ', ');
       throw new DBMockRuntimeException("Column(s) {$bad_fields} not found on {$schema['name']}");
     }
-    // TODO put unique key constraint enforcement here
 
     $row = self::ensureFieldsPresent($row, $schema);
 
@@ -95,7 +150,7 @@ abstract final class DataIntegrity {
       $field_name = $field['name'];
       $field_type = $field['hack_type'];
 
-      # don't coerce null values on nullable fields
+      // don't coerce null values on nullable fields
       if ($field['null'] && $row[$field_name] === null) {
         continue;
       }

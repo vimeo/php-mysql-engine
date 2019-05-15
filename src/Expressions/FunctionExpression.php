@@ -10,7 +10,7 @@ use namespace HH\Lib\{C, Math, Str};
  */
 final class FunctionExpression extends Expression {
 
-  # TODO enum-ify these
+  // TODO enum-ify these
   private string $functionName;
   protected bool $evaluatesGroups = true;
 

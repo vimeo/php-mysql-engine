@@ -20,7 +20,7 @@ final class ColumnExpression extends Expression {
     $this->columnExpression = $token['value'];
     $this->columnName = $token['value'];
 
-    # TODO handle database schema here
+    // TODO handle database schema here
     if (Str\contains($token['value'], '.')) {
       $parts = Str\split($token['value'], '.');
       if (C\count($parts) === 2) {

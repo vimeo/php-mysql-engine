@@ -273,7 +273,7 @@ final class SelectQuery extends Query {
       return $data;
     }
 
-    # remove the fields we don't want from each row
+    // remove the fields we don't want from each row
     return Vec\map($data, $row ==> Dict\filter_keys($row, $field ==> !C\contains_key($remove_fields, $field)));
   }
 

@@ -52,7 +52,7 @@ final class ExpressionParser {
     'IS' => 7, // boolean equal
     'LIKE' => 7, // string comparison
     'REGEXP' => 7, // regular expression string comparison
-    'IN' => 7, // in-array comparison
+    'IN' => 7, // in-list comparison
     'BETWEEN' => 6, // between two values
     'CASE' => 6, // CASE statement
     'WHEN' => 6, // CASE statement

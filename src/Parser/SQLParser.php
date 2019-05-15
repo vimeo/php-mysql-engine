@@ -79,7 +79,7 @@ final class SQLParser {
   }
 
   /*
-   * Lexemes are just an array of strings from the lexer
+   * Lexemes are just a vec of strings from the lexer
    * This builds them into typed token shapes based on lists of reserved keywords and surrounding context
    */
   private static function buildTokenListFromLexemes(vec<string> $tokens): token_list {

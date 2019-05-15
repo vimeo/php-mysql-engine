@@ -35,14 +35,14 @@ final class FromClause {
    */
   public function process(AsyncMysqlConnection $conn, string $sql): dataset {
 
-    $have_schema = true;
     $data = vec[];
     $columns = vec[];
     $is_first_table = true;
+    $left_column_list = keyset[];
 
     foreach ($this->tables as $table) {
 
-      # todo where's the thing
+      // TODO where's the thing
 
       $schema = null;
       if (Shapes::keyExists($table, 'subquery')) {
@@ -70,7 +70,7 @@ final class FromClause {
       $new_dataset = vec[];
       if ($schema !== null) {
         // if schema is set, order the fields in the right order on each row
-        $ordered_fields = array();
+        $ordered_fields = keyset[];
         foreach ($schema['fields'] as $field) {
           $ordered_fields[] = $field['name'];
         }
