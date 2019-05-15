@@ -9,24 +9,24 @@ namespace Slack\DBMock;
  */
 final class PlaceholderExpression extends Expression {
 
-	public function __construct() {
-		$this->precedence = 0;
-		$this->name = '';
-		$this->type = TokenType::RESERVED;
-	}
+  public function __construct() {
+    $this->precedence = 0;
+    $this->name = '';
+    $this->type = TokenType::RESERVED;
+  }
 
-	<<__Override>>
-	public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
-		throw new DBMockRuntimeException("Attempted to evaluate placeholder expression!");
-	}
+  <<__Override>>
+  public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
+    throw new DBMockRuntimeException("Attempted to evaluate placeholder expression!");
+  }
 
-	<<__Override>>
-	public function isWellFormed(): bool {
-		return false;
-	}
+  <<__Override>>
+  public function isWellFormed(): bool {
+    return false;
+  }
 
-	<<__Override>>
-	public function __debugInfo(): dict<string, string> {
-		return dict['type' => 'placeholder'];
-	}
+  <<__Override>>
+  public function __debugInfo(): dict<string, string> {
+    return dict['type' => 'placeholder'];
+  }
 }

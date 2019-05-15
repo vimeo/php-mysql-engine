@@ -8,34 +8,34 @@ namespace Slack\DBMock;
  */
 final class RowExpression extends Expression {
 
-	public function __construct(private vec<Expression> $elements) {
-		$this->precedence = 0;
-		$this->name = '';
-		$this->type = TokenType::PAREN;
-	}
+  public function __construct(private vec<Expression> $elements) {
+    $this->precedence = 0;
+    $this->name = '';
+    $this->type = TokenType::PAREN;
+  }
 
-	<<__Override>>
-	public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
+  <<__Override>>
+  public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
 
-		$result = vec[];
+    $result = vec[];
 
-		foreach ($this->elements as $expr) {
-			$result[] = $expr->evaluate($row, $conn);
-		}
-		return $result;
-	}
+    foreach ($this->elements as $expr) {
+      $result[] = $expr->evaluate($row, $conn);
+    }
+    return $result;
+  }
 
-	<<__Override>>
-	public function isWellFormed(): bool {
-		return true;
-	}
+  <<__Override>>
+  public function isWellFormed(): bool {
+    return true;
+  }
 
-	<<__Override>>
-	public function __debugInfo(): dict<string, mixed> {
-		$elements = vec[];
-		foreach ($this->elements as $elem) {
-			$elements[] = \var_dump($elem, true);
-		}
-		return dict['type' => 'row_expression', 'name' => $this->name, 'elements' => $elements];
-	}
+  <<__Override>>
+  public function __debugInfo(): dict<string, mixed> {
+    $elements = vec[];
+    foreach ($this->elements as $elem) {
+      $elements[] = \var_dump($elem, true);
+    }
+    return dict['type' => 'row_expression', 'name' => $this->name, 'elements' => $elements];
+  }
 }

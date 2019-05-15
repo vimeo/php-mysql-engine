@@ -18,65 +18,65 @@ type database = dict<string, dataset>;
 //
 
 type token = shape(
-	'type' => TokenType,
-	'value' => string,
-	// the raw token including capitalization, quoting, and whitespace. used for generating SELECT column names for expressions
-	'raw' => string,
+  'type' => TokenType,
+  'value' => string,
+  // the raw token including capitalization, quoting, and whitespace. used for generating SELECT column names for expressions
+  'raw' => string,
 );
 
 enum TokenType: string {
-	NUMERIC_CONSTANT = "Number";
-	STRING_CONSTANT = "String";
-	CLAUSE = "Clause";
-	OPERATOR = "Operator";
-	RESERVED = "Reserved";
-	PAREN = "Paren";
-	SEPARATOR = "Separator";
-	SQLFUNCTION = "Function";
-	IDENTIFIER = "Identifier";
-	NULL_CONSTANT = "Null";
+  NUMERIC_CONSTANT = "Number";
+  STRING_CONSTANT = "String";
+  CLAUSE = "Clause";
+  OPERATOR = "Operator";
+  RESERVED = "Reserved";
+  PAREN = "Paren";
+  SEPARATOR = "Separator";
+  SQLFUNCTION = "Function";
+  IDENTIFIER = "Identifier";
+  NULL_CONSTANT = "Null";
 }
 
 enum JoinType: string {
-	JOIN = 'JOIN';
-	LEFT = 'LEFT';
-	RIGHT = 'RIGHT';
-	CROSS = 'CROSS';
-	STRAIGHT = 'STRAIGHT_JOIN';
-	NATURAL = 'NATURAL';
+  JOIN = 'JOIN';
+  LEFT = 'LEFT';
+  RIGHT = 'RIGHT';
+  CROSS = 'CROSS';
+  STRAIGHT = 'STRAIGHT_JOIN';
+  NATURAL = 'NATURAL';
 }
 
 enum JoinOperator: string {
-	ON = "ON";
-	USING = "USING";
+  ON = "ON";
+  USING = "USING";
 }
 
 enum SortDirection: string {
-	ASC = 'ASC';
-	DESC = 'DESC';
+  ASC = 'ASC';
+  DESC = 'DESC';
 }
 
 enum MultiOperand: string {
-	UNION = 'UNION';
-	UNION_ALL = 'UNION_ALL';
-	EXCEPT = 'EXCEPT';
-	INTERSECT = 'INTERSECT';
+  UNION = 'UNION';
+  UNION_ALL = 'UNION_ALL';
+  EXCEPT = 'EXCEPT';
+  INTERSECT = 'INTERSECT';
 }
 
 type token_list = vec<token>;
 
 type from_table = shape(
-	'name' => string,
-	?'subquery' => SubqueryExpression,
-	'join_type' => JoinType,
-	?'join_operator' => JoinOperator,
-	?'alias' => string,
-	?'join_expression' => ?Expression,
+  'name' => string,
+  ?'subquery' => SubqueryExpression,
+  'join_type' => JoinType,
+  ?'join_operator' => JoinOperator,
+  ?'alias' => string,
+  ?'join_expression' => ?Expression,
 );
 
 type limit_clause = shape(
-	'rowcount' => int,
-	'offset' => int,
+  'rowcount' => int,
+  'offset' => int,
 );
 
 type order_by_clause = vec<shape('expression' => Expression, 'direction' => SortDirection)>;
@@ -88,56 +88,56 @@ type order_by_clause = vec<shape('expression' => Expression, 'direction' => Sort
  */
 type table_schema = shape(
 
-	/**
-	 * Table name as it exists in the database
-	 */
-	"name" => string,
-	"fields" => Container<
-		shape(
-			'name' => string,
-			'type' => DataType,
-			'length' => int,
-			'null' => bool,
-			'hack_type' => string,
-		),
-	>,
-	"indexes" => Container<
-		shape(
-			'name' => string,
-			'type' => string,
-			'fields' => Container<string>,
-		),
-	>,
+  /**
+   * Table name as it exists in the database
+   */
+  "name" => string,
+  "fields" => Container<
+    shape(
+      'name' => string,
+      'type' => DataType,
+      'length' => int,
+      'null' => bool,
+      'hack_type' => string,
+    ),
+  >,
+  "indexes" => Container<
+    shape(
+      'name' => string,
+      'type' => string,
+      'fields' => Container<string>,
+    ),
+  >,
 );
 
 enum DataType: string {
-	TINYINT = 'TINYINT';
-	SMALLINT = 'SMALLINT';
-	INT = 'INT';
-	BIT = 'BIT';
-	BIGINT = 'BIGINT';
-	FLOAT = 'FLOAT';
-	DOUBLE = 'DOUBLE';
-	BINARY = 'BINARY';
-	CHAR = 'CHAR';
-	ENUM = 'ENUM';
-	SET = 'SET';
-	TINYBLOB = 'TINYBLOB';
-	BLOB = 'BLOB';
-	MEDIUMBLOB = 'MEDIUMBLOB';
-	LONGBLOB = 'LONGBLOB';
-	TEXT = 'TEXT';
-	TINYTEXT = 'TINYTEXT';
-	MEDIUMTEXT = 'MEDIUMTEXT';
-	LONGTEXT = 'LONGTEXT';
-	VARCHAR = 'VARCHAR';
-	VARBINARY = 'VARBINARY';
-	JSON = 'JSON';
-	DATE = 'DATE';
-	DATETIME = 'DATETIME';
-	TIME = 'TIME';
-	YEAR = 'YEAR';
-	TIMESTAMP = 'TIMESTAMP';
-	DECIMAL = 'DECIMAL';
-	NUMERIC = 'NUMERIC';
+  TINYINT = 'TINYINT';
+  SMALLINT = 'SMALLINT';
+  INT = 'INT';
+  BIT = 'BIT';
+  BIGINT = 'BIGINT';
+  FLOAT = 'FLOAT';
+  DOUBLE = 'DOUBLE';
+  BINARY = 'BINARY';
+  CHAR = 'CHAR';
+  ENUM = 'ENUM';
+  SET = 'SET';
+  TINYBLOB = 'TINYBLOB';
+  BLOB = 'BLOB';
+  MEDIUMBLOB = 'MEDIUMBLOB';
+  LONGBLOB = 'LONGBLOB';
+  TEXT = 'TEXT';
+  TINYTEXT = 'TINYTEXT';
+  MEDIUMTEXT = 'MEDIUMTEXT';
+  LONGTEXT = 'LONGTEXT';
+  VARCHAR = 'VARCHAR';
+  VARBINARY = 'VARBINARY';
+  JSON = 'JSON';
+  DATE = 'DATE';
+  DATETIME = 'DATETIME';
+  TIME = 'TIME';
+  YEAR = 'YEAR';
+  TIMESTAMP = 'TIMESTAMP';
+  DECIMAL = 'DECIMAL';
+  NUMERIC = 'NUMERIC';
 }

@@ -12,6 +12,6 @@ namespace Slack\DBMock;
  * If strict mode is provided (recommended), DB mock will throw an exception on any query referencing tables not in the schema.
  */
 function init(dict<string, dict<string, table_schema>> $schema = dict[], bool $strict = false): void {
-	QueryContext::$schema = $schema;
-	QueryContext::$strictMode = $strict;
+  QueryContext::$schema = $schema;
+  QueryContext::$strictMode = $strict;
 }
