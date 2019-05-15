@@ -47,8 +47,6 @@ final class FromClause {
 			$schema = null;
 			if (Shapes::keyExists($table, 'subquery')) {
 				$res = $table['subquery']->evaluate(dict[], $conn);
-				# TODO fix this
-				#assert(is_array($res));
 				$name = $table['name'];
 			} else {
 				$table_name = $table['name'];
@@ -67,10 +65,6 @@ final class FromClause {
 
 				if ($res === null) {
 					$res = vec[];
-					// TODO throw if strict SQL mode enabled
-					// it seems very common for code not to create tables before they might be selected from. in this case, let's just return an empty table for now
-					// some day it would be nicer to use shapes to create the 'schema' when db mock is initialized so that this is more validated
-					//throw new DBMockParseException("Unable to process query for unknown table {$table['table']}");
 				}
 			}
 
@@ -85,7 +79,6 @@ final class FromClause {
 				foreach ($res as $row) {
 					// TODO hooks here to emulate strict sql mode as well
 					// TODO move this to insert/update only?
-					$row = DataIntegrity::coerceToSchema($res, $row, $schema);
 					$m = dict[];
 					foreach ($ordered_fields as $field) {
 						if (!C\contains_key($row, $field)) {
