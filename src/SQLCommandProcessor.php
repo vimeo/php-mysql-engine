@@ -2,19 +2,30 @@
 
 namespace Slack\DBMock;
 
+use namespace HH\Lib\Str;
+
 /**
  * The query running interface
  * This parses a SQL statement using the Parser, then takes the parsed Query representation and executes it
  */
-final class SQLCommandProcessor {
+abstract final class SQLCommandProcessor {
 
-  # todo maybe move $query and $subquery_row to another function?
-  public function execute(
-    string $sql,
-    AsyncMysqlConnection $conn,
-    ?SelectQuery $query = null,
-    ?row $_subquery_row = null,
-  ): (dataset, int) {
+  public static function execute(string $sql, AsyncMysqlConnection $conn): (dataset, int) {
+
+    // Check for unsupported statements
+
+    if (Str\starts_with_ci($sql, 'SET') || Str\starts_with_ci($sql, 'BEGIN') || Str\starts_with_ci($sql, 'COMMIT')) {
+      // we don't do any handling for these kinds of statements currently
+      return tuple(vec[], 0);
+    }
+
+    if (Str\starts_with_ci($sql, 'ROLLBACK')) {
+      // unlike BEGIN and COMMIT, this actually needs to have material effect on the observed behavior
+      // even in a single test case, and so we need to throw since it's not implemented yet
+      // there's no reason we couldn't start supporting transactions in the future, just haven't done the work yet
+      throw new DBMockNotImplementedException("Transactions are not yet supported");
+    }
+
     try {
       $query = SQLParser::parse($sql);
     } catch (\Exception $e) {
@@ -33,8 +44,7 @@ final class SQLCommandProcessor {
     } elseif ($query is InsertQuery) {
       return tuple(vec[], $query->execute($conn));
     } else {
-      // TODO handle SET, BEGIN, etc.
-      return tuple(vec[], 0);
+      throw new DBMockNotImplementedException("Unhandled query type: ".\get_class($query));
     }
   }
 }

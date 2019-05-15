@@ -42,8 +42,7 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
     int $timeout_micros = -1,
     dict<string, string> $query_attributes = dict[],
   ): Awaitable<\AsyncMysqlQueryResult> {
-    $cmd = new SQLCommandProcessor();
-    list($results, $rows_affected) = $cmd->execute($query, $this);
+    list($results, $rows_affected) = SQLCommandProcessor::execute($query, $this);
     return new AsyncMysqlQueryResult(vec($results), $rows_affected);
   }
 
