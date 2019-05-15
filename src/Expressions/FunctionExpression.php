@@ -333,7 +333,7 @@ final class FunctionExpression extends Expression {
     $left = $args[0]->evaluate($row, $conn);
     $right = $args[1]->evaluate($row, $conn);
 
-    return ($left == $right) ? null : $left;
+    return ($left === $right) ? null : $left;
   }
 
   private function sqlFromUnixtime(row $row, AsyncMysqlConnection $conn): string {

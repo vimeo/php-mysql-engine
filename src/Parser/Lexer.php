@@ -164,8 +164,9 @@ final class SQLLexer {
           }
         }
 
-        if (!$found_match)
+        if (!$found_match) {
           throw new DBMockParseException("Unbalanced quote $quote");
+        }
 
         $tokens[$quote_start] = $token;
         continue;

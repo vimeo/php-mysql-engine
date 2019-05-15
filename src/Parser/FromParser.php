@@ -246,7 +246,7 @@ final class FromParser {
       $filter = null;
       foreach ($arg_tokens as $arg) {
         $count++;
-        if ($count % 2 == 1) {
+        if ($count % 2 === 1) {
           // odd arguments should be columns
           if ($arg['type'] !== TokenType::IDENTIFIER) {
             throw new DBMockParseException("Expected identifier in USING clause");

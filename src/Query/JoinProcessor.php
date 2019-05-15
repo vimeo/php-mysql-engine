@@ -15,7 +15,7 @@ abstract final class JoinProcessor {
     dataset $right_dataset,
     string $right_table_name,
     JoinType $join_type,
-    ?JoinOperator $ref_type,
+    ?JoinOperator $_ref_type,
     ?Expression $ref_clause,
     ?table_schema $right_schema,
   ): dataset {

@@ -21,10 +21,10 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
     string $host,
     int $port,
     string $dbname,
-    string $user,
-    string $password,
-    int $timeout_micros = -1,
-    string $caller = "",
+    string $_user,
+    string $_password,
+    int $_timeout_micros = -1,
+    string $_caller = "",
   ): Awaitable<\AsyncMysqlConnection> {
     $this->connectionsRequest++;
     if (C\contains_key(static::$pool, $host)) {
@@ -46,7 +46,7 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
     string $dbname,
     string $user,
     string $password,
-    \AsyncMysqlConnectionOptions $conn_opts,
+    \AsyncMysqlConnectionOptions $_conn_opts,
     string $caller = "",
   ): Awaitable<\AsyncMysqlConnection> {
     // currently, options are ignored in DBMock

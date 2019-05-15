@@ -240,7 +240,7 @@ final class SelectQuery extends Query {
   /**
    * Remove fields that we do not SELECT by, but we do ORDER BY
    */
-  protected function removeOrderByExtras(AsyncMysqlConnection $conn, dataset $data): dataset {
+  protected function removeOrderByExtras(AsyncMysqlConnection $_conn, dataset $data): dataset {
 
     $order_by = $this->orderBy;
     if ($order_by === null || C\count($data) === 0) {

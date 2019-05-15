@@ -275,7 +275,7 @@ final class SQLParser {
     int $count,
     vec<string> $tokens,
   ): bool {
-    return $token_upper == 'MOD' && $i < $count - 1 && $tokens[$i + 1] === '(';
+    return $token_upper === 'MOD' && $i < $count - 1 && $tokens[$i + 1] === '(';
   }
 
   public static function findMatchingParen(int $pointer, token_list $tokens): int {
@@ -368,7 +368,7 @@ final class SQLParser {
       $count = 0;
       foreach ($arg_tokens as $arg) {
         $count++;
-        if ($count % 2 == 1) {
+        if ($count % 2 === 1) {
           if ($arg['type'] !== TokenType::IDENTIFIER)
             throw new DBMockParseException("Expected identifier in index hint");
         } elseif ($arg['value'] !== ',') {

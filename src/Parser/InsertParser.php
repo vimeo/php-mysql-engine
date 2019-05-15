@@ -2,7 +2,7 @@
 
 namespace Slack\DBMock;
 
-use namespace HH\Lib\{C, Str, Vec};
+use namespace HH\Lib\{C, Vec};
 
 /**
  * Support INSERT statements

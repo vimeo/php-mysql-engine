@@ -13,7 +13,7 @@ final class SQLCommandProcessor {
     string $sql,
     AsyncMysqlConnection $conn,
     ?SelectQuery $query = null,
-    ?row $subquery_row = null,
+    ?row $_subquery_row = null,
   ): (dataset, int) {
     try {
       $query = SQLParser::parse($sql);

@@ -20,7 +20,7 @@ final class CaseOperatorExpression extends Expression {
   private string $lastKeyword = 'CASE';
   private bool $wellFormed = false;
 
-  public function __construct(token $token) {
+  public function __construct(token $_token) {
     $this->name = 'CASE';
     $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE['CASE'];
     $this->operator = 'CASE';

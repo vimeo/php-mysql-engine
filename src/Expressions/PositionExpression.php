@@ -16,7 +16,7 @@ final class PositionExpression extends Expression {
   }
 
   <<__Override>>
-  public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
+  public function evaluate(row $row, AsyncMysqlConnection $_conn): mixed {
     // unroll GROUP BY. if passed a grouped data set, use the very first row
     if (C\first($row) is dict<_, _>) {
       $row = C\firstx($row) as dict<_, _>;

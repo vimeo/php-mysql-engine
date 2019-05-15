@@ -24,8 +24,9 @@ final class OrderByParser {
     $this->pointer++;
     $next = $this->tokens[$this->pointer] ?? null;
     $expressions = vec[];
-    if ($next === null || $next['value'] !== 'BY')
+    if ($next === null || $next['value'] !== 'BY') {
       throw new DBMockParseException("Expected BY after ORDER");
+    }
 
     while (true) {
       $expression_parser = new ExpressionParser($this->tokens, $this->pointer);

@@ -32,8 +32,9 @@ final class SetParser {
         case TokenType::SQLFUNCTION:
         case TokenType::IDENTIFIER:
         case TokenType::PAREN:
-          if ($needs_comma)
+          if ($needs_comma) {
             throw new DBMockParseException("Expected , between expressions in SET clause");
+          }
           $expression_parser = new ExpressionParser($this->tokens, $this->pointer - 1);
           $start = $this->pointer;
           list($this->pointer, $expression) = $expression_parser->buildWithPointer();
@@ -43,16 +44,18 @@ final class SetParser {
             throw new DBMockParseException("Failed parsing SET clause: unexpected expression");
           }
 
-          if (!$expression->left is ColumnExpression)
+          if (!$expression->left is ColumnExpression) {
             throw new DBMockParseException("Left side of SET clause must be a column reference");
+          }
 
           $expressions[] = $expression;
           $needs_comma = true;
           break;
         case TokenType::SEPARATOR:
           if ($token['value'] === ',') {
-            if (!$needs_comma)
+            if (!$needs_comma) {
               throw new DBMockParseException("Unexpected ,");
+            }
             $needs_comma = false;
           } else {
             throw new DBMockParseException("Unexpected {$token['value']}");
@@ -66,13 +69,14 @@ final class SetParser {
           throw new DBMockParseException("Unexpected {$token['value']} in SET");
       }
 
-      if ($end_of_set) break;
+      if ($end_of_set) { break; }
 
       $this->pointer++;
     }
 
-    if (!C\count($expressions))
+    if (!C\count($expressions)) {
       throw new DBMockParseException("Empty SET clause");
+    }
 
     return tuple($this->pointer - 1, $expressions);
   }

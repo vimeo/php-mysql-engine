@@ -19,16 +19,20 @@ final class AsyncMysqlConnectResult extends \AsyncMysqlConnectResult {
     $this->start = \time();
   }
 
+  <<__Override>>
   public function elapsedMicros(): int {
     return $this->elapsed;
   }
+  <<__Override>>
   public function startTime(): int {
     return $this->start;
   }
+  <<__Override>>
   public function endTime(): int {
     return $this->start + $this->elapsed;
   }
 
+  <<__Override>>
   public function clientStats(): \AsyncMysqlClientStats {
     throw new DBMockNotImplementedException('client stats not implemented');
   }

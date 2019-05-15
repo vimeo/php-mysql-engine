@@ -2,7 +2,7 @@
 
 namespace Slack\DBMock;
 
-use namespace HH\Lib\{C, Str};
+use namespace HH\Lib\C;
 
 /**
  * Represents the entire FROM clause of a query,

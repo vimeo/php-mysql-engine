@@ -4,6 +4,7 @@
   "disabledLinters": [
     "Facebook\\HHAST\\Linters\\LicenseHeaderLinter",
     "Facebook\\HHAST\\Linters\\NoStringInterpolationLinter",
+    "Facebook\\HHAST\\Linters\\NoPHPEqualityLinter",
     "Facebook\\HHAST\\Linters\\AsyncFunctionAndMethodLinter"
   ]
 }

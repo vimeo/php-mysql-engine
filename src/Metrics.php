@@ -124,7 +124,7 @@ abstract final class Metrics {
       }
 
       // as soon as we find an item in the trace that isn't in the ignore list, we're done
-      if (!$matched) break;
+      if (!$matched) { break; }
     }
 
     return Vec\reverse($trace)

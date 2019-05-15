@@ -17,18 +17,22 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
     private int $last_insert_id = 0,
   ) {}
 
+  <<__Override>>
   public function numRowsAffected(): int {
     return $this->rows_affected;
   }
 
+  <<__Override>>
   public function lastInsertId(): int {
     return $this->last_insert_id;
   }
 
+  <<__Override>>
   public function numRows(): int {
     return C\count($this->rows);
   }
 
+  <<__Override>>
   public function mapRows(): Vector<Map<string, string>> {
     $out = Vector {};
     foreach ($this->rows as $row) {
@@ -42,6 +46,7 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
     return $out;
   }
 
+  <<__Override>>
   public function mapRowsTyped(): Vector<Map<string, mixed>> {
     $out = Vector {};
     foreach ($this->rows as $row) {
@@ -50,6 +55,7 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
     return $out;
   }
 
+  <<__Override>>
   public function vectorRows(): Vector<Vector<string>> {
     $out = Vector {};
     foreach ($this->rows as $row) {
@@ -63,6 +69,7 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
     return $out;
   }
 
+  <<__Override>>
   public function vectorRowsTyped(): Vector<Vector<mixed>> {
     $out = Vector {};
     foreach ($this->rows as $row) {
@@ -75,15 +82,18 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
     return $out;
   }
 
+  <<__Override>>
   public function rowBlocks(): mixed {
     throw new DBMockNotImplementedException('row blocks not implemented');
   }
 
+  <<__Override>>
   public function noIndexUsed(): bool {
     // TODO
     return true;
   }
 
+  <<__Override>>
   public function recvGtid(): string {
     return 'stubbed';
   }

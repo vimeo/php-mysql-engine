@@ -66,7 +66,7 @@ abstract class Expression {
    * For example, set "right" on a binary, or "start" on a BETWEEN, or "when" on a case
    * For several of the types that don't have child elements this is just a parse error, children who implement it can override
    */
-  public function setNextChild(Expression $expr, bool $overwrite = false): void {
+  public function setNextChild(Expression $_expr, bool $_overwrite = false): void {
     throw new DBMockParseException("Parse error: unexpected expression");
   }
 
@@ -74,7 +74,7 @@ abstract class Expression {
    * Only some expression types support recursive expressions
    * otherwise if unimplemented, it's a parse error
    */
-  public function addRecursiveExpression(token_list $tokens, int $pointer, bool $negated = false): int {
+  public function addRecursiveExpression(token_list $_tokens, int $_pointer, bool $_negated = false): int {
     throw new DBMockParseException("Parse error: unexpected recursive expression");
   }
 

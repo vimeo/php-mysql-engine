@@ -59,8 +59,9 @@ final class InOperatorExpression extends Expression {
           }
         }
       } else {
-        if ($value == $in_expr->evaluate($row, $conn))
+        if ($value == $in_expr->evaluate($row, $conn)) {
           return !$this->negated;
+        }
       }
     }
 
@@ -82,7 +83,7 @@ final class InOperatorExpression extends Expression {
   }
 
   <<__Override>>
-  public function setNextChild(Expression $expr, bool $overwrite = false): void {
+  public function setNextChild(Expression $expr, bool $_overwrite = false): void {
     $this->inList = vec[$expr];
   }
 

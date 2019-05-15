@@ -98,10 +98,12 @@ final class BetweenOperatorExpression extends Expression {
   }
 
   private function getLatestExpression(): Expression {
-    if ($this->end)
+    if ($this->end) {
       return $this->end;
-    if ($this->start)
+    }
+    if ($this->start) {
       return $this->start;
+    }
     return $this->left;
   }
 
@@ -113,8 +115,9 @@ final class BetweenOperatorExpression extends Expression {
     $p = new ExpressionParser($tokens, $pointer, $tmp, $this->precedence, /* $is_child */ true);
     list($pointer, $new_expression) = $p->buildWithPointer();
 
-    if ($negated)
+    if ($negated) {
       $new_expression->negate();
+    }
 
     $this->setNextChild($new_expression, true);
 

@@ -48,7 +48,7 @@ abstract final class DataIntegrity {
    * Ensure default values are preesnt, coerce data types as MySQL would
    */
   public static function coerceToSchema(
-    dataset $table,
+    dataset $_table,
     dict<string, mixed> $row,
     table_schema $schema,
   ): dict<string, mixed> {

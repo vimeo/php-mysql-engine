@@ -44,8 +44,9 @@ final class SelectParser {
           // we should only see these things when we're in the SELECT clause
           // all other clauses should parse their own tokens
           // also check that there has been a delimiter since the last expression if we're adding a new one now
-          if ($this->currentClause !== 'SELECT')
+          if ($this->currentClause !== 'SELECT') {
             throw new DBMockParseException("Unexpected {$token['value']}");
+          }
           if ($query->needsSeparator) {
             // we just had an expression and no comma yet. if this is a string or identifier, it must be an alias like "SELECT 1 foo"
             if (
@@ -69,8 +70,9 @@ final class SelectParser {
           if (!$expression is ColumnExpression && !$expression is ConstantExpression) {
             $name = '';
             $slice = Vec\slice($this->tokens, $start, $this->pointer - $start + 1);
-            foreach ($slice as $t)
+            foreach ($slice as $t) {
               $name .= $t['raw'];
+            }
             $expression->name = Str\trim($name);
           }
 
@@ -78,13 +80,15 @@ final class SelectParser {
           break;
         case TokenType::SEPARATOR:
           if ($token['value'] === ',') {
-            if (!$query->needsSeparator)
+            if (!$query->needsSeparator) {
               throw new DBMockParseException("Unexpected ,");
+            }
             $query->needsSeparator = false;
           } elseif ($token['value'] === ';') {
             // this should be the final token. if it's not, throw. otherwise, return
-            if ($this->pointer !== $count - 1)
+            if ($this->pointer !== $count - 1) {
               throw new DBMockParseException("Unexpected tokens after semicolon");
+            }
             return tuple($this->pointer, $query);
           } else {
             throw new DBMockParseException("Unexpected {$token['value']}");
@@ -95,8 +99,9 @@ final class SelectParser {
           if (
             C\contains_key(self::CLAUSE_ORDER, $token['value']) &&
             self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
-          )
+          ) {
             throw new DBMockParseException("Unexpected {$token['value']}");
+          }
           $this->currentClause = $token['value'];
           switch ($token['value']) {
             case 'FROM':
@@ -140,8 +145,9 @@ final class SelectParser {
                 $expressions[] = $expression;
                 $next = $this->tokens[$this->pointer + 1] ?? null;
                 // skip over commas and continue the processing, but if it's any other token break out of the loop
-                if ($next === null || $next['value'] !== ',')
+                if ($next === null || $next['value'] !== ',') {
                   break;
+                }
                 $this->pointer++;
               }
 
@@ -183,8 +189,9 @@ final class SelectParser {
               if (
                 $next === null ||
                 !C\contains_key(keyset[TokenType::IDENTIFIER, TokenType::STRING_CONSTANT], $next['type'])
-              )
+              ) {
                 throw new DBMockParseException("Expected alias name after AS");
+              }
               $query->aliasRecentExpression($next['value']);
               break;
             case 'DISTINCT':

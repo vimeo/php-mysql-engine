@@ -110,8 +110,9 @@ final class ExpressionParser {
           $close = SQLParser::findMatchingParen($pos, $tokens);
           $pos++;
           $t = $tokens[$pos];
-          if ($close - $pos !== 1)
+          if ($close - $pos !== 1) {
             throw new DBMockParseException("Parse error near DISTINCT");
+          }
           $p = new ExpressionParser(vec[$t], -1);
           $expr = $p->build();
           $args[] = $expr;
@@ -216,8 +217,9 @@ final class ExpressionParser {
               list($pointer, $expr) = $p->buildWithPointer();
               $in_list[] = $expr;
 
-              if ($pointer + 1 >= $token_count)
+              if ($pointer + 1 >= $token_count) {
                 break;
+              }
 
               $pointer++;
               $next = $arg_tokens[$pointer];
@@ -240,8 +242,9 @@ final class ExpressionParser {
             $second_token = $arg_tokens[1];
             if ($second_token !== null && $second_token['type'] === TokenType::SEPARATOR) {
               list($distinct, $elements) = $this->getListExpression($arg_tokens);
-              if ($distinct)
+              if ($distinct) {
                 throw new DBMockParseException("Unexpected DISTINCT in row expression");
+              }
 
               $expr = new RowExpression($elements);
             } else {
@@ -380,16 +383,18 @@ final class ExpressionParser {
             }
           } else {
             if ($operator === 'BETWEEN') {
-              if (!$this->expression is BinaryOperatorExpression)
+              if (!$this->expression is BinaryOperatorExpression) {
                 throw new DBMockParseException('Unexpected keyword BETWEEN');
+              }
               $this->expression = new BetweenOperatorExpression($this->expression->left);
             } elseif ($operator === 'NOT') {
               // this negates another operator like "NOT IN" or "IS NOT NULL"
               // operators would throw an DBMockException here if they don't support negation
               $this->expression->negate();
             } elseif ($operator === 'IN') {
-              if (!$this->expression is BinaryOperatorExpression)
+              if (!$this->expression is BinaryOperatorExpression) {
                 throw new DBMockParseException('Unexpected keyword IN');
+              }
               $this->expression = new InOperatorExpression($this->expression->left, $this->expression->negated);
             } elseif ($operator === 'UNARY_MINUS' || $operator === 'UNARY_PLUS' || $operator === '~') {
               $this->expression as PlaceholderExpression;

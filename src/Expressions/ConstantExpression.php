@@ -36,7 +36,7 @@ final class ConstantExpression extends Expression {
   }
 
   <<__Override>>
-  public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
+  public function evaluate(row $_row, AsyncMysqlConnection $_conn): mixed {
     return $this->value;
   }
 
