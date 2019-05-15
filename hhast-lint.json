@@ -3,6 +3,6 @@
   "builtinLinters": "all",
   "disabledLinters": [
     "Facebook\\HHAST\\Linters\\LicenseHeaderLinter",
-    "Facebook\\HHAST\\Linters\\NoStringInterpolation"
+    "Facebook\\HHAST\\Linters\\NoStringInterpolationLinter"
   ]
 }

@@ -9,7 +9,7 @@ namespace Slack\DBMock;
 // a single DB row
 type row = dict<string, mixed>;
 // vec of rows can be a stored table, a query result set, or an intermediate state for either of those
-type dataset = vec<row>;
+type dataset = KeyedContainer<int, row>;
 // a database is a collection of named tables
 type database = dict<string, dataset>;
 

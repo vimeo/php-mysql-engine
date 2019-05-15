@@ -20,6 +20,8 @@ final class InsertQuery extends Query {
 		list($database, $table_name) = Query::parseTableName($conn, $this->table);
 		$table = $conn->getServer()->getTable($database, $table_name) ?? vec[];
 
+		Metrics::trackQuery(QueryType::INSERT, $conn->getServer()->name, $table_name, $this->sql);
+
 		$schema = QueryContext::getSchema($database, $table_name);
 		if ($schema === null && QueryContext::$strictMode) {
 			throw new DBMockRuntimeException("Table $table_name not found in schema and strict mode is enabled");

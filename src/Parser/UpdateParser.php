@@ -23,8 +23,9 @@ final class UpdateParser {
 	public function parse(): UpdateQuery {
 
 		// if we got here, the first token had better be a UPDATE
-		if ($this->tokens[$this->pointer]['value'] !== 'UPDATE')
+		if ($this->tokens[$this->pointer]['value'] !== 'UPDATE') {
 			throw new DBMockParseException("Parser error: expected UPDATE");
+		}
 		$this->pointer++;
 		$count = C\count($this->tokens);
 
@@ -48,8 +49,12 @@ final class UpdateParser {
 			switch ($token['type']) {
 				case TokenType::CLAUSE:
 					// make sure clauses are in order
-					if (C\contains_key(self::CLAUSE_ORDER, $token['value']) && self::CLAUSE_ORDER[$this->current_clause] >= self::CLAUSE_ORDER[$token['value']])
+					if (
+						C\contains_key(self::CLAUSE_ORDER, $token['value']) &&
+						self::CLAUSE_ORDER[$this->current_clause] >= self::CLAUSE_ORDER[$token['value']]
+					) {
 						throw new DBMockParseException("Unexpected clause {$token['value']}");
+					}
 					$this->current_clause = $token['value'];
 					switch ($token['value']) {
 						case 'WHERE':

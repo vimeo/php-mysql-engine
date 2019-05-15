@@ -2,7 +2,7 @@
 
 namespace Slack\DBMock;
 
-use namespace HH\Lib\{C, Dict, Str, Vec};
+use namespace HH\Lib\{C, Dict, Keyset, Str};
 
 /**
  * An executable Query plan
@@ -29,7 +29,7 @@ abstract class Query {
 			return $data;
 		}
 
-		return Vec\filter($data, $row ==> (bool)$where->evaluate($row, $conn));
+		return Dict\filter($data, $row ==> (bool)$where->evaluate($row, $conn));
 	}
 
 	/**
@@ -61,9 +61,19 @@ abstract class Query {
 
 				if ($value_a != $value_b) {
 					if ($value_a is num && $value_b is num) {
-						return (((float)$value_a < (float)$value_b ? 1 : 0) ^ (($rule['direction'] === SortDirection::DESC) ? 1 : 0)) ? -1 : 1;
+						return (
+							((float)$value_a < (float)$value_b ? 1 : 0) ^
+							(($rule['direction'] === SortDirection::DESC) ? 1 : 0)
+						)
+							? -1
+							: 1;
 					} else {
-						return (((string)$value_a < (string)$value_b ? 1 : 0) ^ (($rule['direction'] === SortDirection::DESC) ? 1 : 0)) ? -1 : 1;
+						return (
+							((string)$value_a < (string)$value_b ? 1 : 0) ^
+							(($rule['direction'] === SortDirection::DESC) ? 1 : 0)
+						)
+							? -1
+							: 1;
 					}
 
 				}
@@ -84,6 +94,7 @@ abstract class Query {
 		});
 
 		// re-key the input dataset
+		$data = dict($data);
 		foreach ($data_temp as $index => $item) {
 			$data[$index] = $item[1];
 		}
@@ -96,7 +107,9 @@ abstract class Query {
 		if ($limit === null) {
 			return $data;
 		}
-		return Vec\slice($data, $limit['offset'], $limit['rowcount']);
+		// this is like Vec\slice(), but there's no Dict\slice
+		// we want to retain keys as row numbers for update statements, so we need a dict
+		return dict(\array_slice($data, $limit['offset'], $limit['rowcount']));
 	}
 
 	/**
@@ -118,6 +131,69 @@ abstract class Query {
 			$database = $conn->getDatabase();
 			return tuple($database, $table);
 		}
+	}
+
+
+	/**
+	 * Apply the "SET" clause of an UPDATE, or "ON DUPLICATE KEY UPDATE"
+	 */
+	protected function applySet(
+		AsyncMysqlConnection $conn,
+		string $database,
+		string $table_name,
+		dataset $filtered_rows,
+		dataset $original_table,
+		vec<BinaryOperatorExpression> $set_clause,
+		?table_schema $table_schema,
+	): int {
+
+		$original_table as vec<_>;
+
+		$valid_fields = null;
+		if ($table_schema !== null) {
+			$valid_fields = Keyset\map($table_schema['fields'], $field ==> $field['name']);
+		}
+
+		$set_clauses = vec[];
+		foreach ($set_clause as $expression) {
+			// the parser already asserts this at parse time
+			$left = $expression->left as ColumnExpression;
+			$right = $expression->right as nonnull;
+			$column = $left->name;
+
+			# If we know the valid fields for this table, only allow setting those
+			if ($valid_fields !== null) {
+				if (!C\contains($valid_fields, $column)) {
+					throw new DBMockRuntimeException("Invalid update column {$column}");
+				}
+			}
+
+			$set_clauses[] = shape('column' => $column, 'expression' => $right);
+		}
+
+		$update_count = 0;
+
+		foreach ($filtered_rows as $row_id => $row) {
+			$changes_found = false;
+			foreach ($set_clauses as $clause) {
+				$existing_value = $row[$clause['column']];
+				$new_value = $clause['expression']->evaluate($row, $conn);
+
+				if ($new_value !== $existing_value) {
+					$row[$clause['column']] = $new_value;
+					$changes_found = true;
+				}
+			}
+
+			if ($changes_found) {
+				$original_table[$row_id] = $row;
+				$update_count++;
+			}
+		}
+
+		// write it back to the database
+		$conn->getServer()->saveTable($database, $table_name, $original_table);
+		return $update_count;
 	}
 
 }
