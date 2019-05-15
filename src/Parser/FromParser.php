@@ -2,7 +2,7 @@
 
 namespace Slack\DBMock;
 
-use namespace HH\Lib\{C, Vec};
+use namespace HH\Lib\{C, Str, Vec};
 
 final class FromParser {
 
@@ -123,7 +123,8 @@ final class FromParser {
 				$expr = new PlaceholderExpression();
 
 				// this will throw if the first keyword isn't SELECT which is what we want
-				$parser = new SelectParser(0, $subquery_tokens);
+				$subquery_sql = Vec\map($subquery_tokens, $token ==> $token['value']) |> Str\join($$, ' ');
+				$parser = new SelectParser(0, $subquery_tokens, $subquery_sql);
 				list($p, $select) = $parser->parse();
 				$expr = new SubqueryExpression($select, '');
 
@@ -268,7 +269,12 @@ final class FromParser {
 		return $table;
 	}
 
-	public function addJoinFilterExpression(?Expression $filter, string $left_table, string $right_table, string $column): BinaryOperatorExpression {
+	public function addJoinFilterExpression(
+		?Expression $filter,
+		string $left_table,
+		string $right_table,
+		string $column,
+	): BinaryOperatorExpression {
 
 		$left = new ColumnExpression(shape(
 			'type' => TokenType::IDENTIFIER,

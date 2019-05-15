@@ -45,8 +45,11 @@ final class SelectQuery extends Query {
 		$this->multiQueries[] = shape('type' => $type, 'query' => $query);
 	}
 
-	# TODO subqueries
-	public function execute(AsyncMysqlConnection $conn): dataset {
+	/**
+	 * Run the query
+	 * The 2nd parameter is for supporting correlated subqueries, not currently supported
+	 */
+	public function execute(AsyncMysqlConnection $conn, ?row $_ = null): dataset {
 
 		return
 			// FROM clause handling - builds a data set including extracting rows from tables, applying joins
@@ -216,7 +219,8 @@ final class SelectQuery extends Query {
 			// Adding any fields needed by the ORDER BY not already returned by the SELECT
 			foreach ($order_by_expressions as $order_by) {
 				$row as dict<_, _>;
-				list($name, $val) = $order_by['expression']->evaluateWithName(/* HH_FIXME[4110] generics */ $row, $conn);
+				list($name, $val) =
+					$order_by['expression']->evaluateWithName(/* HH_FIXME[4110] generics */ $row, $conn);
 				if (!C\contains_key($formatted_row, $name)) {
 					$formatted_row[$name] = $val;
 				}

@@ -202,7 +202,8 @@ final class ExpressionParser {
 					$expr = new PlaceholderExpression();
 
 					if ($arg_tokens[0]['value'] === 'SELECT') {
-						$parser = new SelectParser(0, $arg_tokens);
+						$subquery_sql = Vec\map($arg_tokens, $token ==> $token['value']) |> Str\join($$, ' ');
+						$parser = new SelectParser(0, $arg_tokens, $subquery_sql);
 						list($p, $select) = $parser->parse();
 						$expr = new SubqueryExpression($select, '');
 					} elseif ($this->expression is InOperatorExpression) {
@@ -270,7 +271,11 @@ final class ExpressionParser {
 						// we assume an expression will be a Binary Operator (most common) when we first encounter a token
 						// if it's something else like BETWEEN or IN, we convert it to that deliberately when encountering the operand
 						$this->expression = new BinaryOperatorExpression($expr);
-					} elseif (!$this->expression->operator && $this->expression is BinaryOperatorExpression && $token['type'] === TokenType::IDENTIFIER) {
+					} elseif (
+						!$this->expression->operator &&
+						$this->expression is BinaryOperatorExpression &&
+						$token['type'] === TokenType::IDENTIFIER
+					) {
 						// we encountered an identifier immediately after the left side of an expression... only hope is that this is an implicit alias like
 						// "SELECT 1 foo"
 						// if so, move the pointer back one and return
@@ -323,13 +328,26 @@ final class ExpressionParser {
 					// when "EXISTS (foo)"
 					// TODO handle EXISTS
 					if ($this->expression->operator) {
-						if ($operator === 'AND' && $this->expression->operator === 'BETWEEN' && !$this->expression->isWellFormed()) {
+						if (
+							$operator === 'AND' &&
+							$this->expression->operator === 'BETWEEN' &&
+							!$this->expression->isWellFormed()
+						) {
 							$this->expression as BetweenOperatorExpression;
 							$this->expression->foundAnd();
 						} elseif ($operator === 'NOT') {
 							if ($this->expression->operator !== 'IS') {
 								$next = $this->peekNext();
-								if ($next !== null && (($next['type'] === TokenType::OPERATOR && Str\uppercase($next['value']) === 'IN') || $next['type'] === TokenType::PAREN)) {
+								if (
+									$next !== null &&
+									(
+										(
+											$next['type'] === TokenType::OPERATOR &&
+											Str\uppercase($next['value']) === 'IN'
+										) ||
+										$next['type'] === TokenType::PAREN
+									)
+								) {
 									// something like "A=B AND s NOT IN (foo)", we have to recurse to handle that also
 									// also AND NOT (foo AND bar)
 									$this->pointer = $this->expression
@@ -359,9 +377,11 @@ final class ExpressionParser {
 								if ($operator === 'BETWEEN') {
 									$this->expression = new BetweenOperatorExpression($this->expression);
 								} elseif ($operator === 'IN') {
-									$this->expression = new InOperatorExpression($this->expression, $this->expression->negated);
+									$this->expression =
+										new InOperatorExpression($this->expression, $this->expression->negated);
 								} else {
-									$this->expression = new BinaryOperatorExpression($this->expression, false, $operator);
+									$this->expression =
+										new BinaryOperatorExpression($this->expression, false, $operator);
 								}
 							}
 						}
@@ -377,7 +397,8 @@ final class ExpressionParser {
 						} elseif ($operator === 'IN') {
 							if (!$this->expression is BinaryOperatorExpression)
 								throw new DBMockParseException('Unexpected keyword IN');
-							$this->expression = new InOperatorExpression($this->expression->left, $this->expression->negated);
+							$this->expression =
+								new InOperatorExpression($this->expression->left, $this->expression->negated);
 						} elseif ($operator === 'UNARY_MINUS' || $operator === 'UNARY_PLUS' || $operator === '~') {
 							$this->expression as PlaceholderExpression;
 							$this->expression = new UnaryExpression($operator);
@@ -399,7 +420,9 @@ final class ExpressionParser {
 				break;
 			}
 
-			if (C\contains_key(keyset[TokenType::CLAUSE, TokenType::RESERVED, TokenType::SEPARATOR], $nextToken['type'])) {
+			if (
+				C\contains_key(keyset[TokenType::CLAUSE, TokenType::RESERVED, TokenType::SEPARATOR], $nextToken['type'])
+			) {
 				break;
 			}
 

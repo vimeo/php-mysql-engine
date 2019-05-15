@@ -14,8 +14,12 @@ final class SubqueryExpression extends Expression {
 	}
 
 	<<__Override>>
-	public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
-		return db_mock_query_select('', '', $database, $this->query, $row);
+	/**
+	 * Evaluate the subquery, passing the current row from the outer query along
+	 * for correlated subqueries (not currently supported)
+	 */
+	public function evaluate(row $row, AsyncMysqlConnection $conn): dataset {
+		return $this->query->execute($conn, $row);
 	}
 
 	<<__Override>>

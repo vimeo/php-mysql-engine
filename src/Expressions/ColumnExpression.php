@@ -84,9 +84,9 @@ final class ColumnExpression extends Expression {
 			return $row[$this->name];
 		}
 
-		if (QueryContext::get_have_schema()) {
-			// we've got schemas for all the tables but we still ran into a column that was missing.
-			// this probably means we're selecting on a column that does not exist
+		if (QueryContext::$strictMode) {
+			// we've running in strict mode but we still ran into a column that was missing.
+			// this means we're selecting on a column that does not exist
 			throw new DBMockRuntimeException("Column with index ".$this->columnExpression." not found in row");
 		} else {
 			return null;
