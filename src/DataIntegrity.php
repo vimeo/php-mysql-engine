@@ -15,6 +15,10 @@ abstract final class DataIntegrity {
     return Keyset\map($schema['fields'], $field ==> $field['name']);
   }
 
+  /**
+   * Ensure all fields from the table schema are present in the row
+   * Applies default values based on either DEFAULTs, nullable fields, or data types
+   */
   public static function ensureFieldsPresent(dict<string, mixed> $row, table_schema $schema): dict<string, mixed> {
 
     foreach ($schema['fields'] as $field) {
@@ -24,13 +28,31 @@ abstract final class DataIntegrity {
       $field_nullable = $field['null'] ?? false;
 
       if (!C\contains_key($row, $field_name)) {
-        if ($field_nullable) {
+        if (Shapes::keyExists($field, 'default') && $field['default'] !== 'NULL') {
+          switch ($field_type) {
+            case 'int':
+              $row[$field_name] = Str\to_int($field['default']);
+              break;
+            case 'double':
+              $row[$field_name] = (float)$field['default'];
+              break;
+            default:
+              $row[$field_name] = $field['default'];
+              break;
+          }
+        } else if ($field_nullable) {
           $row[$field_name] = null;
         } else {
-          if ($field_type == 'int' || $field_type == 'double') {
-            $row[$field_name] = 0;
-          } else if ($field_type == 'string') {
-            $row[$field_name] = '';
+          switch ($field_type) {
+            case 'int':
+              $row[$field_name] = 0;
+              break;
+            case 'double':
+              $row[$field_name] = 0.0;
+              break;
+            default:
+              $row[$field_name] = '';
+              break;
           }
         }
       }

@@ -99,6 +99,7 @@ type table_schema = shape(
       'length' => int,
       'null' => bool,
       'hack_type' => string,
+      ?'default' => string,
     ),
   >,
   "indexes" => Container<
