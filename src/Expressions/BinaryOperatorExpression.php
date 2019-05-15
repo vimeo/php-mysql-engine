@@ -1,5 +1,7 @@
 <?hh // strict
 
+/* HHAST_IGNORE_ALL[NoPHPEquality] */
+
 namespace Slack\DBMock;
 
 use namespace HH\Lib\{C, Regex, Str};
@@ -35,7 +37,12 @@ final class BinaryOperatorExpression extends Expression {
 	 * (1, 2, 3) > (1, 2, 2) for example
 	 * (1, 2, 3) > (1, 1, 4) is also true
 	 */
-	private function evaluateRowComparison(RowExpression $left, RowExpression $right, row $row, AsyncMysqlConnection $conn): bool {
+	private function evaluateRowComparison(
+		RowExpression $left,
+		RowExpression $right,
+		row $row,
+		AsyncMysqlConnection $conn,
+	): bool {
 
 		$left_elems = $left->evaluate($row, $conn);
 		invariant($left_elems is vec<_>, "RowExpression must return vec");
@@ -117,12 +124,14 @@ final class BinaryOperatorExpression extends Expression {
 				// an operator should only be in this state in the middle of parsing, never when evaluating
 				throw new DBMockRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
 			case 'AND':
-				if ((bool)$l_value && (bool)$r_value)
+				if ((bool)$l_value && (bool)$r_value) {
 					return !$this->negated;
+				}
 				return $this->negated;
 			case 'OR':
-				if ((bool)$l_value || (bool)$r_value)
+				if ((bool)$l_value || (bool)$r_value) {
 					return !$this->negated;
+				}
 				return $this->negated;
 			case '=':
 				// maybe do some stuff with data types here
@@ -197,8 +206,9 @@ final class BinaryOperatorExpression extends Expression {
 				}
 			case 'LIKE':
 				$left_string = (string)$left->evaluate($row, $conn);
-				if (!$right is ConstantExpression)
+				if (!$right is ConstantExpression) {
 					throw new DBMockRuntimeException("LIKE pattern should be a constant string");
+				}
 				$pattern = (string)$r_value;
 
 				$start_pattern = '^';
@@ -300,10 +310,12 @@ final class BinaryOperatorExpression extends Expression {
 			'right' => $this->right ? \var_dump($this->right, true) : dict[],
 		];
 
-		if ($this->name)
+		if ($this->name) {
 			$ret['name'] = $this->name;
-		if ($this->negated)
+		}
+		if ($this->negated) {
 			$ret['negated'] = 1;
+		}
 		return $ret;
 	}
 
@@ -326,8 +338,9 @@ final class BinaryOperatorExpression extends Expression {
 	}
 
 	public function getRightOrThrow(): Expression {
-		if ($this->right === null)
+		if ($this->right === null) {
 			throw new DBMockParseException("Parse error: attempted to resolve unbound expression");
+		}
 		return $this->right;
 	}
 
@@ -341,8 +354,9 @@ final class BinaryOperatorExpression extends Expression {
 		$p = new ExpressionParser($tokens, $pointer, $tmp, $this->precedence, true);
 		list($pointer, $new_expression) = $p->buildWithPointer();
 
-		if ($negated)
+		if ($negated) {
 			$new_expression->negate();
+		}
 
 		$this->setNextChild($new_expression, true);
 

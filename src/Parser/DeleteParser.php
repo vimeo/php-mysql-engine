@@ -36,15 +36,20 @@ final class DeleteParser {
 			switch ($token['type']) {
 				case TokenType::CLAUSE:
 					// make sure clauses are in order
-					if (C\contains_key(self::CLAUSE_ORDER, $token['value']) && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']])
+					if (
+						C\contains_key(self::CLAUSE_ORDER, $token['value']) &&
+						self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
+					) {
 						throw new DBMockParseException("Unexpected clause {$token['value']}");
+					}
 					$this->currentClause = $token['value'];
 					switch ($token['value']) {
 						case 'FROM':
 							$this->pointer++;
 							$token = $this->tokens[$this->pointer];
-							if ($token === null || $token['type'] !== TokenType::IDENTIFIER)
+							if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
 								throw new DBMockParseException("Expected table name after FROM");
+							}
 							// TODO DO NOT DO THIS
 							// If we have a database name (like in vitess range modifier syntax `keyspace[-]`.table), just keep the table name
 							if (Str\contains($token['value'], '.')) {
@@ -60,15 +65,15 @@ final class DeleteParser {
 						case 'WHERE':
 							$expression_parser = new ExpressionParser($this->tokens, $this->pointer);
 							list($this->pointer, $expression) = $expression_parser->buildWithPointer();
-							$query->where_clause = $expression;
+							$query->whereClause = $expression;
 							break;
 						case 'ORDER':
 							$p = new OrderByParser($this->pointer, $this->tokens);
-							list($this->pointer, $query->order_by) = $p->parse();
+							list($this->pointer, $query->orderBy) = $p->parse();
 							break;
 						case 'LIMIT':
 							$p = new LimitParser($this->pointer, $this->tokens);
-							list($this->pointer, $query->limit_clause) = $p->parse();
+							list($this->pointer, $query->limitClause) = $p->parse();
 							break;
 						default:
 							throw new DBMockParseException("Unexpected clause {$token['value']}");
@@ -77,7 +82,10 @@ final class DeleteParser {
 				case TokenType::RESERVED:
 				case TokenType::IDENTIFIER:
 					// just skip over these hints
-					if ($this->currentClause === 'DELETE' && C\contains_key(keyset['LOW_PRIORITY', 'QUICK', 'IGNORE'], $token['value'])) {
+					if (
+						$this->currentClause === 'DELETE' &&
+						C\contains_key(keyset['LOW_PRIORITY', 'QUICK', 'IGNORE'], $token['value'])
+					) {
 						break;
 					}
 					throw new DBMockParseException("Unexpected token {$token['value']}");

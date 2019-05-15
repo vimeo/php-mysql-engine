@@ -15,10 +15,21 @@ final class InsertQueryTest extends HackTest {
 		$pool = new AsyncMysqlConnectionPool(darray[]);
 		$conn = await $pool->connect("example", 1, 'db1', '', '');
 		$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
+		$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (2, 'testing')");
+		$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (3, 'testyada')");
+		$results = await $conn->query("SELECT * FROM table1");
+		echo "\nafter inserts";
+		\var_dump($results);
+		$results = await $conn->query("UPDATE table1 SET name='updated' WHERE id=2");
 		\var_dump($results);
 		$results = await $conn->query("SELECT * FROM table1");
+		echo "\nafter updates";
 		\var_dump($results);
-		echo "got it";
+		$results = await $conn->query("DELETE FROM table1 WHERE id=2");
+		\var_dump($results);
+		$results = await $conn->query("SELECT * FROM table1");
+		echo "\nafter deletes";
+		\var_dump($results);
 	}
 	/*
 		public function provideDirtyData(): vec<mixed> {

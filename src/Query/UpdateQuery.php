@@ -20,9 +20,9 @@ final class UpdateQuery extends Query {
 	}
 
 	/**
-	* process the UPDATE clause to retrieve the table
-	* add a row identifier to each element in the result which we can later use to update the underlying table
-	*/
+	 * process the UPDATE clause to retrieve the table
+	 * add a row identifier to each element in the result which we can later use to update the underlying table
+	 */
 	protected function processUpdateClause(AsyncMysqlConnection $conn): (string, string, dataset) {
 		list($database, $table_name) = Query::parseTableName($conn, $this->updateClause['name']);
 		$table = $conn->getServer()->getTable($database, $table_name) ?? vec[];

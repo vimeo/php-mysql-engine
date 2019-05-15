@@ -80,8 +80,9 @@ final class UpdateParser {
 					break;
 				case TokenType::SEPARATOR:
 					// a semicolon to end the query is valid, but nothing else is in this context
-					if ($token['value'] !== ';')
+					if ($token['value'] !== ';') {
 						throw new DBMockParseException("Unexpected {$token['value']}");
+					}
 					break;
 				default:
 					throw new DBMockParseException("Unexpected token {$token['value']}");
