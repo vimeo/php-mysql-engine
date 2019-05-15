@@ -1,0 +1,74 @@
+<?hh // strict
+
+namespace Slack\DBMock;
+use function Facebook\FBExpect\expect;
+use type Facebook\HackTest\{DataProvider, HackTest};
+use namespace HH\Lib\Str;
+
+final class InsertQueryTest extends HackTest {
+
+	public static async function beforeFirstTestAsync(): Awaitable<void> {
+		init(TEST_SCHEMA, true);
+	}
+
+	public async function testExample(): Awaitable<void> {
+		$pool = new AsyncMysqlConnectionPool(darray[]);
+		$conn = await $pool->connect("example", 1, 'db1', '', '');
+		$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
+		\var_dump($results);
+		$results = await $conn->query("SELECT * FROM table1");
+		\var_dump($results);
+		echo "got it";
+	}
+	/*
+		public function provideDirtyData(): vec<mixed> {
+			$elements = vec['the', 'quicky', 'brown', 'fox', 1];
+			return vec[
+				tuple($elements),
+				tuple(new Vector($elements)),
+				tuple(new Set($elements)),
+				tuple(new Map($elements)),
+				tuple(vec($elements)),
+				tuple(keyset($elements)),
+				tuple(dict($elements)),
+				tuple(HackLibTestTraversables::getIterator($elements)),
+			];
+		}
+
+		<<DataProvider('provideDirtyData')>>
+		public function testDirtyData(Traversable<string> $traversable): void {
+			expect(Str\join($traversable, '-'))->toBeSame('the-quick-brown-fox-1');
+		}
+
+		public function provideNoData(): vec<mixed> {
+			return vec[];
+		}
+
+		<<DataProvider('provideNoData')>>
+		public function testNoData(int $a): void {
+			expect($a)->toBeSame(1);
+		}
+
+		<<DataProvider('provideNoData')>>
+		public function testNoDataDup(int $a): void {
+			expect($a)->toBeSame(1);
+		}
+
+		public function provideError(): vec<mixed> {
+			invariant(
+				0 === 1,
+				"This test depends on a provider that throws an error.",
+			);
+			return vec[
+				tuple(1, 2),
+				tuple(2, 1),
+			];
+		}
+
+		<<DataProvider('provideError')>>
+		public function testProviderError(int $_a, int $_b): void {}
+
+		<<DataProvider('provideError')>>
+		public function testProviderErrorDup(int $_a, int $_b): void {}
+		*/
+}

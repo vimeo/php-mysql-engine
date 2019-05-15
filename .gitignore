@@ -1,0 +1,7 @@
+vendor
+www.pid
+.DS_STORE
+*.orig
+*~
+composer.lock
+.vscode
