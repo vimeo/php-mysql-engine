@@ -13,6 +13,13 @@ abstract final class QueryContext {
   public static bool $strictMode = false;
 
   /**
+   * 1: quiet, print nothing
+   * 2: verbose, print every query as it executes
+   * 3: very verbose, print query results as well TODO port over DB mock show for this?
+   */
+  public static Verbosity $verbosity = Verbosity::QUIET;
+
+  /**
    * Representation of database schema
    * String keys are database names, with table names inside that list
    *

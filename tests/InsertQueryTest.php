@@ -9,6 +9,7 @@ final class InsertQueryTest extends HackTest {
 
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		init(TEST_SCHEMA, true);
+		QueryContext::$verbosity = Verbosity::RESULTS;
 	}
 
 	public async function testExample(): Awaitable<void> {
@@ -18,40 +19,40 @@ final class InsertQueryTest extends HackTest {
 		$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (2, 'testing')");
 		$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (3, 'testyada')");
 		$results = await $conn->query("SELECT * FROM table1");
-		echo "\nafter inserts";
-		\var_dump($results);
+		#echo "\nafter inserts";
+		#\var_dump($results);
 		$results = await $conn->query("UPDATE table1 SET name='updated' WHERE id=2");
-		\var_dump($results);
+		#\var_dump($results);
 		$results = await $conn->query("SELECT * FROM table1");
-		echo "\nafter updates";
-		\var_dump($results);
+		#echo "\nafter updates";
+		#\var_dump($results);
 		Server::snapshot('test');
 		$results = await $conn->query("DELETE FROM table1 WHERE id=2");
-		\var_dump($results);
+		#\var_dump($results);
 		$results = await $conn->query("SELECT * FROM table1");
-		echo "\nafter deletes";
-		\var_dump($results);
+		#echo "\nafter deletes";
+		#\var_dump($results);
 		Server::restore('test');
 		$results = await $conn->query("SELECT * FROM table1");
-		echo "\nafter restore";
-		\var_dump($results);
+		#echo "\nafter restore";
+		#\var_dump($results);
 
 		$results =
 			await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'dupe') ON DUPLICATE KEY UPDATE name='dupe'");
-		\var_dump($results);
+		#\var_dump($results);
 
 		$results = await $conn->query("SELECT * FROM table1");
-		echo "\nafter dupe inserts";
-		\var_dump($results);
+		#echo "\nafter dupe inserts";
+		#\var_dump($results);
 
 		$results = await $conn->query(
 			"INSERT INTO table1 (id, name) VALUES (1, 'duplicate') ON DUPLICATE KEY UPDATE name=VALUES(name)",
 		);
-		\var_dump($results);
+		#\var_dump($results);
 
 		$results = await $conn->query("SELECT * FROM table1");
-		echo "\nafter dupe inserts 2";
-		\var_dump($results);
+		#echo "\nafter dupe inserts 2";
+		#\var_dump($results);
 	}
 	/*
 		public function provideDirtyData(): vec<mixed> {

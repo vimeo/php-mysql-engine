@@ -46,6 +46,15 @@ enum JoinType: string {
   NATURAL = 'NATURAL';
 }
 
+enum Verbosity: int as int {
+  // Default, print nothing
+  QUIET = 1;
+  // Print every query as it executes
+  QUERIES = 2;
+  // Print every query and its results
+  RESULTS = 3;
+}
+
 enum JoinOperator: string {
   ON = "ON";
   USING = "USING";

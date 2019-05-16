@@ -13,7 +13,6 @@ abstract final class SQLCommandProcessor {
   public static function execute(string $sql, AsyncMysqlConnection $conn): (dataset, int) {
 
     // Check for unsupported statements
-
     if (Str\starts_with_ci($sql, 'SET') || Str\starts_with_ci($sql, 'BEGIN') || Str\starts_with_ci($sql, 'COMMIT')) {
       // we don't do any handling for these kinds of statements currently
       return tuple(vec[], 0);

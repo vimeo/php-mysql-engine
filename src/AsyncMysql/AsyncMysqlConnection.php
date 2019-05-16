@@ -41,7 +41,9 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
     int $timeout_micros = -1,
     dict<string, string> $query_attributes = dict[],
   ): Awaitable<\AsyncMysqlQueryResult> {
+    Logger::log(Verbosity::QUERIES, "DBMock [verbose]: $query");
     list($results, $rows_affected) = SQLCommandProcessor::execute($query, $this);
+    Logger::logResult($this->getServer()->name, $results, $rows_affected);
     return new AsyncMysqlQueryResult(vec($results), $rows_affected);
   }
 
