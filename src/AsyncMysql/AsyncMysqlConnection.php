@@ -31,8 +31,7 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
 
   /* HH_IGNORE_ERROR[3012] I don't want to call parent::construct */
   public function __construct(private string $host, private int $port, private string $dbname) {
-    // in the fake database world, each connection gets a different logical server (enforcing no data sharing between hosts)
-    $this->server = new Server($host);
+    $this->server = Server::getOrCreate($host);
     $this->result = new AsyncMysqlConnectResult(false);
   }
 

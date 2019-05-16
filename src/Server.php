@@ -8,6 +8,54 @@ final class Server {
 
   public function __construct(public string $name) {}
 
+  private static dict<string, Server> $instances = dict[];
+  private static keyset<string> $snapshot_names = keyset[];
+
+  public static function getAll(): dict<string, this> {
+    return static::$instances;
+  }
+
+  public static function get(string $name): ?this {
+    return static::$instances[$name] ?? null;
+  }
+
+  public static function getOrCreate(string $name): this {
+    $server = static::$instances[$name] ?? null;
+    if ($server === null) {
+      $server = new static($name);
+      static::$instances[$name] = $server;
+    }
+    return $server;
+  }
+
+  public static function reset(): void {
+    self::$instances = dict[];
+  }
+
+  public static function snapshot(string $name): void {
+    foreach (static::getAll() as $server) {
+      $server->doSnapshot($name);
+    }
+    static::$snapshot_names[] = $name;
+  }
+
+  public static function restore(string $name): void {
+    if (!C\contains_key(static::$snapshot_names, $name)) {
+      throw new DBMockRuntimeException("Snapshot $name not found, unable to restore");
+    }
+    foreach (static::getAll() as $server) {
+      $server->doRestore($name);
+    }
+  }
+
+  protected function doSnapshot(string $name): void {
+    $this->snapshots[$name] = $this->databases;
+  }
+
+  protected function doRestore(string $name): void {
+    $this->databases = $this->snapshots[$name] ?? dict[];
+  }
+
   /**
    * The main storage mechanism
    * dict of strings (database schema names)
@@ -20,6 +68,7 @@ final class Server {
    * which is often used frequently between test cases
    */
   public dict<string, dict<string, vec<dict<string, mixed>>>> $databases = dict[];
+  private dict<string, dict<string, dict<string, vec<dict<string, mixed>>>>> $snapshots = dict[];
 
   /**
    * Retrieve a table from the specified database, if it exists, by value

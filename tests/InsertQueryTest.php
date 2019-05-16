@@ -25,10 +25,15 @@ final class InsertQueryTest extends HackTest {
 		$results = await $conn->query("SELECT * FROM table1");
 		echo "\nafter updates";
 		\var_dump($results);
+		Server::snapshot('test');
 		$results = await $conn->query("DELETE FROM table1 WHERE id=2");
 		\var_dump($results);
 		$results = await $conn->query("SELECT * FROM table1");
 		echo "\nafter deletes";
+		\var_dump($results);
+		Server::restore('test');
+		$results = await $conn->query("SELECT * FROM table1");
+		echo "\nafter restore";
 		\var_dump($results);
 
 		$results =

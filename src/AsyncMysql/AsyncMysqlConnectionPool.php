@@ -2,7 +2,7 @@
 
 namespace Slack\DBMock;
 
-use namespace HH\Lib\{C, Dict};
+use namespace HH\Lib\C;
 
 /**
  * Mock a connection pool, instantiating fake connections instead of real ones
@@ -62,16 +62,5 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
       'pool_hits' => $this->poolHits,
       'pool_misses' => $this->poolMisses,
     ];
-  }
-
-  /**
-   * Not part of the AsyncMysqlConnectionPool interface, these are for debugging
-   */
-  public static function getAllServers(): dict<string, Server> {
-    return Dict\map(static::$pool, $conn ==> $conn->getServer());
-  }
-
-  public static function getServer(string $name): ?Server {
-    return C\contains_key(static::$pool, $name) ? static::$pool[$name]->getServer() : null;
   }
 }
