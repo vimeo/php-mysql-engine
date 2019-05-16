@@ -105,19 +105,6 @@ final class InsertParser {
                 $this->pointer = $close;
               } while (($this->tokens[$this->pointer + 1]['value'] ?? null) === ',' && $this->pointer++);
               break;
-            case 'ON':
-              $expected = vec['DUPLICATE', 'KEY', 'UPDATE'];
-              $next_pointer = $this->pointer + 1;
-              foreach ($expected as $index => $keyword) {
-                $next = $this->tokens[$next_pointer + $index + 1] ?? null;
-                if ($next === null || $next['value'] !== $keyword) {
-                  throw new DBMockParseException("Unexpected keyword near ON");
-                }
-              }
-              $this->pointer += 3;
-              $p = new SetParser($this->pointer, $this->tokens);
-              list($this->pointer, $query->updateExpressions) = $p->parse(/* $skip_set */ true);
-              break;
             default:
               throw new DBMockParseException("Unexpected clause {$token['value']}");
           }
@@ -160,6 +147,22 @@ final class InsertParser {
             throw new DBMockParseException("Unexpected {$token['value']}");
           }
           break;
+        case TokenType::RESERVED:
+          if ($token['value'] === 'ON') {
+            $expected = vec['DUPLICATE', 'KEY', 'UPDATE'];
+            $next_pointer = $this->pointer + 1;
+            foreach ($expected as $index => $keyword) {
+              $next = $this->tokens[$next_pointer + $index] ?? null;
+              if ($next === null || $next['value'] !== $keyword) {
+                throw new DBMockParseException("Unexpected keyword near ON");
+              }
+            }
+            $this->pointer += 3;
+            $p = new SetParser($this->pointer, $this->tokens);
+            list($this->pointer, $query->updateExpressions) = $p->parse(/* $skip_set */ true);
+            break;
+          }
+          throw new DBMockParseException("Unexpected {$token['value']}");
         default:
           throw new DBMockParseException("Unexpected token {$token['value']}");
       }

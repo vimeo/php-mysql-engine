@@ -51,8 +51,9 @@ final class CaseOperatorExpression extends Expression {
   public function setKeyword(string $keyword): void {
     switch ($keyword) {
       case 'WHEN':
-        if ($this->lastKeyword !== 'CASE' && $this->lastKeyword !== 'THEN')
+        if ($this->lastKeyword !== 'CASE' && $this->lastKeyword !== 'THEN') {
           throw new DBMockParseException("Unexpected WHEN in CASE statement");
+        }
         $this->lastKeyword = 'WHEN';
         // set these to null in case this is not the first WHEN clause, so that the clauses know to accept expressions
         $this->when = null;
@@ -108,8 +109,9 @@ final class CaseOperatorExpression extends Expression {
         $this->whenExpressions[] = shape('when' => $this->when as nonnull, 'then' => $expr);
         break;
       case 'ELSE':
-        if ($this->else && !$overwrite)
+        if ($this->else && !$overwrite) {
           throw new DBMockParseException("Unexpected token near ELSE");
+        }
         $this->else = $expr;
         break;
       case 'END':
@@ -122,8 +124,9 @@ final class CaseOperatorExpression extends Expression {
     $p = new ExpressionParser($tokens, $pointer, new PlaceholderExpression(), 0, true);
     list($pointer, $new_expression) = $p->buildWithPointer();
 
-    if ($negated)
+    if ($negated) {
       $new_expression->negate();
+    }
 
     // the way case statements are parsed... we actually do not want to overwrite
     $this->setNextChild($new_expression, false);

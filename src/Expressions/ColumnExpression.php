@@ -61,8 +61,9 @@ final class ColumnExpression extends Expression {
   public function evaluate(row $row, AsyncMysqlConnection $_conn): mixed {
     // for the "COUNT(*)" case, just return 1
     // we don't actually implement "*" in this library, the select processer handles that
-    if ($this->name === '*')
+    if ($this->name === '*') {
       return 1;
+    }
 
     $row = $this->maybeUnrollGroupedDataset($row);
 
@@ -101,12 +102,17 @@ final class ColumnExpression extends Expression {
     $this->allowFallthrough = true;
   }
 
+  <<__Override>>
   public function isWellFormed(): bool {
     return true;
   }
 
   public function tableName(): ?string {
     return $this->tableName;
+  }
+
+  public function prefixName(string $prefix): void {
+    $this->columnName = $prefix.$this->columnName;
   }
 
   <<__Override>>

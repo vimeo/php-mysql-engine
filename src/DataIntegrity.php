@@ -183,9 +183,15 @@ abstract final class DataIntegrity {
   }
 
   /**
-   * This either returns nothing or throws
+   * Check for unique key violations
+   * If there's a violation, this returns a string message, as well as the integer id of the row that conflicted
+   * Caller may decide to throw using the message, or make use of the row id to do an update
    */
-  public static function checkUniqueConstraints(dataset $table, dict<string, mixed> $row, table_schema $schema): void {
+  public static function checkUniqueConstraints(
+    dataset $table,
+    dict<string, mixed> $row,
+    table_schema $schema,
+  ): ?(string, int) {
 
     // gather all unique keys
     $unique_keys = dict[];
@@ -205,12 +211,15 @@ abstract final class DataIntegrity {
       }
 
       // are there any existing rows in the table for which every unique key field matches this row?
-      if (C\any($table, $r ==> C\every($unique_key, $field ==> $r[$field] === $row[$field]))) {
-        $dupe_unique_key_value = Vec\map($unique_key, $field ==> (string)$row[$field]) |> Str\join($$, ', ');
-        throw new DBMockUniqueKeyViolation(
-          "Duplicate entry '{$dupe_unique_key_value}' for key '{$name}' in table '{$schema['name']}'",
-        );
+      foreach ($table as $row_id => $r) {
+        if (C\every($unique_key, $field ==> $r[$field] === $row[$field])) {
+          $dupe_unique_key_value = Vec\map($unique_key, $field ==> (string)$row[$field]) |> Str\join($$, ', ');
+          return
+            tuple("Duplicate entry '{$dupe_unique_key_value}' for key '{$name}' in table '{$schema['name']}'", $row_id);
+        }
       }
     }
+
+    return null;
   }
 }

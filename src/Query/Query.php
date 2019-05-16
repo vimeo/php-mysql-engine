@@ -143,6 +143,8 @@ abstract class Query {
     dataset $original_table,
     vec<BinaryOperatorExpression> $set_clause,
     ?table_schema $table_schema,
+    /* for dupe inserts only */
+    ?row $values = null,
   ): int {
 
     $original_table as vec<_>;
@@ -173,9 +175,22 @@ abstract class Query {
 
     foreach ($filtered_rows as $row_id => $row) {
       $changes_found = false;
+
+      // a copy of the $row to be updated
+      $update_row = $row;
+      if ($values is nonnull) {
+        // this is a bit of a hack to make the VALUES() function work without changing the
+        // interface of all ->evaluate() expressions to include the values list as well
+        // we put the values on the row as though they were another table
+        // we do this on a copy so that we don't accidentally save these to the table
+        foreach ($values as $col => $val) {
+          $update_row['db_mock_values.'.$col] = $val;
+        }
+      }
       foreach ($set_clauses as $clause) {
         $existing_value = $row[$clause['column']];
-        $new_value = $clause['expression']->evaluate($row, $conn);
+        $expr = $clause['expression'];
+        $new_value = $clause['expression']->evaluate($update_row, $conn);
 
         if ($new_value !== $existing_value) {
           $row[$clause['column']] = $new_value;
@@ -184,6 +199,7 @@ abstract class Query {
       }
 
       if ($changes_found) {
+
         $original_table[$row_id] = $row;
         $update_count++;
       }

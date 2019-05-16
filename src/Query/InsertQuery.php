@@ -47,30 +47,28 @@ final class InsertQuery extends Query {
 
       // check for unique key violations unless INSERT IGNORE was specified
       if (!$this->ignoreDupes) {
-        try {
-          // TODO change this, instead of throwing it should return whether there is a violation and the integer id of the row that violated
-          // so that we can use for that for updates
-          DataIntegrity::checkUniqueConstraints($table, $row, $schema);
-        } catch (DBMockUniqueKeyViolation $e) {
+
+        $unique_key_violation = DataIntegrity::checkUniqueConstraints($table, $row, $schema);
+        if ($unique_key_violation is nonnull) {
+          list($msg, $row_id) = $unique_key_violation;
           // is this an "INSERT ... ON DUPLICATE KEY UPDATE?"
           // if so, this is where we apply the updates
           if (!C\is_empty($this->updateExpressions)) {
-            // TODO apply update here
-
-            // $update_expression !== null && $database !== null) {
-            // manual update expression is used when the UPDATE clause contains more than just scalars in an INSERT ... ON DUPLICATE KEY UPDATE. in this case, we need to apply that expression
-            $old_row['db_mock_row_id'] = $row_num;
-            $table_schema = db_tables_get_schema(_db_mock_get_cluster_type($cluster), $table_name);
-            $rows_affected = db_mock_query_apply_set(
-              $table_name,
+            $existing_row = $table[$row_id];
+            $rows_affected += $this->applySet(
+              $conn,
               $database,
-              Vector {new Map($old_row)},
-              $update_expression,
-              $table_schema,
+              $table_name,
+              dict[$row_id => $existing_row],
+              $table,
+              $this->updateExpressions,
+              $schema,
+              $row,
             );
+            continue;
           } else {
-            // otherwise re-throw
-            throw $e;
+            // otherwise throw
+            throw new DBMockUniqueKeyViolation($msg);
           }
         }
       }

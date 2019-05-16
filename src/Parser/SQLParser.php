@@ -20,8 +20,9 @@ final class SQLParser {
       $token = $tokens[0];
     }
 
-    if ($token['type'] !== TokenType::CLAUSE)
+    if ($token['type'] !== TokenType::CLAUSE) {
       throw new DBMockParseException("Unexpected {$token['value']}");
+    }
 
     switch ($token['value']) {
       case 'SELECT':
@@ -63,19 +64,6 @@ final class SQLParser {
     }
 
     throw new DBMockParseException("Parse error: unexpected end of input");
-  }
-
-  // this is used for _db_mock_db_insert_dupe_manual_safe
-  // it has a regular insert call, but then an UPDATE hash that is manually constructed as raw SQL, which we parse here
-  <<__Memoize>>
-  public static function parseSetFragment(string $sql): vec<BinaryOperatorExpression> {
-    $tokens = (new SQLLexer())->lex($sql);
-    $tokens = self::buildTokenListFromLexemes($tokens);
-
-    $token = $tokens[0];
-    $p = new SetParser(0, $tokens);
-    list($pointer, $expressions) = $p->parse();
-    return $expressions;
   }
 
   /*
@@ -188,10 +176,11 @@ final class SQLParser {
           ) &&
           $previous['value'] !== ')'
         ) {
-          if ($token === '-')
+          if ($token === '-') {
             $op = 'UNARY_MINUS';
-          else
+          } else {
             $op = 'UNARY_PLUS';
+          }
           $out[] = shape(
             'type' => TokenType::OPERATOR,
             'value' => $op,
@@ -363,14 +352,16 @@ final class SQLParser {
 
       $closing_paren_pointer = SQLParser::findMatchingParen($pointer, $tokens);
       $arg_tokens = Vec\slice($tokens, $pointer + 1, $closing_paren_pointer - $pointer - 1);
-      if (!C\count($arg_tokens))
+      if (!C\count($arg_tokens)) {
         throw new DBMockParseException("Expected at least one argument to index hint");
+      }
       $count = 0;
       foreach ($arg_tokens as $arg) {
         $count++;
         if ($count % 2 === 1) {
-          if ($arg['type'] !== TokenType::IDENTIFIER)
+          if ($arg['type'] !== TokenType::IDENTIFIER) {
             throw new DBMockParseException("Expected identifier in index hint");
+          }
         } elseif ($arg['value'] !== ',') {
           throw new DBMockParseException("Expected , or ) after index hint");
         }
@@ -402,11 +393,13 @@ final class SQLParser {
         // skip over FOR UDPATE while validating it
         $next_pointer++;
         $next = $tokens[$next_pointer] ?? null;
-        if ($next === null)
+        if ($next === null) {
           throw new DBMockParseException("Expected keyword after FOR");
+        }
         // skip over FOR UPDATE
-        if ($next['value'] === 'UPDATE')
+        if ($next['value'] === 'UPDATE') {
           return $pointer + 2;
+        }
 
         throw new DBMockParseException("Unexpected keyword {$next['value']} after FOR");
       } elseif ($next['value'] === 'LOCK') {
@@ -414,8 +407,9 @@ final class SQLParser {
         $expected = vec['IN', 'SHARE', 'MODE'];
         foreach ($expected as $index => $keyword) {
           $next = $tokens[$next_pointer + $index + 1] ?? null;
-          if ($next === null || $next['value'] !== $keyword)
+          if ($next === null || $next['value'] !== $keyword) {
             throw new DBMockParseException("Unexpected keyword near LOCK");
+          }
         }
         return $pointer + 4;
       }

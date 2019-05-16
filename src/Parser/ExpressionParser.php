@@ -417,8 +417,17 @@ final class ExpressionParser {
         break;
       }
 
+      // return control to parent when we hit one of these
+      // special case: VALUES is both a clause and can also be a function inside an INSERT... ON DUPLICATE KEY UPDATE
+      // if we find a VALUES and the current expression is incomplete, we keep going
+      // TODO actually maybe we should just seek for the VALUES(  sequence in the setParser and collapse those into a sqlFunction token??
       if (C\contains_key(keyset[TokenType::CLAUSE, TokenType::RESERVED, TokenType::SEPARATOR], $nextToken['type'])) {
-        break;
+        if ($nextToken['value'] === 'VALUES' && !$this->expression->isWellFormed()) {
+          // change VALUES from a CLAUSE to SQLFUNCTION if it occurs inside an expression
+          $this->tokens[$this->pointer + 1]['type'] = TokenType::SQLFUNCTION;
+        } else {
+          break;
+        }
       }
 
       // possibly break out of the loop depending on next token, operator precedence, child status

@@ -65,6 +65,8 @@ final class FunctionExpression extends Expression {
         return $this->sqlFromUnixtime($row, $conn);
       case 'GREATEST':
         return $this->sqlGreatest($row, $conn);
+      case 'VALUES':
+        return $this->sqlValues($row, $conn);
 
       // GROUP_CONCAT might be a nice one to implement but it does have a lot of params and isn't really used in our codebase
     }
@@ -80,6 +82,7 @@ final class FunctionExpression extends Expression {
     return C\contains_key(keyset['COUNT', 'SUM', 'MIN', 'MAX', 'AVG'], $this->functionName);
   }
 
+  <<__Override>>
   public function isWellFormed(): bool {
     return true;
   }
@@ -398,6 +401,23 @@ final class FunctionExpression extends Expression {
       }
     }
     return 0;
+  }
+
+  private function sqlValues(row $row, AsyncMysqlConnection $conn): mixed {
+    $args = $this->args;
+    $num_args = C\count($args);
+    if ($num_args !== 1) {
+      throw new DBMockRuntimeException("MySQL VALUES() function must be called with one argument");
+    }
+
+    $arg = $args[0];
+    if (!$arg is ColumnExpression) {
+      throw new DBMockRuntimeException("MySQL VALUES() function should be called with a column name");
+    }
+
+    // a bit hacky here, override so that the expression pulls the value from the db_mock_values.* fields set in Query::applySet
+    $arg->prefixName('db_mock_values.');
+    return $arg->evaluate($row, $conn);
   }
 
   <<__Override>>

@@ -30,6 +30,23 @@ final class InsertQueryTest extends HackTest {
 		$results = await $conn->query("SELECT * FROM table1");
 		echo "\nafter deletes";
 		\var_dump($results);
+
+		$results =
+			await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'dupe') ON DUPLICATE KEY UPDATE name='dupe'");
+		\var_dump($results);
+
+		$results = await $conn->query("SELECT * FROM table1");
+		echo "\nafter dupe inserts";
+		\var_dump($results);
+
+		$results = await $conn->query(
+			"INSERT INTO table1 (id, name) VALUES (1, 'duplicate') ON DUPLICATE KEY UPDATE name=VALUES(name)",
+		);
+		\var_dump($results);
+
+		$results = await $conn->query("SELECT * FROM table1");
+		echo "\nafter dupe inserts 2";
+		\var_dump($results);
 	}
 	/*
 		public function provideDirtyData(): vec<mixed> {
