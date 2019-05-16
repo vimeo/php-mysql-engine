@@ -7,53 +7,76 @@ use namespace HH\Lib\Str;
 
 final class InsertQueryTest extends HackTest {
 
+	private static ?AsyncMysqlConnection $conn;
+
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		init(TEST_SCHEMA, true);
 		QueryContext::$verbosity = Verbosity::RESULTS;
-	}
-
-	public async function testExample(): Awaitable<void> {
 		$pool = new AsyncMysqlConnectionPool(darray[]);
-		$conn = await $pool->connect("example", 1, 'db1', '', '');
-		$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
-		$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (2, 'testing')");
-		$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (3, 'testyada')");
-		$results = await $conn->query("SELECT * FROM table1");
-		#echo "\nafter inserts";
-		#\var_dump($results);
-		$results = await $conn->query("UPDATE table1 SET name='updated' WHERE id=2");
-		#\var_dump($results);
-		$results = await $conn->query("SELECT * FROM table1");
-		#echo "\nafter updates";
-		#\var_dump($results);
-		Server::snapshot('test');
-		$results = await $conn->query("DELETE FROM table1 WHERE id=2");
-		#\var_dump($results);
-		$results = await $conn->query("SELECT * FROM table1");
-		#echo "\nafter deletes";
-		#\var_dump($results);
-		Server::restore('test');
-		$results = await $conn->query("SELECT * FROM table1");
-		#echo "\nafter restore";
-		#\var_dump($results);
-
-		$results =
-			await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'dupe') ON DUPLICATE KEY UPDATE name='dupe'");
-		#\var_dump($results);
-
-		$results = await $conn->query("SELECT * FROM table1");
-		#echo "\nafter dupe inserts";
-		#\var_dump($results);
-
-		$results = await $conn->query(
-			"INSERT INTO table1 (id, name) VALUES (1, 'duplicate') ON DUPLICATE KEY UPDATE name=VALUES(name)",
-		);
-		#\var_dump($results);
-
-		$results = await $conn->query("SELECT * FROM table1");
-		#echo "\nafter dupe inserts 2";
-		#\var_dump($results);
+		static::$conn = \HH\Asio\join($pool->connect("example", 1, 'db1', '', ''));
 	}
+
+	public async function beforeEachTestAsync(): Awaitable<void> {
+		Server::reset();
+	}
+
+	public async function testSingleInsert(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
+		$results = await $conn->query("SELECT * FROM table1");
+		expect($results->rows())->toBeSame(vec[dict['id' => 1, 'name' => 'test']]);
+	}
+
+	public async function testMultiInsert(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test'), (2, 'test2')");
+		$results = await $conn->query("SELECT * FROM table1");
+		expect($results->rows())->toBeSame(vec[dict['id' => 1, 'name' => 'test'], dict['id' => 2, 'name' => 'test2']]);
+	}
+	/*
+		public async function testExample(): Awaitable<void> {
+			$pool = new AsyncMysqlConnectionPool(darray[]);
+			$conn = await $pool->connect("example", 1, 'db1', '', '');
+			$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
+			$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (2, 'testing')");
+			$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (3, 'testyada')");
+			$results = await $conn->query("SELECT * FROM table1");
+			#echo "\nafter inserts";
+			#\var_dump($results);
+			$results = await $conn->query("UPDATE table1 SET name='updated' WHERE id=2");
+			#\var_dump($results);
+			$results = await $conn->query("SELECT * FROM table1");
+			#echo "\nafter updates";
+			#\var_dump($results);
+			Server::snapshot('test');
+			$results = await $conn->query("DELETE FROM table1 WHERE id=2");
+			#\var_dump($results);
+			$results = await $conn->query("SELECT * FROM table1");
+			#echo "\nafter deletes";
+			#\var_dump($results);
+			Server::restore('test');
+			$results = await $conn->query("SELECT * FROM table1");
+			#echo "\nafter restore";
+			#\var_dump($results);
+
+			$results =
+				await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'dupe') ON DUPLICATE KEY UPDATE name='dupe'");
+			#\var_dump($results);
+
+			$results = await $conn->query("SELECT * FROM table1");
+			#echo "\nafter dupe inserts";
+			#\var_dump($results);
+
+			$results = await $conn->query(
+				"INSERT INTO table1 (id, name) VALUES (1, 'duplicate') ON DUPLICATE KEY UPDATE name=VALUES(name)",
+			);
+			#\var_dump($results);
+
+			$results = await $conn->query("SELECT * FROM table1");
+			#echo "\nafter dupe inserts 2";
+			#\var_dump($results);
+		}
+		*/
 	/*
 		public function provideDirtyData(): vec<mixed> {
 			$elements = vec['the', 'quicky', 'brown', 'fox', 1];

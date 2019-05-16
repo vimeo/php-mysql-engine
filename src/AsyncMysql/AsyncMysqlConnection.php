@@ -40,7 +40,7 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
     string $query,
     int $timeout_micros = -1,
     dict<string, string> $query_attributes = dict[],
-  ): Awaitable<\AsyncMysqlQueryResult> {
+  ): Awaitable<AsyncMysqlQueryResult> {
     Logger::log(Verbosity::QUERIES, "DBMock [verbose]: $query");
     list($results, $rows_affected) = SQLCommandProcessor::execute($query, $this);
     Logger::logResult($this->getServer()->name, $results, $rows_affected);
@@ -51,7 +51,7 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
   public async function queryf(
     \HH\FormatString<\HH\SQLFormatter> $query,
     mixed ...$args
-  ): Awaitable<\AsyncMysqlQueryResult> {
+  ): Awaitable<AsyncMysqlQueryResult> {
     throw new DBMockNotImplementedException('queryf not yet implemented');
   }
 

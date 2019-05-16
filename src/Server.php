@@ -29,7 +29,9 @@ final class Server {
   }
 
   public static function reset(): void {
-    self::$instances = dict[];
+    foreach (static::getAll() as $server) {
+      $server->doReset();
+    }
   }
 
   public static function snapshot(string $name): void {
@@ -54,6 +56,10 @@ final class Server {
 
   protected function doRestore(string $name): void {
     $this->databases = $this->snapshots[$name] ?? dict[];
+  }
+
+  protected function doReset(): void {
+    $this->databases = dict[];
   }
 
   /**

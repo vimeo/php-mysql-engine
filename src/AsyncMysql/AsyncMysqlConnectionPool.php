@@ -25,7 +25,7 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
     string $_password,
     int $_timeout_micros = -1,
     string $_caller = "",
-  ): Awaitable<\AsyncMysqlConnection> {
+  ): Awaitable<AsyncMysqlConnection> {
     $this->connectionsRequest++;
     if (C\contains_key(static::$pool, $host)) {
       $this->poolHits++;
