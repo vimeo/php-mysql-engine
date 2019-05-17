@@ -27,10 +27,6 @@ abstract final class DataIntegrity {
     string $table_name,
   ): mixed {
 
-    if (QueryContext::$strictMode && !$nullable) {
-      throw new DBMockRuntimeException("Column {$field_name} on {$table_name} does not allow null values");
-    }
-
     if ($default !== null) {
       switch ($field_type) {
         case 'int':
@@ -45,6 +41,12 @@ abstract final class DataIntegrity {
       }
     } else if ($nullable) {
       return null;
+    }
+
+    if (QueryContext::$strictMode) {
+      // if we got this far the column has no default and isn't nullable, strict would throw
+      // but default MySQL mode would coerce to a valid value
+      throw new DBMockRuntimeException("Column '{$field_name}' on '{$table_name}' does not allow null values");
     }
 
     switch ($field_type) {
@@ -76,9 +78,18 @@ abstract final class DataIntegrity {
       if (!C\contains_key($row, $field_name)) {
         $row[$field_name] =
           self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema['name']);
-      } else if ($row[$field_name] === null && !$field_nullable) {
-        $row[$field_name] =
-          self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema['name']);
+      } else if ($row[$field_name] === null) {
+        if ($field_nullable) {
+          // explicit null value and nulls are allowed, let it through
+          continue;
+        } else if (QueryContext::$strictMode) {
+          // if we got this far the column has no default and isn't nullable, strict would throw
+          // but default MySQL mode would coerce to a valid value
+          throw new DBMockRuntimeException("Column '{$field_name}' on '{$schema['name']}' does not allow null values");
+        } else {
+          $row[$field_name] =
+            self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema['name']);
+        }
       } else {
         // TODO more integrity constraints, check field length for varchars, check timestamps
         switch ($field_type) {
@@ -89,7 +100,7 @@ abstract final class DataIntegrity {
               if (QueryContext::$strictMode) {
                 $field_str = \var_export($row[$field_name], true);
                 throw new DBMockRuntimeException(
-                  "Invalid value {$field_str} for column {$field_name} on {$schema['name']}, expected int",
+                  "Invalid value {$field_str} for column '{$field_name}' on '{$schema['name']}', expected int",
                 );
               } else {
                 $row[$field_name] = (int)$row[$field_name];
@@ -101,7 +112,7 @@ abstract final class DataIntegrity {
               if (QueryContext::$strictMode) {
                 $field_str = \var_export($row[$field_name], true);
                 throw new DBMockRuntimeException(
-                  "Invalid value {$field_str} for column {$field_name} on {$schema['name']}, expected float",
+                  "Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected float",
                 );
               } else {
                 $row[$field_name] = (float)$row[$field_name];
@@ -113,7 +124,7 @@ abstract final class DataIntegrity {
               if (QueryContext::$strictMode) {
                 $field_str = \var_export($row[$field_name], true);
                 throw new DBMockRuntimeException(
-                  "Invalid value {$field_str} for column {$field_name} on {$schema['name']}, expected string",
+                  "Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected string",
                 );
               } else {
                 $row[$field_name] = (float)$row[$field_name];
@@ -140,7 +151,7 @@ abstract final class DataIntegrity {
     $bad_fields = Keyset\keys($row) |> Keyset\diff($$, $fields);
     if (!C\is_empty($bad_fields)) {
       $bad_fields = Str\join($bad_fields, ', ');
-      throw new DBMockRuntimeException("Column(s) {$bad_fields} not found on {$schema['name']}");
+      throw new DBMockRuntimeException("Column(s) '{$bad_fields}' not found on '{$schema['name']}'");
     }
 
     $row = self::ensureFieldsPresent($row, $schema);
@@ -174,7 +185,7 @@ abstract final class DataIntegrity {
           break;
         default:
           throw new DBMockRuntimeException(
-            "DataIntegrity::coerceToSchema found unknown type for field: {$field_name}:{$field_type}",
+            "DataIntegrity::coerceToSchema found unknown type for field: '{$field_name}:{$field_type}'",
           );
       }
     }

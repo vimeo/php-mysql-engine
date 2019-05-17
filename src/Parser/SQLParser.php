@@ -110,7 +110,9 @@ final class SQLParser {
       } elseif ($token[0] === '`') {
         $raw = $token;
         // Only chop off the ` if it's fully wrapping the identifier
-        $token = Str\strip_suffix($token, '`');
+        if (Str\ends_with($token, '`')) {
+          $token = Str\strip_prefix($token, '`') |> Str\strip_suffix($$, '`');
+        }
         $out[] = shape(
           'type' => TokenType::IDENTIFIER,
           'value' => $token,

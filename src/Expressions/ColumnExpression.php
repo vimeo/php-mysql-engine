@@ -111,8 +111,8 @@ final class ColumnExpression extends Expression {
     return $this->tableName;
   }
 
-  public function prefixName(string $prefix): void {
-    $this->columnName = $prefix.$this->columnName;
+  public function prefixColumnExpression(string $prefix): void {
+    $this->columnExpression = $prefix.$this->columnExpression;
   }
 
   <<__Override>>

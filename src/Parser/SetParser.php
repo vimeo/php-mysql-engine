@@ -28,6 +28,7 @@ final class SetParser {
       switch ($token['type']) {
         case TokenType::NUMERIC_CONSTANT:
         case TokenType::STRING_CONSTANT:
+        case TokenType::NULL_CONSTANT:
         case TokenType::OPERATOR:
         case TokenType::SQLFUNCTION:
         case TokenType::IDENTIFIER:
@@ -69,7 +70,9 @@ final class SetParser {
           throw new DBMockParseException("Unexpected {$token['value']} in SET");
       }
 
-      if ($end_of_set) { break; }
+      if ($end_of_set) {
+        break;
+      }
 
       $this->pointer++;
     }

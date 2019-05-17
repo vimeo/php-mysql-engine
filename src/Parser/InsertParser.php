@@ -193,6 +193,7 @@ final class InsertParser {
         case TokenType::IDENTIFIER:
         case TokenType::NUMERIC_CONSTANT:
         case TokenType::STRING_CONSTANT:
+        case TokenType::NULL_CONSTANT:
         case TokenType::OPERATOR:
         case TokenType::SQLFUNCTION:
         case TokenType::PAREN:

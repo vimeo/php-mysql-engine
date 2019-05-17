@@ -416,7 +416,7 @@ final class FunctionExpression extends Expression {
     }
 
     // a bit hacky here, override so that the expression pulls the value from the db_mock_values.* fields set in Query::applySet
-    $arg->prefixName('db_mock_values.');
+    $arg->prefixColumnExpression('db_mock_values.');
     return $arg->evaluate($row, $conn);
   }
 

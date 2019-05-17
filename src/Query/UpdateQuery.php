@@ -13,10 +13,12 @@ final class UpdateQuery extends Query {
     Metrics::trackQuery(QueryType::UPDATE, $conn->getServer()->name, $table_name, $this->sql);
     $schema = QueryContext::getSchema($database, $table_name);
 
-    return $this->applyWhere($conn, $data)
+    list($rows_affected, $_) = $this->applyWhere($conn, $data)
       |> $this->applyOrderBy($conn, $$)
       |> $this->applyLimit($$)
       |> $this->applySet($conn, $database, $table_name, $$, $data, $this->setClause, $schema);
+
+    return $rows_affected;
   }
 
   /**

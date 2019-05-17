@@ -55,7 +55,7 @@ final class InsertQuery extends Query {
           // if so, this is where we apply the updates
           if (!C\is_empty($this->updateExpressions)) {
             $existing_row = $table[$row_id];
-            $rows_affected += $this->applySet(
+            list($affected, $table) = $this->applySet(
               $conn,
               $database,
               $table_name,
@@ -65,6 +65,7 @@ final class InsertQuery extends Query {
               $schema,
               $row,
             );
+            $rows_affected += $affected;
             continue;
           } else {
             // otherwise throw

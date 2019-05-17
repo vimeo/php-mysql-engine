@@ -1,6 +1,7 @@
 <?hh // strict
 
 namespace Slack\DBMock;
+
 use function Facebook\FBExpect\expect;
 use type Facebook\HackTest\{DataProvider, HackTest};
 use namespace HH\Lib\Str;
@@ -11,13 +12,13 @@ final class InsertQueryTest extends HackTest {
 
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		init(TEST_SCHEMA, true);
-		QueryContext::$verbosity = Verbosity::RESULTS;
 		$pool = new AsyncMysqlConnectionPool(darray[]);
-		static::$conn = \HH\Asio\join($pool->connect("example", 1, 'db1', '', ''));
+		static::$conn = await $pool->connect("example", 1, 'db1', '', '');
 	}
 
 	public async function beforeEachTestAsync(): Awaitable<void> {
 		Server::reset();
+		QueryContext::$strictMode = false;
 	}
 
 	public async function testSingleInsert(): Awaitable<void> {
@@ -27,105 +28,257 @@ final class InsertQueryTest extends HackTest {
 		expect($results->rows())->toBeSame(vec[dict['id' => 1, 'name' => 'test']]);
 	}
 
+	public async function testSingleInsertBacktickIdentifiers(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO `table1` (`id`, `name`) VALUES (1, 'test')");
+		$results = await $conn->query("SELECT * FROM `table1`");
+		expect($results->rows())->toBeSame(vec[dict['id' => 1, 'name' => 'test']]);
+	}
+
 	public async function testMultiInsert(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test'), (2, 'test2')");
 		$results = await $conn->query("SELECT * FROM table1");
 		expect($results->rows())->toBeSame(vec[dict['id' => 1, 'name' => 'test'], dict['id' => 2, 'name' => 'test2']]);
 	}
-	/*
-		public async function testExample(): Awaitable<void> {
-			$pool = new AsyncMysqlConnectionPool(darray[]);
-			$conn = await $pool->connect("example", 1, 'db1', '', '');
-			$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
-			$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (2, 'testing')");
-			$results = await $conn->query("INSERT INTO table1 (id, name) VALUES (3, 'testyada')");
-			$results = await $conn->query("SELECT * FROM table1");
-			#echo "\nafter inserts";
-			#\var_dump($results);
-			$results = await $conn->query("UPDATE table1 SET name='updated' WHERE id=2");
-			#\var_dump($results);
-			$results = await $conn->query("SELECT * FROM table1");
-			#echo "\nafter updates";
-			#\var_dump($results);
-			Server::snapshot('test');
-			$results = await $conn->query("DELETE FROM table1 WHERE id=2");
-			#\var_dump($results);
-			$results = await $conn->query("SELECT * FROM table1");
-			#echo "\nafter deletes";
-			#\var_dump($results);
-			Server::restore('test');
-			$results = await $conn->query("SELECT * FROM table1");
-			#echo "\nafter restore";
-			#\var_dump($results);
 
-			$results =
-				await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'dupe') ON DUPLICATE KEY UPDATE name='dupe'");
-			#\var_dump($results);
+	public async function testPKViolation(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
+		expect(() ==> $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test2')"))->toThrow(
+			DBMockUniqueKeyViolation::class,
+			"Duplicate entry '1' for key 'PRIMARY' in table 'table1'",
+		);
+	}
 
-			$results = await $conn->query("SELECT * FROM table1");
-			#echo "\nafter dupe inserts";
-			#\var_dump($results);
+	public async function testPKViolationInsertIgnore(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
+		expect(() ==> $conn->query("INSERT IGNORE INTO table1 (id, name) VALUES (1, 'test2')"))->notToThrow(
+			DBMockUniqueKeyViolation::class,
+		);
+	}
 
-			$results = await $conn->query(
-				"INSERT INTO table1 (id, name) VALUES (1, 'duplicate') ON DUPLICATE KEY UPDATE name=VALUES(name)",
+	public async function testPKViolationWithinMultiInsert(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		expect(() ==> $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test'), (1, 'test2')"))->toThrow(
+			DBMockUniqueKeyViolation::class,
+			"Duplicate entry '1' for key 'PRIMARY' in table 'table1'",
+		);
+	}
+
+	public async function testUniqueViolation(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
+		expect(() ==> $conn->query("INSERT INTO table1 (id, name) VALUES (2, 'test')"))->toThrow(
+			DBMockUniqueKeyViolation::class,
+			"Duplicate entry 'test' for key 'name_uniq' in table 'table1'",
+		);
+	}
+
+	public async function testUniqueViolationInsertIgnore(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
+		expect(() ==> $conn->query("INSERT IGNORE INTO table1 (id, name) VALUES (2, 'test')"))->notToThrow(
+			DBMockUniqueKeyViolation::class,
+		);
+	}
+
+	public async function testPartialValuesList(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table_with_more_fields (id, name) VALUES (1, 'test')");
+		$results = await $conn->query("SELECT * FROM table_with_more_fields");
+		expect($results->rows())->toBeSame(vec[dict[
+			'id' => 1,
+			'name' => 'test',
+			'nullable_unique' => null,
+			'nullable_default' => 1,
+			'not_null_default' => 2,
+		]]);
+	}
+
+	public async function testExplicitNullForNullableField(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', null)");
+		$results = await $conn->query("SELECT * FROM table_with_more_fields");
+		expect($results->rows())->toBeSame(vec[dict[
+			'id' => 1,
+			'name' => 'test',
+			'nullable_unique' => null,
+			'nullable_default' => 1,
+			'not_null_default' => 2,
+		]]);
+	}
+
+	public async function testExplicitNullForNotNullableFieldStrict(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		QueryContext::$strictMode = true;
+		expect(
+			() ==> $conn->query(
+				"INSERT INTO table_with_more_fields (id, name, not_null_default) VALUES (1, 'test', null)",
+			),
+		)->toThrow(
+			DBMockRuntimeException::class,
+			"Column 'not_null_default' on 'table_with_more_fields' does not allow null values",
+		);
+	}
+
+	public async function testExplicitNullForNotNullableFieldNotStrict(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table_with_more_fields (id, name, not_null_default) VALUES (1, 'test', null)");
+		$results = await $conn->query("SELECT * FROM table_with_more_fields");
+		expect($results->rows())->toBeSame(vec[dict[
+			'id' => 1,
+			'name' => 'test',
+			'nullable_unique' => null,
+			'nullable_default' => 1,
+			'not_null_default' => 2,
+		]]);
+	}
+
+	public async function testCompoundPKNoViolation(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table_with_more_fields (id, name) VALUES (1, 'test')");
+		expect(() ==> $conn->query("INSERT INTO table_with_more_fields (id, name) VALUES (1, 'test2')"))->notToThrow(
+			DBMockUniqueKeyViolation::class,
+		);
+	}
+
+	public async function testCompoundPKViolation(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table_with_more_fields (id, name) VALUES (1, 'test')");
+		expect(() ==> $conn->query("INSERT INTO table_with_more_fields (id, name) VALUES (1, 'test')"))->toThrow(
+			DBMockUniqueKeyViolation::class,
+			"Duplicate entry '1, test' for key 'PRIMARY' in table 'table_with_more_fields'",
+		);
+	}
+
+	public async function testMismatchedValuesList(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		expect(() ==> $conn->query("INSERT INTO table1 (id, name, col3) VALUES (1, 'test2')"))->toThrow(
+			DBMockParseException::class,
+			'Insert list contains 3 fields, but values clause contains 2',
+		);
+	}
+
+	public async function testNullableUniqueNoViolation(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query(
+			"INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', 'example')",
+		);
+		expect(
+			() ==> $conn->query(
+				"INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (2, 'test2', null)",
+			),
+		)
+			->notToThrow(DBMockUniqueKeyViolation::class);
+	}
+
+	public async function testNullableUniqueViolation(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query(
+			"INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', 'example')",
+		);
+		expect(
+			() ==> $conn->query(
+				"INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (2, 'test2', 'example')",
+			),
+		)
+			->toThrow(
+				DBMockUniqueKeyViolation::class,
+				"Duplicate entry 'example' for key 'nullable_unique' in table 'table_with_more_fields'",
 			);
-			#\var_dump($results);
+	}
 
-			$results = await $conn->query("SELECT * FROM table1");
-			#echo "\nafter dupe inserts 2";
-			#\var_dump($results);
-		}
-		*/
-	/*
-		public function provideDirtyData(): vec<mixed> {
-			$elements = vec['the', 'quicky', 'brown', 'fox', 1];
-			return vec[
-				tuple($elements),
-				tuple(new Vector($elements)),
-				tuple(new Set($elements)),
-				tuple(new Map($elements)),
-				tuple(vec($elements)),
-				tuple(keyset($elements)),
-				tuple(dict($elements)),
-				tuple(HackLibTestTraversables::getIterator($elements)),
-			];
-		}
+	public async function testMissingNotNullFieldNoDefault(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table2 (id, table_1_id) VALUES (1, 1)");
+		$results = await $conn->query("SELECT * FROM table2");
+		expect($results->rows())->toBeSame(vec[dict[
+			'id' => 1,
+			'table_1_id' => 1,
+			'description' => '',
+		]]);
+	}
 
-		<<DataProvider('provideDirtyData')>>
-		public function testDirtyData(Traversable<string> $traversable): void {
-			expect(Str\join($traversable, '-'))->toBeSame('the-quick-brown-fox-1');
-		}
+	public async function testMissingNotNullFieldNoDefaultStrict(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		QueryContext::$strictMode = true;
+		expect(() ==> $conn->query("INSERT INTO table2 (id, table_1_id) VALUES (1, 1)"))->toThrow(
+			DBMockRuntimeException::class,
+			"Column 'description' on 'table2' does not allow null values",
+		);
+	}
 
-		public function provideNoData(): vec<mixed> {
-			return vec[];
-		}
+	public async function testWrongDataType(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query("INSERT INTO table2 (id, table_1_id, description) VALUES (1, 'notastring', 'test')");
+		$results = await $conn->query("SELECT * FROM table2");
+		expect($results->rows())->toBeSame(vec[dict[
+			'id' => 1,
+			'table_1_id' => 0,
+			'description' => 'test',
+		]]);
+	}
 
-		<<DataProvider('provideNoData')>>
-		public function testNoData(int $a): void {
-			expect($a)->toBeSame(1);
-		}
-
-		<<DataProvider('provideNoData')>>
-		public function testNoDataDup(int $a): void {
-			expect($a)->toBeSame(1);
-		}
-
-		public function provideError(): vec<mixed> {
-			invariant(
-				0 === 1,
-				"This test depends on a provider that throws an error.",
+	public async function testWrongDataTypeStrict(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		QueryContext::$strictMode = true;
+		expect(() ==> $conn->query("INSERT INTO table2 (id, table_1_id, description) VALUES (1, 'notastring', 'test')"))
+			->toThrow(
+				DBMockRuntimeException::class,
+				"Invalid value 'notastring' for column 'table_1_id' on 'table2', expected int",
 			);
-			return vec[
-				tuple(1, 2),
-				tuple(2, 1),
-			];
-		}
+	}
 
-		<<DataProvider('provideError')>>
-		public function testProviderError(int $_a, int $_b): void {}
+	public async function testDupeInsertNoConflicts(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query(
+			"INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', 'example') ON DUPLICATE KEY UPDATE nullable_default=nullable_default+1",
+		);
+		$results = await $conn->query("SELECT * FROM table_with_more_fields");
+		expect($results->rows())->toBeSame(vec[dict[
+			'id' => 1,
+			'name' => 'test',
+			'nullable_unique' => 'example',
+			'nullable_default' => 1,
+			'not_null_default' => 2,
+		]]);
+	}
 
-		<<DataProvider('provideError')>>
-		public function testProviderErrorDup(int $_a, int $_b): void {}
-		*/
+	public async function testDupeInsertWithConflicts(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query(
+			"INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', 'example') ON DUPLICATE KEY UPDATE nullable_default=nullable_default+1",
+		);
+		await $conn->query(
+			"INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', 'example') ON DUPLICATE KEY UPDATE nullable_default=nullable_default+1",
+		);
+		$results = await $conn->query("SELECT * FROM table_with_more_fields");
+		expect($results->rows())->toBeSame(vec[dict[
+			'id' => 1,
+			'name' => 'test',
+			'nullable_unique' => 'example',
+			'nullable_default' => 2,
+			'not_null_default' => 2,
+		]]);
+	}
+
+	public async function testDupeInsertWithValuesFunction(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		await $conn->query(
+			"INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', 'example')",
+		);
+		await $conn->query(
+			"INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (1, 'test', 'new_example') ON DUPLICATE KEY UPDATE nullable_unique=VALUES(nullable_unique)",
+		);
+		$results = await $conn->query("SELECT * FROM table_with_more_fields");
+		expect($results->rows())->toBeSame(vec[dict[
+			'id' => 1,
+			'name' => 'test',
+			'nullable_unique' => 'new_example',
+			'nullable_default' => 1,
+			'not_null_default' => 2,
+		]]);
+	}
 }

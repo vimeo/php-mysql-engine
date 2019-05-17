@@ -79,6 +79,60 @@ const dict<string, dict<string, table_schema>> TEST_SCHEMA = dict[
 				),
 			],
 		),
+		'table_with_more_fields' => shape(
+			'name' => 'table_with_more_fields',
+			'fields' => vec[
+				shape(
+					'name' => 'id',
+					'type' => DataType::BIGINT,
+					'length' => 20,
+					'null' => false,
+					'hack_type' => 'int',
+				),
+				shape(
+					'name' => 'name',
+					'type' => DataType::VARCHAR,
+					'length' => 255,
+					'null' => false,
+					'hack_type' => 'string',
+				),
+				shape(
+					'name' => 'nullable_unique',
+					'type' => DataType::VARCHAR,
+					'length' => 255,
+					'null' => true,
+					'hack_type' => 'string',
+				),
+				shape(
+					'name' => 'nullable_default',
+					'type' => DataType::INT,
+					'length' => 20,
+					'null' => true,
+					'hack_type' => 'int',
+					'default' => '1',
+				),
+				shape(
+					'name' => 'not_null_default',
+					'type' => DataType::INT,
+					'length' => 20,
+					'null' => false,
+					'hack_type' => 'int',
+					'default' => '2',
+				),
+			],
+			'indexes' => vec[
+				shape(
+					'name' => 'PRIMARY',
+					'type' => 'PRIMARY',
+					'fields' => keyset['id', 'name'],
+				),
+				shape(
+					'name' => 'nullable_unique',
+					'type' => 'UNIQUE',
+					'fields' => keyset['nullable_unique'],
+				),
+			],
+		),
 	],
 	'db2' => dict[
 		'table3' => shape(

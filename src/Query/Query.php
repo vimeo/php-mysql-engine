@@ -145,7 +145,7 @@ abstract class Query {
     ?table_schema $table_schema,
     /* for dupe inserts only */
     ?row $values = null,
-  ): int {
+  ): (int, vec<dict<string, mixed>>) {
 
     $original_table as vec<_>;
 
@@ -207,7 +207,7 @@ abstract class Query {
 
     // write it back to the database
     $conn->getServer()->saveTable($database, $table_name, $original_table);
-    return $update_count;
+    return tuple($update_count, $original_table);
   }
 
 }
