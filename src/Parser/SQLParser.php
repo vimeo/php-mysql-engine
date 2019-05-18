@@ -300,7 +300,7 @@ final class SQLParser {
     while (
       $next !== null &&
       $next['type'] === TokenType::RESERVED &&
-      !C\contains_key(keyset['USE', 'IGNORE', 'FORCE'], $next['value'])
+      C\contains_key(keyset['USE', 'IGNORE', 'FORCE'], $next['value'])
     ) {
       $pointer += 2;
       $hint_type = $next['value'];

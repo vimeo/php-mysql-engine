@@ -105,7 +105,7 @@ final class SelectQuery extends Query {
           $hashes .= \sha1($expr->evaluate($row, $conn));
         }
         $hash = \sha1($hashes);
-        if (!C\contains_key($hash, $grouped_data)) {
+        if (!C\contains_key($grouped_data, $hash)) {
           $grouped_data[$hash] = dict[];
         }
         $count = C\count($grouped_data[$hash]);
