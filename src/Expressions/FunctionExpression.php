@@ -233,7 +233,7 @@ final class FunctionExpression extends Expression {
     // MySQL string positions 1-indexed, PHP strings are 0-indexed. So substract one from pos
     $pos -= 1;
 
-    $length = $args[2];
+    $length = $args[2] ?? null;
     if ($length !== null) {
       $len = (int)$length->evaluate($row, $conn);
       return \mb_substr($string, $pos, $len);

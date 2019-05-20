@@ -4,7 +4,7 @@ namespace Slack\DBMock;
 
 use type Facebook\HackTest\HackTest;
 
-final class DeleteQueryTest extends HackTest {
+final class DataIntegrityTest extends HackTest {
 	private static ?AsyncMysqlConnection $conn;
 
 	<<__Override>>

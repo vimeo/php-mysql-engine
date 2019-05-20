@@ -3,8 +3,37 @@
 namespace Slack\DBMock;
 
 final class SharedSetup {
-	public static function init(bool $strict): void {
-		init(TEST_SCHEMA, $strict);
+	public static async function initAsync(): Awaitable<AsyncMysqlConnection> {
+		init(TEST_SCHEMA, true);
+		$pool = new AsyncMysqlConnectionPool(darray[]);
+		$conn = await $pool->connect("example", 1, 'db2', '', '');
+
+		// populate database state
+		$database = dict[
+			'table3' => vec[
+				dict['id' => 1, 'group_id' => 12345, 'name' => 'name1'],
+				dict['id' => 2, 'group_id' => 12345, 'name' => 'name2'],
+				dict['id' => 3, 'group_id' => 12345, 'name' => 'name3'],
+				dict['id' => 4, 'group_id' => 6, 'name' => 'name3'],
+				dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
+			],
+			'table4' => vec[
+				dict['id' => 1000, 'group_id' => 12345, 'description' => 'desc1'],
+				dict['id' => 1001, 'group_id' => 12345, 'description' => 'desc2'],
+				dict['id' => 1002, 'group_id' => 12345, 'description' => 'desc3'],
+				dict['id' => 1003, 'group_id' => 7, 'description' => 'desc1'],
+				dict['id' => 1004, 'group_id' => 7, 'description' => 'desc2'],
+			],
+			'association_table' => vec[
+				dict['table_3_id' => 1, 'table_4_id' => 1000, 'group_id' => 12345, 'description' => 'association 1'],
+				dict['table_3_id' => 1, 'table_4_id' => 1001, 'group_id' => 12345, 'description' => 'association 2'],
+				dict['table_3_id' => 2, 'table_4_id' => 1000, 'group_id' => 12345, 'description' => 'association 3'],
+				dict['table_3_id' => 3, 'table_4_id' => 1003, 'group_id' => 0, 'description' => 'association 4'],
+			],
+		];
+		$conn->getServer()->databases['db2'] = $database;
+		snapshot('setup');
+		return $conn;
 	}
 }
 

@@ -159,8 +159,9 @@ final class FromParser {
 
     // INNER JOIN and JOIN are aliases
     $join_type = $token['value'];
-    if ($token['value'] === 'INNER')
+    if ($token['value'] === 'INNER') {
       $join_type = 'JOIN';
+    }
 
     if (C\contains_key(keyset['INNER', 'CROSS', 'NATURAL'], $token['value'])) {
       $this->pointer++;
