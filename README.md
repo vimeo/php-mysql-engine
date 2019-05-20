@@ -16,7 +16,7 @@ Hack SQL Fake takes a different approach - parse and execute SQL SELECT, INSERT,
 
 SQL Fake works by providing a subclass of [AsyncMysqlConnectionPool](https://docs.hhvm.com/hack/reference/class/AsyncMysqlConnectionPool/), the recommended method of querying MySQL built-in to Hack.
 
-This library assumes you currently have some form of establishing a database connection using `AsyncMysqlConnectionPool`. In tests, you can use dependency injection or (`fb_intercept()`)[https://docs.hhvm.com/hack/reference/function/fb_intercept/] to instantiate a `Slack\SQLFake\AsyncMysqlConnectionPool` instead. This will behave like the database for the rest of your test run.
+This library assumes you currently have some form of establishing a database connection using `AsyncMysqlConnectionPool`. In tests, you can use dependency injection or [`fb_intercept()`](https://docs.hhvm.com/hack/reference/function/fb_intercept/) to instantiate a `Slack\SQLFake\AsyncMysqlConnectionPool` instead. This will behave like the database for the rest of your test run.
 
 Once per test run, you should also call `Slack\SQLFake\init()` to register database schema.
 
