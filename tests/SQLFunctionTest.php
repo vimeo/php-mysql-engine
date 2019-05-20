@@ -68,6 +68,20 @@ final class SQLFunctionTest extends HackTest {
 		);
 	}
 
+	public async function testCountNullable(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		$results = await $conn->query(
+			"SELECT id, COUNT(table_4_id) thecount FROM table3 LEFT OUTER JOIN association_table ON id=table_3_id GROUP BY id",
+		);
+		expect($results->rows())->toBeSame(vec[
+			dict['id' => 1, 'thecount' => 2],
+			dict['id' => 2, 'thecount' => 1],
+			dict['id' => 3, 'thecount' => 1],
+			dict['id' => 4, 'thecount' => 0],
+			dict['id' => 6, 'thecount' => 0],
+		]);
+	}
+
 	public async function testGroupByNullable(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		$results = await $conn->query(
