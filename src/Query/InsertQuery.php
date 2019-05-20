@@ -43,7 +43,7 @@ final class InsertQuery extends Query {
 
       // ensure all fields are present with appropriate types and default values
       // throw for nonexistent fields
-      $row = DataIntegrity::coerceToSchema($table, $row, $schema);
+      $row = DataIntegrity::coerceToSchema($row, $schema);
 
       // check for unique key violations unless INSERT IGNORE was specified
       if (!$this->ignoreDupes) {

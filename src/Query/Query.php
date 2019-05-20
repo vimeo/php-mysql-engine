@@ -49,9 +49,6 @@ abstract class Query {
       }
     }
 
-    // Work around default sorting behavior to provide a usort that looks like MySQL, where equal values are ordered deterministically
-    $index = 0;
-
     // sort function applies all ORDER BY criteria to compare two rows
     $sort_fun = (row $a, row $b): int ==> {
       foreach ($order_by as $rule) {
@@ -79,10 +76,11 @@ abstract class Query {
       return 0;
     };
 
+    // Work around default sorting behavior to provide a usort that looks like MySQL, where equal values are ordered deterministically
     // record the keys in a dict for usort
     $data_temp = dict[];
     foreach ($data as $i => $item) {
-      $data_temp[$i] = tuple($index++, $item);
+      $data_temp[$i] = tuple($i, $item);
     }
 
     $data_temp = Dict\sort($data_temp, ((int, dict<string, mixed>) $a, (int, dict<string, mixed>) $b): int ==> {
@@ -205,7 +203,14 @@ abstract class Query {
       }
 
       if ($changes_found) {
-
+        if ($table_schema is nonnull) {
+          // throw on invalid data types if strict mode
+          $row = DataIntegrity::coerceToSchema($row, $table_schema);
+          $result = DataIntegrity::checkUniqueConstraints($original_table, $row, $table_schema, $row_id);
+          if ($result is nonnull) {
+            throw new DBMockUniqueKeyViolation($result[0]);
+          }
+        }
         $original_table[$row_id] = $row;
         $update_count++;
       }

@@ -57,6 +57,8 @@ final class FunctionExpression extends Expression {
         return $this->sqlCharLength($row, $conn);
       case 'CONCAT_WS':
         return $this->sqlConcatWS($row, $conn);
+      case 'CONCAT':
+        return $this->sqlConcat($row, $conn);
       case 'FIELD':
         return $this->sqlField($row, $conn);
       case 'BINARY':
@@ -358,11 +360,25 @@ final class FunctionExpression extends Expression {
     return \date($format, (int)$column);
   }
 
+  private function sqlConcat(row $row, AsyncMysqlConnection $conn): string {
+    $row = $this->maybeUnrollGroupedDataset($row);
+    $args = $this->args;
+    if (C\count($args) < 2) {
+      throw new DBMockRuntimeException("MySQL CONCAT() function must be called with at least two arguments");
+    }
+    $final_concat = "";
+    foreach ($args as $k => $arg) {
+      $val = (string)$arg->evaluate($row, $conn);
+      $final_concat .= $val;
+    }
+    return $final_concat;
+  }
+
   private function sqlConcatWS(row $row, AsyncMysqlConnection $conn): string {
     $row = $this->maybeUnrollGroupedDataset($row);
     $args = $this->args;
     if (C\count($args) < 2) {
-      throw new DBMockRuntimeException("MySQL CONCAT_WS() function must be called with atleast two arguments");
+      throw new DBMockRuntimeException("MySQL CONCAT_WS() function must be called with at least two arguments");
     }
     $separator = $args[0]->evaluate($row, $conn);
     if ($separator === null) {

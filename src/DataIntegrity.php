@@ -139,13 +139,9 @@ abstract final class DataIntegrity {
   }
 
   /**
-   * Ensure default values are preesnt, coerce data types as MySQL would
+   * Ensure default values are present, coerce data types as MySQL would
    */
-  public static function coerceToSchema(
-    dataset $_table,
-    dict<string, mixed> $row,
-    table_schema $schema,
-  ): dict<string, mixed> {
+  public static function coerceToSchema(dict<string, mixed> $row, table_schema $schema): dict<string, mixed> {
 
     $fields = self::namesForSchema($schema);
     $bad_fields = Keyset\keys($row) |> Keyset\diff($$, $fields);
@@ -202,6 +198,7 @@ abstract final class DataIntegrity {
     dataset $table,
     dict<string, mixed> $row,
     table_schema $schema,
+    ?int $update_row_id = null,
   ): ?(string, int) {
 
     // gather all unique keys
@@ -223,6 +220,10 @@ abstract final class DataIntegrity {
 
       // are there any existing rows in the table for which every unique key field matches this row?
       foreach ($table as $row_id => $r) {
+        // if we're updating and this is the row from the original table that we're updating, don't check that one
+        if ($row_id === $update_row_id) {
+          continue;
+        }
         if (C\every($unique_key, $field ==> $r[$field] === $row[$field])) {
           $dupe_unique_key_value = Vec\map($unique_key, $field ==> (string)$row[$field]) |> Str\join($$, ', ');
           return
