@@ -3,19 +3,20 @@
 namespace Slack\DBMock;
 
 use function Facebook\FBExpect\expect;
-use type Facebook\HackTest\{DataProvider, HackTest};
-use namespace HH\Lib\Str;
+use type Facebook\HackTest\HackTest;
 
 final class InsertQueryTest extends HackTest {
 
 	private static ?AsyncMysqlConnection $conn;
 
+	<<__Override>>
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		init(TEST_SCHEMA, true);
 		$pool = new AsyncMysqlConnectionPool(darray[]);
 		static::$conn = await $pool->connect("example", 1, 'db1', '', '');
 	}
 
+	<<__Override>>
 	public async function beforeEachTestAsync(): Awaitable<void> {
 		Server::reset();
 		QueryContext::$strictMode = false;

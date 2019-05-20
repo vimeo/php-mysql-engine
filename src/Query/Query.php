@@ -92,6 +92,7 @@ abstract class Query {
     });
 
     // re-key the input dataset
+    $data_temp = vec($data_temp);
     $data = dict($data);
     foreach ($data_temp as $index => $item) {
       $data[$index] = $item[1];

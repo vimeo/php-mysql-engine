@@ -112,7 +112,7 @@ final class SelectQuery extends Query {
         $grouped_data[$hash][(string)$count] = $row;
       }
 
-      $data = vec[$grouped_data];
+      $data = vec($grouped_data);
     } else {
       $found_aggregate = false;
       foreach ($select_expressions as $expr) {
@@ -124,12 +124,12 @@ final class SelectQuery extends Query {
 
       // if we have an aggregate function in the select clause but no group by, do an implicit group that puts all rows in one grouping
       // this makes things like "SELECT COUNT(*) FROM mytable" work
-
-      // TODO this might be wrong
       if ($found_aggregate) {
-        $data = vec[dict['1' => $data]];
+        return vec[Dict\map_keys($data, $k ==> (string)$k)];
       }
     }
+
+    // vec[dict[0 => dict['0' => $row, '1' => $row], 1 => dict['0' => $row]]
 
     return $data;
   }
@@ -231,7 +231,8 @@ final class SelectQuery extends Query {
 
     if (C\contains_key($this->options, 'DISTINCT')) {
 
-      return /* HH_FIXME[4110] generics */ Vec\unique($out);
+      /*  HH_FIXME[4110] generics */
+      return Vec\unique_by($out, (row $row): string ==> Str\join(Vec\map($row, $col ==> (string)$col), '-'));
     }
 
     return /* HH_FIXME[4110] generics */ $out;

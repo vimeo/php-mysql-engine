@@ -23,6 +23,7 @@ final class PositionExpression extends Expression {
     }
 
     // SQL positions are 1-indexed, dicts are 0-indexed
+    $row = vec($row);
     if (!C\contains_key($row, $this->position - 1)) {
       throw new DBMockRuntimeException("Undefined positional reference {$this->position} IN GROUP BY or ORDER BY");
     }
