@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/slackhq/hack-sql-fake.svg?branch=master)](https://travis-ci.org/slackhq/hack-sql-fake)
 
-Hack SQL Fake is unit testing library for [Hack](https://hacklang.org/). It enables testing database-driven applications with an in-memory simulation of MySQL. It supports a wide variety of queries, rapid snapshot/restore of the database between test cases, and more. This is done with a [Fake Object](https://martinfowler.com/bliki/TestDouble.html, which contains an implementation of the database, avoiding the need for explicit stubbing or mocking.
+Hack SQL Fake is unit testing library for [Hack](https://hacklang.org/). It enables testing database-driven applications with an in-memory simulation of MySQL. It supports a wide variety of queries, rapid snapshot/restore of the database between test cases, and more. This is done with a [Fake Object](https://martinfowler.com/bliki/TestDouble.html), which contains an implementation of the database, avoiding the need for explicit stubbing or mocking.
 
 ## Motivation
 
