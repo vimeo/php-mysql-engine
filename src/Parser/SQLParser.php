@@ -112,7 +112,22 @@ final class SQLParser {
         // Only chop off the ` if it's fully wrapping the identifier
         if (Str\ends_with($token, '`')) {
           $token = Str\strip_prefix($token, '`') |> Str\strip_suffix($$, '`');
+        } else if (Str\ends_with($token, '`.')) {
+          // for `foo`., it becomes foo.
+          $token = Str\strip_prefix($token, '`') |> Str\strip_suffix($$, '`.') |> $$.'.';
         }
+
+        // if we find an identifier and previous token ended with ., smush them together
+        $previous_key = C\last_key($out);
+        if (
+          $previous_key is nonnull &&
+          $out[$previous_key]['type'] === TokenType::IDENTIFIER &&
+          Str\ends_with($out[$previous_key]['value'], '.')
+        ) {
+          $out[$previous_key]['value'] .= $token;
+          continue;
+        }
+
         $out[] = shape(
           'type' => TokenType::IDENTIFIER,
           'value' => $token,
@@ -246,6 +261,16 @@ final class SQLParser {
           'raw' => $token,
         );
       } else {
+        // if we find an identifier and previous token ended with ., smush them together
+        $previous_key = C\last_key($out);
+        if (
+          $previous_key is nonnull &&
+          $out[$previous_key]['type'] === TokenType::IDENTIFIER &&
+          Str\ends_with($out[$previous_key]['value'], '.')
+        ) {
+          $out[$previous_key]['value'] .= $token;
+          continue;
+        }
         $out[] = shape(
           'type' => TokenType::IDENTIFIER,
           'value' => $token,

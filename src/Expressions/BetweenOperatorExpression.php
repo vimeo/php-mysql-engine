@@ -46,7 +46,7 @@ final class BetweenOperatorExpression extends Expression {
       $eval = $subject >= $start && $subject <= $end;
     }
 
-    return $this->negated ? !$eval : $eval;
+    return ($this->negated ? !$eval : $eval) ? 1 : 0;
   }
 
   <<__Override>>

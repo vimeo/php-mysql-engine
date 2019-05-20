@@ -41,6 +41,52 @@ final class SelectClauseTest extends HackTest {
 		);
 	}
 
+	public async function testDatabaseName(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		$results = await $conn->query("SELECT id, group_id as my_fav_group_id FROM db2.table3 WHERE group_id=6");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 4, 'my_fav_group_id' => 6],
+				dict['id' => 6, 'my_fav_group_id' => 6],
+			],
+		);
+
+		$results = await $conn->query("SELECT id, group_id as my_fav_group_id FROM `db2`.`table3` WHERE group_id=6");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 4, 'my_fav_group_id' => 6],
+				dict['id' => 6, 'my_fav_group_id' => 6],
+			],
+			'with backtick quoted identifiers',
+		);
+
+
+		$results = await $conn->query(
+			"SELECT table3.id, table3.group_id as my_fav_group_id FROM `db2`.`table3` WHERE group_id=6",
+		);
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 4, 'my_fav_group_id' => 6],
+				dict['id' => 6, 'my_fav_group_id' => 6],
+			],
+			'column identifiers',
+		);
+
+		/*
+		TODO: this doesn't currently work
+		$results = await $conn->query(
+			"SELECT db2.table3.id, db2.table3.group_id as my_fav_group_id FROM `db2`.`table3` WHERE group_id=6",
+		);
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 4, 'my_fav_group_id' => 6],
+				dict['id' => 6, 'my_fav_group_id' => 6],
+			],
+			'column identifiers',
+		);
+		*/
+	}
+
 	public async function testNonexistentColumnInWhere(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		$results = await $conn->query("SELECT id FROM table3 WHERE group_id=12345 AND doesnotexist='name2'");

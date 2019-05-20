@@ -63,6 +63,33 @@ final class SelectExpressionTest extends HackTest {
 			dict['id' => 1002],
 			dict['id' => 1003],
 		]);
+
+		$results = await $conn->query("SELECT id FROM table4 WHERE id*10 BETWEEN 1000*10 AND 1004*10-10");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 1000],
+				dict['id' => 1001],
+				dict['id' => 1002],
+				dict['id' => 1003],
+			],
+			'with complex expressions',
+		);
+
+		$results = await $conn->query("SELECT 5 BETWEEN 3 AND 9 AND 6 = 6 AND 10/2 = 5");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['5 BETWEEN 3 AND 9 AND 6 = 6 AND 10/2 = 5' => 1],
+			],
+			'handles AND, and knows which AND is which',
+		);
+
+		$results = await $conn->query("SELECT 5 BETWEEN 3 AND 9 AND 5 = 6 AND 10/2 = 5");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['5 BETWEEN 3 AND 9 AND 5 = 6 AND 10/2 = 5' => 0],
+			],
+			'handles AND, and knows which AND is which',
+		);
 	}
 
 	public async function testIn(): Awaitable<void> {
@@ -73,6 +100,16 @@ final class SelectExpressionTest extends HackTest {
 			dict['id' => 1002],
 			dict['id' => 1003],
 		]);
+
+		$results = await $conn->query("SELECT id FROM table4 WHERE id IN (1000, 1002, 1003, description)");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 1000],
+				dict['id' => 1002],
+				dict['id' => 1003],
+			],
+			'adding a column reference still parses',
+		);
 	}
 
 	public async function testNotIn(): Awaitable<void> {
@@ -102,6 +139,43 @@ final class SelectExpressionTest extends HackTest {
 			dict['id' => 1001, 'foo' => 'nope'],
 			dict['id' => 1004, 'foo' => 'yep'],
 		]);
+
+		$results = await $conn->query(
+			"SELECT id, CASE WHEN id % 4 = 0 AND id BETWEEN 1001 AND 1002 THEN 'yep' ELSE 'nope' END foo FROM table4 WHERE id = 1001 OR id = 1004",
+		);
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 1001, 'foo' => 'nope'],
+				dict['id' => 1004, 'foo' => 'nope'],
+			],
+			'case with two conditions and nested BETWEEN',
+		);
+
+		// weird this is even valid SQL, and possibly pedantic, but this demonstrates a lot of how
+		// case statements are implemented such that it doesn't blow up on the second THEN or second CASE
+		$results =
+			await $conn->query("SELECT CASE WHEN 4 = CASE WHEN 1 = 2 THEN 3 ELSE 4 END THEN 'yes' ELSE 'no' END");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict["CASE WHEN 4 = CASE WHEN 1 = 2 THEN 3 ELSE 4 END THEN 'yes' ELSE 'no' END" => 'yes'],
+			],
+			'nested case',
+		);
+
+
+		$results = await $conn->query(
+			"SELECT id, (CASE WHEN t.id=1 THEN 'First' WHEN t.id=2 then 'Second' END) AS ord FROM table3 t",
+		);
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['id' => 1, 'ord' => 'First'],
+				dict['id' => 2, 'ord' => 'Second'],
+				dict['id' => 3, 'ord' => null],
+				dict['id' => 4, 'ord' => null],
+				dict['id' => 6, 'ord' => null],
+			],
+			'case with multiple when clauses, no else clause',
+		);
 	}
 
 	public async function testDistinct(): Awaitable<void> {
@@ -253,6 +327,99 @@ final class SelectExpressionTest extends HackTest {
 				dict['id' => 6, 'group_id' => 6, 'name' => 'name3'],
 			],
 			'with actual rows',
+		);
+	}
+
+	public async function testConstantExpression(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		$results = await $conn->query("SELECT 1+1");
+		expect($results->rows())->toBeSame(vec[
+			dict['1+1' => 2],
+		]);
+	}
+
+	public async function testOperatorPrecedence(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		$results = await $conn->query("SELECT 1 + 3 * 4");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['1 + 3 * 4' => 13],
+			],
+			'increasing precedence',
+		);
+
+		$results = await $conn->query("SELECT 1 + 3 * 4 + 5");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['1 + 3 * 4 + 5' => 18],
+			],
+			'increasing then decreasing precedence',
+		);
+
+		$results = await $conn->query("SELECT 100 >> 0 + 2*2");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['100 >> 0 + 2*2' => 6],
+			],
+			'strictly increasing precedence',
+		);
+
+		$results = await $conn->query("SELECT 100 >> 2 * 2 + 0");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['100 >> 2 * 2 + 0' => 6],
+			],
+			'increasing then decreasing precedence',
+		);
+	}
+
+	public async function testOperatorAssociativity(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		// equal precedence, but left associative
+		// processed as (9/3)*5, not 9/(3*5)
+		$results = await $conn->query("SELECT 9 / 3 * 5");
+		expect($results->rows())->toBeSame(vec[
+			dict['9 / 3 * 5' => 15],
+		]);
+
+		$results = await $conn->query("SELECT 9 / (3 * 5)");
+		expect($results->rows()[0]['9 / (3 * 5)'])->toAlmostEqual(9 / 15.0, 'parens change results');
+	}
+
+	public async function testBinaryExpressions(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		// equal precedence, but left associative
+		// processed as (9/3)*5, not 9/(3*5)
+		$results = await $conn->query("SELECT 5=9 AND 6>3 OR 2<7 AND 9=8");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['5=9 AND 6>3 OR 2<7 AND 9=8' => 0],
+			],
+			'parses multiple Binary operations as one expression',
+		);
+
+		$results = await $conn->query("SELECT 5=5 AND 6>3 OR 2<7 AND 9=8");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['5=5 AND 6>3 OR 2<7 AND 9=8' => 1],
+			],
+			'OR precedence works properly, only left expressions are truthy',
+		);
+
+		$results = await $conn->query("SELECT 5=5 AND (6>3 OR 2<7) AND 9=8");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['5=5 AND (6>3 OR 2<7) AND 9=8' => 0],
+			],
+			'handles parentheses',
+		);
+
+		$results = await $conn->query("SELECT 5=5 AND (6>3 OR 2<7) AND 8=8");
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['5=5 AND (6>3 OR 2<7) AND 8=8' => 1],
+			],
+			'OR precedence works properly, only left expressions are truthy',
 		);
 	}
 }

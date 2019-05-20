@@ -125,14 +125,14 @@ final class BinaryOperatorExpression extends Expression {
         throw new DBMockRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
       case 'AND':
         if ((bool)$l_value && (bool)$r_value) {
-          return !$this->negated;
+          return (int)!$this->negated;
         }
-        return $this->negated;
+        return (int)$this->negated;
       case 'OR':
         if ((bool)$l_value || (bool)$r_value) {
-          return !$this->negated;
+          return (int)!$this->negated;
         }
-        return $this->negated;
+        return (int)$this->negated;
       case '=':
         // maybe do some stuff with data types here
         // comparing strings: gotta think about collation and case sensitivity!
