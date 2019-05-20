@@ -50,11 +50,6 @@ final class DeleteParser {
               if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
                 throw new DBMockParseException("Expected table name after FROM");
               }
-              // TODO DO NOT DO THIS
-              // If we have a database name (like in vitess range modifier syntax `keyspace[-]`.table), just keep the table name
-              if (Str\contains($token['value'], '.')) {
-                $token['value'] = Str\split($token['value'], '.')[1];
-              }
               $table = shape(
                 'name' => $token['value'],
                 'join_type' => JoinType::JOIN,
@@ -86,6 +81,17 @@ final class DeleteParser {
             $this->currentClause === 'DELETE' &&
             C\contains_key(keyset['LOW_PRIORITY', 'QUICK', 'IGNORE'], $token['value'])
           ) {
+            break;
+          }
+          if ($this->currentClause === 'DELETE' && $token['type'] === TokenType::IDENTIFIER) {
+            // delete without FROM
+            $table = shape(
+              'name' => $token['value'],
+              'join_type' => JoinType::JOIN,
+            );
+            $query->fromClause = $table;
+            $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
+            $this->currentClause = 'FROM';
             break;
           }
           throw new DBMockParseException("Unexpected token {$token['value']}");

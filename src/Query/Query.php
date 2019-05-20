@@ -2,7 +2,7 @@
 
 namespace Slack\DBMock;
 
-use namespace HH\Lib\{C, Dict, Keyset, Str};
+use namespace HH\Lib\{C, Dict, Keyset, Str, Vec};
 
 /**
  * An executable Query plan
@@ -93,9 +93,11 @@ abstract class Query {
 
     // re-key the input dataset
     $data_temp = vec($data_temp);
-    $data = dict($data);
+    // dicts maintain insert order. the keys will be inserted out of order but have to match the original
+    // keys for updates/deletes to be able to delete the right rows
+    $data = dict[];
     foreach ($data_temp as $index => $item) {
-      $data[$index] = $item[1];
+      $data[$item[0]] = $item[1];
     }
 
     return $data;
@@ -106,9 +108,12 @@ abstract class Query {
     if ($limit === null) {
       return $data;
     }
-    // this is like Vec\slice(), but there's no Dict\slice
-    // we want to retain keys as row numbers for update statements, so we need a dict
-    return dict(\array_slice($data, $limit['offset'], $limit['rowcount']));
+
+    // keys in this dict are intentionally out of order if an ORDER BY clause occurred
+    // so first we get the ordered keys, then slice that list by the limit clause, then select only those keys
+    return Vec\keys($data)
+      |> Vec\slice($$, $limit['offset'], $limit['rowcount'])
+      |> Dict\select_keys($data, $$);
   }
 
   /**
