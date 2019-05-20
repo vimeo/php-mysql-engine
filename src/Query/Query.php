@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Dict, Keyset, Str, Vec};
 
@@ -124,7 +124,7 @@ abstract class Query {
     if (Str\contains($table, '.')) {
       $parts = Str\split($table, '.');
       if (C\count($parts) !== 2) {
-        throw new DBMockRuntimeException("Table name $table has too many parts");
+        throw new SQLFakeRuntimeException("Table name $table has too many parts");
       }
       list($database, $table_name) = $parts;
       return tuple($database, $table_name);
@@ -168,7 +168,7 @@ abstract class Query {
       // If we know the valid fields for this table, only allow setting those
       if ($valid_fields !== null) {
         if (!C\contains($valid_fields, $column)) {
-          throw new DBMockRuntimeException("Invalid update column {$column}");
+          throw new SQLFakeRuntimeException("Invalid update column {$column}");
         }
       }
 
@@ -188,7 +188,7 @@ abstract class Query {
         // we put the values on the row as though they were another table
         // we do this on a copy so that we don't accidentally save these to the table
         foreach ($values as $col => $val) {
-          $update_row['db_mock_values.'.$col] = $val;
+          $update_row['sql_fake_values.'.$col] = $val;
         }
       }
       foreach ($set_clauses as $clause) {
@@ -208,7 +208,7 @@ abstract class Query {
           $row = DataIntegrity::coerceToSchema($row, $table_schema);
           $result = DataIntegrity::checkUniqueConstraints($original_table, $row, $table_schema, $row_id);
           if ($result is nonnull) {
-            throw new DBMockUniqueKeyViolation($result[0]);
+            throw new SQLFakeUniqueKeyViolation($result[0]);
           }
         }
         $original_table[$row_id] = $row;

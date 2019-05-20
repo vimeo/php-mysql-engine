@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 /**
  * a row expression is like (col1, col2, col3) and is sometimes used for a row comparison for pagination

@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\Str;
 
@@ -22,7 +22,7 @@ abstract final class SQLCommandProcessor {
       // unlike BEGIN and COMMIT, this actually needs to have material effect on the observed behavior
       // even in a single test case, and so we need to throw since it's not implemented yet
       // there's no reason we couldn't start supporting transactions in the future, just haven't done the work yet
-      throw new DBMockNotImplementedException("Transactions are not yet supported");
+      throw new SQLFakeNotImplementedException("Transactions are not yet supported");
     }
 
     try {
@@ -31,7 +31,7 @@ abstract final class SQLCommandProcessor {
       // this makes debugging a failing unit test easier, show the actual query that failed parsing along with the parser error
       $msg = $e->getMessage();
       $type = \get_class($e);
-      throw new DBMockParseException("DB Mock $type: $msg in SQL query: $sql");
+      throw new SQLFakeParseException("SQL Fake $type: $msg in SQL query: $sql");
     }
 
     if ($query is SelectQuery) {
@@ -43,7 +43,7 @@ abstract final class SQLCommandProcessor {
     } elseif ($query is InsertQuery) {
       return tuple(vec[], $query->execute($conn));
     } else {
-      throw new DBMockNotImplementedException("Unhandled query type: ".\get_class($query));
+      throw new SQLFakeNotImplementedException("Unhandled query type: ".\get_class($query));
     }
   }
 }

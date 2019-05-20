@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use function preg_split, preg_match;
 use namespace HH\Lib\{C, Str};
@@ -165,7 +165,7 @@ final class SQLLexer {
         }
 
         if (!$found_match) {
-          throw new DBMockParseException("Unbalanced quote $quote");
+          throw new SQLFakeParseException("Unbalanced quote $quote");
         }
 
         $tokens[$quote_start] = $token;

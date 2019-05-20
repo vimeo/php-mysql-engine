@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use function Facebook\FBExpect\expect;
 use type Facebook\HackTest\HackTest;
@@ -47,7 +47,7 @@ final class InsertQueryTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
 		expect(() ==> $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test2')"))->toThrow(
-			DBMockUniqueKeyViolation::class,
+			SQLFakeUniqueKeyViolation::class,
 			"Duplicate entry '1' for key 'PRIMARY' in table 'table1'",
 		);
 	}
@@ -56,14 +56,14 @@ final class InsertQueryTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
 		expect(() ==> $conn->query("INSERT IGNORE INTO table1 (id, name) VALUES (1, 'test2')"))->notToThrow(
-			DBMockUniqueKeyViolation::class,
+			SQLFakeUniqueKeyViolation::class,
 		);
 	}
 
 	public async function testPKViolationWithinMultiInsert(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		expect(() ==> $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test'), (1, 'test2')"))->toThrow(
-			DBMockUniqueKeyViolation::class,
+			SQLFakeUniqueKeyViolation::class,
 			"Duplicate entry '1' for key 'PRIMARY' in table 'table1'",
 		);
 	}
@@ -72,7 +72,7 @@ final class InsertQueryTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
 		expect(() ==> $conn->query("INSERT INTO table1 (id, name) VALUES (2, 'test')"))->toThrow(
-			DBMockUniqueKeyViolation::class,
+			SQLFakeUniqueKeyViolation::class,
 			"Duplicate entry 'test' for key 'name_uniq' in table 'table1'",
 		);
 	}
@@ -81,7 +81,7 @@ final class InsertQueryTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		await $conn->query("INSERT INTO table1 (id, name) VALUES (1, 'test')");
 		expect(() ==> $conn->query("INSERT IGNORE INTO table1 (id, name) VALUES (2, 'test')"))->notToThrow(
-			DBMockUniqueKeyViolation::class,
+			SQLFakeUniqueKeyViolation::class,
 		);
 	}
 
@@ -119,7 +119,7 @@ final class InsertQueryTest extends HackTest {
 				"INSERT INTO table_with_more_fields (id, name, not_null_default) VALUES (1, 'test', null)",
 			),
 		)->toThrow(
-			DBMockRuntimeException::class,
+			SQLFakeRuntimeException::class,
 			"Column 'not_null_default' on 'table_with_more_fields' does not allow null values",
 		);
 	}
@@ -141,7 +141,7 @@ final class InsertQueryTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		await $conn->query("INSERT INTO table_with_more_fields (id, name) VALUES (1, 'test')");
 		expect(() ==> $conn->query("INSERT INTO table_with_more_fields (id, name) VALUES (1, 'test2')"))->notToThrow(
-			DBMockUniqueKeyViolation::class,
+			SQLFakeUniqueKeyViolation::class,
 		);
 	}
 
@@ -149,7 +149,7 @@ final class InsertQueryTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		await $conn->query("INSERT INTO table_with_more_fields (id, name) VALUES (1, 'test')");
 		expect(() ==> $conn->query("INSERT INTO table_with_more_fields (id, name) VALUES (1, 'test')"))->toThrow(
-			DBMockUniqueKeyViolation::class,
+			SQLFakeUniqueKeyViolation::class,
 			"Duplicate entry '1, test' for key 'PRIMARY' in table 'table_with_more_fields'",
 		);
 	}
@@ -157,7 +157,7 @@ final class InsertQueryTest extends HackTest {
 	public async function testMismatchedValuesList(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		expect(() ==> $conn->query("INSERT INTO table1 (id, name, col3) VALUES (1, 'test2')"))->toThrow(
-			DBMockParseException::class,
+			SQLFakeParseException::class,
 			'Insert list contains 3 fields, but values clause contains 2',
 		);
 	}
@@ -172,7 +172,7 @@ final class InsertQueryTest extends HackTest {
 				"INSERT INTO table_with_more_fields (id, name, nullable_unique) VALUES (2, 'test2', null)",
 			),
 		)
-			->notToThrow(DBMockUniqueKeyViolation::class);
+			->notToThrow(SQLFakeUniqueKeyViolation::class);
 	}
 
 	public async function testNullableUniqueViolation(): Awaitable<void> {
@@ -186,7 +186,7 @@ final class InsertQueryTest extends HackTest {
 			),
 		)
 			->toThrow(
-				DBMockUniqueKeyViolation::class,
+				SQLFakeUniqueKeyViolation::class,
 				"Duplicate entry 'example' for key 'nullable_unique' in table 'table_with_more_fields'",
 			);
 	}
@@ -206,7 +206,7 @@ final class InsertQueryTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		QueryContext::$strictMode = true;
 		expect(() ==> $conn->query("INSERT INTO table2 (id, table_1_id) VALUES (1, 1)"))->toThrow(
-			DBMockRuntimeException::class,
+			SQLFakeRuntimeException::class,
 			"Column 'description' on 'table2' does not allow null values",
 		);
 	}
@@ -227,7 +227,7 @@ final class InsertQueryTest extends HackTest {
 		QueryContext::$strictMode = true;
 		expect(() ==> $conn->query("INSERT INTO table2 (id, table_1_id, description) VALUES (1, 'notastring', 'test')"))
 			->toThrow(
-				DBMockRuntimeException::class,
+				SQLFakeRuntimeException::class,
 				"Invalid value 'notastring' for column 'table_1_id' on 'table2', expected int",
 			);
 	}

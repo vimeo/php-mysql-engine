@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 /* HH_FIXME[2049] */
 <<__MockClass>>
@@ -34,6 +34,6 @@ final class AsyncMysqlConnectResult extends \AsyncMysqlConnectResult {
 
   <<__Override>>
   public function clientStats(): \AsyncMysqlClientStats {
-    throw new DBMockNotImplementedException('client stats not implemented');
+    throw new SQLFakeNotImplementedException('client stats not implemented');
   }
 }

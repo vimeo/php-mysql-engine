@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Keyset, Vec};
 

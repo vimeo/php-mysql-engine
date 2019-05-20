@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use function Facebook\FBExpect\expect;
 use type Facebook\HackTest\HackTest;
@@ -97,7 +97,7 @@ final class SelectClauseTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		QueryContext::$strictMode = true;
 		expect(() ==> $conn->query("SELECT id FROM table3 WHERE group_id=12345 AND doesnotexist='name2'"))->toThrow(
-			DBMockRuntimeException::class,
+			SQLFakeRuntimeException::class,
 			"Column with index doesnotexist not found in row",
 		);
 	}
@@ -224,6 +224,6 @@ final class SelectClauseTest extends HackTest {
 		expect(
 			() ==> $conn->query("select group_id, table_4_id from association_table LIMIT 2 ORDER BY group_id, 2 DESC"),
 		)
-			->toThrow(DBMockParseException::class, "Unexpected ORDER in SQL query");
+			->toThrow(SQLFakeParseException::class, "Unexpected ORDER in SQL query");
 	}
 }

@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
 
@@ -24,7 +24,7 @@ final class InsertQuery extends Query {
 
     $schema = QueryContext::getSchema($database, $table_name);
     if ($schema === null && QueryContext::$strictMode) {
-      throw new DBMockRuntimeException("Table $table_name not found in schema and strict mode is enabled");
+      throw new SQLFakeRuntimeException("Table $table_name not found in schema and strict mode is enabled");
     }
 
     $rows_affected = 0;
@@ -69,7 +69,7 @@ final class InsertQuery extends Query {
             continue;
           } else {
             // otherwise throw
-            throw new DBMockUniqueKeyViolation($msg);
+            throw new SQLFakeUniqueKeyViolation($msg);
           }
         }
       }

@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use type Facebook\HackTest\HackTest;
 use function Facebook\FBExpect\expect;
@@ -80,7 +80,7 @@ final class UpdateQueryTest extends HackTest {
 
 	public async function testPrimaryKeyViolation(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		expect(() ==> $conn->query("UPDATE table3 set id=1"))->toThrow(DBMockUniqueKeyViolation::class);
+		expect(() ==> $conn->query("UPDATE table3 set id=1"))->toThrow(SQLFakeUniqueKeyViolation::class);
 	}
 
 	public async function testTypeCoercion(): Awaitable<void> {
@@ -98,7 +98,7 @@ final class UpdateQueryTest extends HackTest {
 		$conn = static::$conn as nonnull;
 		QueryContext::$strictMode = true;
 		expect(() ==> $conn->query("UPDATE table3 set name=1 WHERE id=6"))->toThrow(
-			DBMockRuntimeException::class,
+			SQLFakeRuntimeException::class,
 			"Invalid value '1' for column 'name' on 'table3', expected string",
 		);
 	}

@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 // HHAST_IGNORE_ALL[BannedHackCollections]
 
@@ -84,7 +84,7 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
 
   <<__Override>>
   public function rowBlocks(): mixed {
-    throw new DBMockNotImplementedException('row blocks not implemented');
+    throw new SQLFakeNotImplementedException('row blocks not implemented');
   }
 
   <<__Override>>

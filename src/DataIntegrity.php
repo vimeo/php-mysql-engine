@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Keyset, Vec, Str};
 
@@ -46,7 +46,7 @@ abstract final class DataIntegrity {
     if (QueryContext::$strictMode) {
       // if we got this far the column has no default and isn't nullable, strict would throw
       // but default MySQL mode would coerce to a valid value
-      throw new DBMockRuntimeException("Column '{$field_name}' on '{$table_name}' does not allow null values");
+      throw new SQLFakeRuntimeException("Column '{$field_name}' on '{$table_name}' does not allow null values");
     }
 
     switch ($field_type) {
@@ -85,7 +85,7 @@ abstract final class DataIntegrity {
         } else if (QueryContext::$strictMode) {
           // if we got this far the column has no default and isn't nullable, strict would throw
           // but default MySQL mode would coerce to a valid value
-          throw new DBMockRuntimeException("Column '{$field_name}' on '{$schema['name']}' does not allow null values");
+          throw new SQLFakeRuntimeException("Column '{$field_name}' on '{$schema['name']}' does not allow null values");
         } else {
           $row[$field_name] =
             self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema['name']);
@@ -99,7 +99,7 @@ abstract final class DataIntegrity {
             } else if (!$row[$field_name] is int) {
               if (QueryContext::$strictMode) {
                 $field_str = \var_export($row[$field_name], true);
-                throw new DBMockRuntimeException(
+                throw new SQLFakeRuntimeException(
                   "Invalid value {$field_str} for column '{$field_name}' on '{$schema['name']}', expected int",
                 );
               } else {
@@ -111,7 +111,7 @@ abstract final class DataIntegrity {
             if (!$row[$field_name] is float) {
               if (QueryContext::$strictMode) {
                 $field_str = \var_export($row[$field_name], true);
-                throw new DBMockRuntimeException(
+                throw new SQLFakeRuntimeException(
                   "Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected float",
                 );
               } else {
@@ -123,7 +123,7 @@ abstract final class DataIntegrity {
             if (!$row[$field_name] is string) {
               if (QueryContext::$strictMode) {
                 $field_str = \var_export($row[$field_name], true);
-                throw new DBMockRuntimeException(
+                throw new SQLFakeRuntimeException(
                   "Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected string",
                 );
               } else {
@@ -147,7 +147,7 @@ abstract final class DataIntegrity {
     $bad_fields = Keyset\keys($row) |> Keyset\diff($$, $fields);
     if (!C\is_empty($bad_fields)) {
       $bad_fields = Str\join($bad_fields, ', ');
-      throw new DBMockRuntimeException("Column(s) '{$bad_fields}' not found on '{$schema['name']}'");
+      throw new SQLFakeRuntimeException("Column(s) '{$bad_fields}' not found on '{$schema['name']}'");
     }
 
     $row = self::ensureFieldsPresent($row, $schema);
@@ -167,7 +167,7 @@ abstract final class DataIntegrity {
           $row[$field_name] = (int)$row[$field_name];
           break;
         case 'string':
-          // binary types behave differently than other varchars in MySQL, and we need to mock that behavior
+          // binary types behave differently than other varchars in MySQL, and we need to emulate that behavior
           // specifically, qprintf uses addslashes to escape, and we need to strip those here to match MySQL's behavior
           if (Str\search_ci((string)$field['type'], 'BLOB') !== null) {
             $row[$field_name] = \stripslashes($row[$field_name]);
@@ -180,7 +180,7 @@ abstract final class DataIntegrity {
           $row[$field_name] = (float)$row[$field_name];
           break;
         default:
-          throw new DBMockRuntimeException(
+          throw new SQLFakeRuntimeException(
             "DataIntegrity::coerceToSchema found unknown type for field: '{$field_name}:{$field_type}'",
           );
       }

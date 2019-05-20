@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\Str;
 
@@ -31,7 +31,7 @@ final class ConstantExpression extends Expression {
         return null;
       default:
         throw
-          new DBMockRuntimeException("Attempted to assign invalid token type {$token['type']} to Constant Expression");
+          new SQLFakeRuntimeException("Attempted to assign invalid token type {$token['type']} to Constant Expression");
     }
   }
 

@@ -2,7 +2,7 @@
 
 /* HHAST_IGNORE_ALL[NoPHPEquality] */
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Regex, Str};
 
@@ -51,7 +51,7 @@ final class BinaryOperatorExpression extends Expression {
     invariant($right_elems is vec<_>, "RowExpression must return vec");
 
     if (C\count($left_elems) !== C\count($right_elems)) {
-      throw new DBMockRuntimeException("Mismatched column count in row comparison expression");
+      throw new SQLFakeRuntimeException("Mismatched column count in row comparison expression");
     }
 
     $last_index = C\last_key($left_elems);
@@ -87,7 +87,7 @@ final class BinaryOperatorExpression extends Expression {
           /* HH_IGNORE_ERROR[4240] assume they have the same types */
           return ($le <= $re);
         default:
-          throw new DBMockRuntimeException("Operand {$this->operator} should contain 1 column(s)");
+          throw new SQLFakeRuntimeException("Operand {$this->operator} should contain 1 column(s)");
       }
     }
 
@@ -101,7 +101,7 @@ final class BinaryOperatorExpression extends Expression {
 
     if ($left is RowExpression) {
       if (!$right is RowExpression) {
-        throw new DBMockRuntimeException("Expected row expression on RHS of {$this->operator} operand");
+        throw new SQLFakeRuntimeException("Expected row expression on RHS of {$this->operator} operand");
       }
 
       // oh fun! a row comparison, e.g. (col1, col2, col3) > (1, 2, 3)
@@ -111,7 +111,7 @@ final class BinaryOperatorExpression extends Expression {
     }
 
     if ($right === null) {
-      throw new DBMockRuntimeException("Attempted to evaluate BinaryOperatorExpression with no right operand");
+      throw new SQLFakeRuntimeException("Attempted to evaluate BinaryOperatorExpression with no right operand");
     }
 
     $l_value = $left->evaluate($row, $conn);
@@ -122,7 +122,7 @@ final class BinaryOperatorExpression extends Expression {
     switch ($this->operator) {
       case '':
         // an operator should only be in this state in the middle of parsing, never when evaluating
-        throw new DBMockRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
+        throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
       case 'AND':
         if ((bool)$l_value && (bool)$r_value) {
           return (int)!$this->negated;
@@ -207,7 +207,7 @@ final class BinaryOperatorExpression extends Expression {
       case 'LIKE':
         $left_string = (string)$left->evaluate($row, $conn);
         if (!$right is ConstantExpression) {
-          throw new DBMockRuntimeException("LIKE pattern should be a constant string");
+          throw new SQLFakeRuntimeException("LIKE pattern should be a constant string");
         }
         $pattern = (string)$r_value;
 
@@ -234,7 +234,7 @@ final class BinaryOperatorExpression extends Expression {
         return ((bool)\preg_match($regex, $left_string) ? 1 : 0) ^ $this->negatedInt;
       case 'IS':
         if (!$right is ConstantExpression) {
-          throw new DBMockRuntimeException("Unsupported right operand for IS keyword");
+          throw new SQLFakeRuntimeException("Unsupported right operand for IS keyword");
         }
         $val = $left->evaluate($row, $conn);
 
@@ -246,7 +246,7 @@ final class BinaryOperatorExpression extends Expression {
 
         // you can also do IS TRUE, IS FALSE, or IS UNKNOWN but I haven't implemented that yet mostly because those come through the parser as "RESERVED" rather than const expressions
 
-        throw new DBMockRuntimeException("Unsupported right operand for IS keyword");
+        throw new SQLFakeRuntimeException("Unsupported right operand for IS keyword");
       case 'RLIKE':
       case 'REGEXP':
         $left_string = (string)$left->evaluate($row, $conn);
@@ -274,7 +274,7 @@ final class BinaryOperatorExpression extends Expression {
       case 'ANY': // parser does NOT KNOW about this functionality
       case 'SOME': // parser does NOT KNOW about this functionality
       default:
-        throw new DBMockRuntimeException("Operator {$this->operator} not implemented in DB Mock");
+        throw new SQLFakeRuntimeException("Operator {$this->operator} not implemented in SQLFake");
     }
   }
 
@@ -327,7 +327,7 @@ final class BinaryOperatorExpression extends Expression {
   <<__Override>>
   public function setNextChild(Expression $expr, bool $overwrite = false): void {
     if (!$this->operator || ($this->right && !$overwrite)) {
-      throw new DBMockParseException("Parse error");
+      throw new SQLFakeParseException("Parse error");
     }
     $this->right = $expr;
   }
@@ -339,7 +339,7 @@ final class BinaryOperatorExpression extends Expression {
 
   public function getRightOrThrow(): Expression {
     if ($this->right === null) {
-      throw new DBMockParseException("Parse error: attempted to resolve unbound expression");
+      throw new SQLFakeParseException("Parse error: attempted to resolve unbound expression");
     }
     return $this->right;
   }

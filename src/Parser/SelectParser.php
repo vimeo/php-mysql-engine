@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Str, Vec};
 
@@ -23,7 +23,7 @@ final class SelectParser {
   public function parse(): (int, SelectQuery) {
     // if we got here, the first token had better be a SELECT
     if ($this->tokens[$this->pointer]['value'] !== 'SELECT') {
-      throw new DBMockParseException("Parser error: expected SELECT");
+      throw new SQLFakeParseException("Parser error: expected SELECT");
     }
 
     $query = new SelectQuery($this->sql);
@@ -45,7 +45,7 @@ final class SelectParser {
           // all other clauses should parse their own tokens
           // also check that there has been a delimiter since the last expression if we're adding a new one now
           if ($this->currentClause !== 'SELECT') {
-            throw new DBMockParseException("Unexpected {$token['value']}");
+            throw new SQLFakeParseException("Unexpected {$token['value']}");
           }
           if ($query->needsSeparator) {
             // we just had an expression and no comma yet. if this is a string or identifier, it must be an alias like "SELECT 1 foo"
@@ -57,7 +57,7 @@ final class SelectParser {
               break;
             } else {
               // if the new token isn't an identifier, or the most recent expression had an alias, this is bogus
-              throw new DBMockParseException("Expected comma between expressions near {$token['value']}");
+              throw new SQLFakeParseException("Expected comma between expressions near {$token['value']}");
             }
           }
           $expression_parser = new ExpressionParser($this->tokens, $this->pointer - 1);
@@ -81,17 +81,17 @@ final class SelectParser {
         case TokenType::SEPARATOR:
           if ($token['value'] === ',') {
             if (!$query->needsSeparator) {
-              throw new DBMockParseException("Unexpected ,");
+              throw new SQLFakeParseException("Unexpected ,");
             }
             $query->needsSeparator = false;
           } elseif ($token['value'] === ';') {
             // this should be the final token. if it's not, throw. otherwise, return
             if ($this->pointer !== $count - 1) {
-              throw new DBMockParseException("Unexpected tokens after semicolon");
+              throw new SQLFakeParseException("Unexpected tokens after semicolon");
             }
             return tuple($this->pointer, $query);
           } else {
-            throw new DBMockParseException("Unexpected {$token['value']}");
+            throw new SQLFakeParseException("Unexpected {$token['value']}");
           }
           break;
         case TokenType::CLAUSE:
@@ -100,7 +100,7 @@ final class SelectParser {
             C\contains_key(self::CLAUSE_ORDER, $token['value']) &&
             self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
           ) {
-            throw new DBMockParseException("Unexpected {$token['value']}");
+            throw new SQLFakeParseException("Unexpected {$token['value']}");
           }
           $this->currentClause = $token['value'];
           switch ($token['value']) {
@@ -120,7 +120,7 @@ final class SelectParser {
               $expressions = vec[];
               $sort_directions = vec[];
               if ($next === null || $next['value'] !== 'BY') {
-                throw new DBMockParseException("Expected BY after GROUP");
+                throw new SQLFakeParseException("Expected BY after GROUP");
               }
 
               while (true) {
@@ -138,7 +138,7 @@ final class SelectParser {
 
                   $expression = $query->selectExpressions[$position] ?? null;
                   if ($expression === null) {
-                    throw new DBMockParseException("Invalid positional reference $position in GROUP BY");
+                    throw new SQLFakeParseException("Invalid positional reference $position in GROUP BY");
                   }
                 }
 
@@ -175,7 +175,7 @@ final class SelectParser {
               return tuple($this->pointer, $query);
               break;
             default:
-              throw new DBMockParseException("Unexpected {$token['value']}");
+              throw new SQLFakeParseException("Unexpected {$token['value']}");
           }
           // after adding a clause like FROM or WHERE, skip over any locking hints
           $this->pointer = SQLParser::skipLockHints($this->pointer, $this->tokens);
@@ -190,7 +190,7 @@ final class SelectParser {
                 $next === null ||
                 !C\contains_key(keyset[TokenType::IDENTIFIER, TokenType::STRING_CONSTANT], $next['type'])
               ) {
-                throw new DBMockParseException("Expected alias name after AS");
+                throw new SQLFakeParseException("Expected alias name after AS");
               }
               $query->aliasRecentExpression($next['value']);
               break;
@@ -212,7 +212,7 @@ final class SelectParser {
               $query->addOption($token['value']);
               break;
             default:
-              throw new DBMockParseException("Unexpected {$token['value']}");
+              throw new SQLFakeParseException("Unexpected {$token['value']}");
           }
           break;
       }

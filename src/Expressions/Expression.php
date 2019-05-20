@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
 
@@ -35,7 +35,7 @@ abstract class Expression {
    * subclasses that do support negation must override this
    */
   public function negate(): void {
-    throw new DBMockParseException("Parse error: unexpected NOT for expression {$this->type}");
+    throw new SQLFakeParseException("Parse error: unexpected NOT for expression {$this->type}");
   }
 
   /**
@@ -67,7 +67,7 @@ abstract class Expression {
    * For several of the types that don't have child elements this is just a parse error, children who implement it can override
    */
   public function setNextChild(Expression $_expr, bool $_overwrite = false): void {
-    throw new DBMockParseException("Parse error: unexpected expression");
+    throw new SQLFakeParseException("Parse error: unexpected expression");
   }
 
   /**
@@ -75,14 +75,14 @@ abstract class Expression {
    * otherwise if unimplemented, it's a parse error
    */
   public function addRecursiveExpression(token_list $_tokens, int $_pointer, bool $_negated = false): int {
-    throw new DBMockParseException("Parse error: unexpected recursive expression");
+    throw new SQLFakeParseException("Parse error: unexpected recursive expression");
   }
 
   /**
    * All operators have to handle potentially grouped data sets.
    * row is a dict<string, mixed>, but for a grouped data set the "mixed"
    * will itself be a dict<string, mixed>, so the row will be a dict<string, dict<string, mixed>>
-   * See db_mock_query_apply_group_by which does the grouping
+   * See applyGroupBy which does the grouping
    * Since some operators don't want grouped data (column expressions and non-aggregate functions)
    * this helper lets them extract the first value from the grouping set
    */

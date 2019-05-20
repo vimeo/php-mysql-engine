@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use function Facebook\FBExpect\expect;
 use type Facebook\HackTest\HackTest;

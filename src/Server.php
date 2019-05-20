@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
 
@@ -43,7 +43,7 @@ final class Server {
 
   public static function restore(string $name): void {
     if (!C\contains_key(static::$snapshot_names, $name)) {
-      throw new DBMockRuntimeException("Snapshot $name not found, unable to restore");
+      throw new SQLFakeRuntimeException("Snapshot $name not found, unable to restore");
     }
     foreach (static::getAll() as $server) {
       $server->doRestore($name);

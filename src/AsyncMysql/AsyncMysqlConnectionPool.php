@@ -1,11 +1,13 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
 
 /**
- * Mock a connection pool, instantiating fake connections instead of real ones
+ * Fake connection pool, instantiating fake connections instead of real ones
+ * This is the main entry point to SQLFake which should be injected into your production database library,
+ * replacing a regular AsyncMysqlConnectionPool
  */
 final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
 
@@ -49,7 +51,7 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
     \AsyncMysqlConnectionOptions $_conn_opts,
     string $caller = "",
   ): Awaitable<\AsyncMysqlConnection> {
-    // currently, options are ignored in DBMock
+    // currently, options are ignored in SQLFake
     return $this->connect($host, $port, $dbname, $user, $password, -1, $caller);
   }
 

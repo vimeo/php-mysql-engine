@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
 
@@ -30,7 +30,7 @@ final class CaseOperatorExpression extends Expression {
   <<__Override>>
   public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
     if (!$this->wellFormed) {
-      throw new DBMockRuntimeException("Attempted to evaluate incomplete CASE expression");
+      throw new SQLFakeRuntimeException("Attempted to evaluate incomplete CASE expression");
     }
 
     foreach ($this->whenExpressions as $clause) {
@@ -52,7 +52,7 @@ final class CaseOperatorExpression extends Expression {
     switch ($keyword) {
       case 'WHEN':
         if ($this->lastKeyword !== 'CASE' && $this->lastKeyword !== 'THEN') {
-          throw new DBMockParseException("Unexpected WHEN in CASE statement");
+          throw new SQLFakeParseException("Unexpected WHEN in CASE statement");
         }
         $this->lastKeyword = 'WHEN';
         // set these to null in case this is not the first WHEN clause, so that the clauses know to accept expressions
@@ -61,13 +61,13 @@ final class CaseOperatorExpression extends Expression {
         break;
       case 'THEN':
         if ($this->lastKeyword !== 'WHEN' || !$this->when) {
-          throw new DBMockParseException("Unexpected THEN in CASE statement");
+          throw new SQLFakeParseException("Unexpected THEN in CASE statement");
         }
         $this->lastKeyword = 'THEN';
         break;
       case 'ELSE':
         if ($this->lastKeyword !== 'THEN' || !$this->then) {
-          throw new DBMockParseException("Unexpected ELSE in CASE statement");
+          throw new SQLFakeParseException("Unexpected ELSE in CASE statement");
         }
         $this->lastKeyword = 'ELSE';
         break;
@@ -80,13 +80,13 @@ final class CaseOperatorExpression extends Expression {
             'raw' => 'null',
           ));
         } elseif ($this->lastKeyword !== 'ELSE' || !$this->else) {
-          throw new DBMockParseException("Unexpected END in CASE statement");
+          throw new SQLFakeParseException("Unexpected END in CASE statement");
         }
         $this->lastKeyword = 'END';
         $this->wellFormed = true;
         break;
       default:
-        throw new DBMockParseException("Unexpected keyword $keyword in CASE statement");
+        throw new SQLFakeParseException("Unexpected keyword $keyword in CASE statement");
     }
   }
 
@@ -94,28 +94,28 @@ final class CaseOperatorExpression extends Expression {
   public function setNextChild(Expression $expr, bool $overwrite = false): void {
     switch ($this->lastKeyword) {
       case 'CASE':
-        throw new DBMockParseException("Missing WHEN in CASE");
+        throw new SQLFakeParseException("Missing WHEN in CASE");
       case 'WHEN':
         if ($this->when && !$overwrite) {
-          throw new DBMockParseException("Unexpected token near WHEN");
+          throw new SQLFakeParseException("Unexpected token near WHEN");
         }
         $this->when = $expr;
         break;
       case 'THEN':
         if ($this->then && !$overwrite) {
-          throw new DBMockParseException("Unexpected token near THEN");
+          throw new SQLFakeParseException("Unexpected token near THEN");
         }
         $this->then = $expr;
         $this->whenExpressions[] = shape('when' => $this->when as nonnull, 'then' => $expr);
         break;
       case 'ELSE':
         if ($this->else && !$overwrite) {
-          throw new DBMockParseException("Unexpected token near ELSE");
+          throw new SQLFakeParseException("Unexpected token near ELSE");
         }
         $this->else = $expr;
         break;
       case 'END':
-        throw new DBMockParseException("Unexpected token near END");
+        throw new SQLFakeParseException("Unexpected token near END");
     }
   }
 

@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 /**
  * the placeholder is often used before we know which operator will be used in some expression
@@ -17,7 +17,7 @@ final class PlaceholderExpression extends Expression {
 
   <<__Override>>
   public function evaluate(row $_row, AsyncMysqlConnection $_conn): mixed {
-    throw new DBMockRuntimeException("Attempted to evaluate placeholder expression!");
+    throw new SQLFakeRuntimeException("Attempted to evaluate placeholder expression!");
   }
 
   <<__Override>>

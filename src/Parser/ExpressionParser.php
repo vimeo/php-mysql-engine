@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Str, Vec};
 
@@ -111,7 +111,7 @@ final class ExpressionParser {
           $pos++;
           $t = $tokens[$pos];
           if ($close - $pos !== 1) {
-            throw new DBMockParseException("Parse error near DISTINCT");
+            throw new SQLFakeParseException("Parse error near DISTINCT");
           }
           $p = new ExpressionParser(vec[$t], -1);
           $expr = $p->build();
@@ -127,7 +127,7 @@ final class ExpressionParser {
           $pos++;
           continue;
         } else {
-          throw new DBMockParseException("Unexpected comma in SQL query");
+          throw new SQLFakeParseException("Unexpected comma in SQL query");
         }
       }
       $p = new ExpressionParser($tokens, $pos - 1);
@@ -180,7 +180,7 @@ final class ExpressionParser {
         $fn = new FunctionExpression($token, $args, $distinct);
         return $fn;
       default:
-        throw new DBMockNotImplementedException("Not implemented: {$token['value']}");
+        throw new SQLFakeNotImplementedException("Not implemented: {$token['value']}");
     }
   }
 
@@ -197,7 +197,7 @@ final class ExpressionParser {
           $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
           $arg_tokens = Vec\slice($this->tokens, $this->pointer + 1, $close - $this->pointer - 1);
           if (!C\count($arg_tokens)) {
-            throw new DBMockParseException("Empty parentheses found");
+            throw new SQLFakeParseException("Empty parentheses found");
           }
           $this->pointer = $close;
           $expr = new PlaceholderExpression();
@@ -224,7 +224,7 @@ final class ExpressionParser {
               $pointer++;
               $next = $arg_tokens[$pointer];
               if ($next['value'] !== ',') {
-                throw new DBMockParseException("Expected , in IN () list");
+                throw new SQLFakeParseException("Expected , in IN () list");
               }
             }
             $this->expression as InOperatorExpression;
@@ -243,7 +243,7 @@ final class ExpressionParser {
             if ($second_token !== null && $second_token['type'] === TokenType::SEPARATOR) {
               list($distinct, $elements) = $this->getListExpression($arg_tokens);
               if ($distinct) {
-                throw new DBMockParseException("Unexpected DISTINCT in row expression");
+                throw new SQLFakeParseException("Unexpected DISTINCT in row expression");
               }
 
               $expr = new RowExpression($elements);
@@ -315,7 +315,7 @@ final class ExpressionParser {
               }
               // it's one of those things where I feel like I should have solved this before...
               // otherwise we just found a keyword outside of a CASE statement, that seems wrong!
-              throw new DBMockParseException("Unexpected $operator");
+              throw new SQLFakeParseException("Unexpected $operator");
             }
             // tell the case statement we encountered a keyword so it knows where to stuff the next sub-expression
             $this->expression->setKeyword($operator);
@@ -352,7 +352,7 @@ final class ExpressionParser {
                     ->addRecursiveExpression($this->tokens, $this->pointer, true);
                   break;
                 }
-                throw new DBMockParseException("Unexpected NOT");
+                throw new SQLFakeParseException("Unexpected NOT");
               }
               $this->expression->negate();
             } else {
@@ -384,16 +384,16 @@ final class ExpressionParser {
           } else {
             if ($operator === 'BETWEEN') {
               if (!$this->expression is BinaryOperatorExpression) {
-                throw new DBMockParseException('Unexpected keyword BETWEEN');
+                throw new SQLFakeParseException('Unexpected keyword BETWEEN');
               }
               $this->expression = new BetweenOperatorExpression($this->expression->left);
             } elseif ($operator === 'NOT') {
               // this negates another operator like "NOT IN" or "IS NOT NULL"
-              // operators would throw an DBMockException here if they don't support negation
+              // operators would throw an SQLFakeException here if they don't support negation
               $this->expression->negate();
             } elseif ($operator === 'IN') {
               if (!$this->expression is BinaryOperatorExpression) {
-                throw new DBMockParseException('Unexpected keyword IN');
+                throw new SQLFakeParseException('Unexpected keyword IN');
               }
               $this->expression = new InOperatorExpression($this->expression->left, $this->expression->negated);
             } elseif ($operator === 'UNARY_MINUS' || $operator === 'UNARY_PLUS' || $operator === '~') {
@@ -407,7 +407,7 @@ final class ExpressionParser {
 
           break;
         default:
-          throw new DBMockParseException("Expression parse error: unexpected {$token['value']}");
+          throw new SQLFakeParseException("Expression parse error: unexpected {$token['value']}");
       }
 
       // don't move pointer forward and break early for some keywords
@@ -446,7 +446,7 @@ final class ExpressionParser {
 
         // the only other valid thing to come after a well_formed operation is another operand (other than the things we break on just above)
         if ($nextToken['type'] !== TokenType::OPERATOR) {
-          throw new DBMockParseException("Unexpected token {$nextToken['value']}");
+          throw new SQLFakeParseException("Unexpected token {$nextToken['value']}");
         }
 
         if ($this->is_child) {
@@ -470,7 +470,7 @@ final class ExpressionParser {
       if ($this->expression is BinaryOperatorExpression && $this->expression->operator === '') {
         return $this->expression->left;
       }
-      throw new DBMockParseException('Parse error, unexpected end of input');
+      throw new SQLFakeParseException('Parse error, unexpected end of input');
     }
     return $this->expression;
   }

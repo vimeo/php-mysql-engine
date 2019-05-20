@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 /* HHAST_IGNORE_ALL[UnusedParameter] */
 
@@ -41,7 +41,7 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
     int $timeout_micros = -1,
     dict<string, string> $query_attributes = dict[],
   ): Awaitable<AsyncMysqlQueryResult> {
-    Logger::log(Verbosity::QUERIES, "DBMock [verbose]: $query");
+    Logger::log(Verbosity::QUERIES, "SQLFake [verbose]: $query");
     list($results, $rows_affected) = SQLCommandProcessor::execute($query, $this);
     Logger::logResult($this->getServer()->name, $results, $rows_affected);
     return new AsyncMysqlQueryResult(vec($results), $rows_affected);
@@ -52,7 +52,7 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
     \HH\FormatString<\HH\SQLFormatter> $query,
     mixed ...$args
   ): Awaitable<AsyncMysqlQueryResult> {
-    throw new DBMockNotImplementedException('queryf not yet implemented');
+    throw new SQLFakeNotImplementedException('queryf not yet implemented');
   }
 
   <<__Override>>
@@ -61,7 +61,7 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
     int $timeout_micros = -1,
     dict<string, string> $query_attributes = dict[],
   ): mixed {
-    throw new DBMockNotImplementedException('multiQuery not yet implemented');
+    throw new SQLFakeNotImplementedException('multiQuery not yet implemented');
   }
 
   <<__Override>>

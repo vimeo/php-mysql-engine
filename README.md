@@ -10,7 +10,7 @@ In most unit testing libraries, SQL database calls are traditionally replaced wi
 
 Another common strategy is to test using an actual database, such as SQLite. This creates a dangerous situation in which the query engine in tests may not match the behavior of the production database, and any code using specialized features of the production database may be untestable. This strategy also requires explicitly truncating the schema and reloading test data between test cases to ensure isolation.
 
-Hack SQL Fake takes a different approach - parse and execute SQL SELECT, INSERT, UPDATE, and DELETE queries against an in-memory "database" stored with nested arrays. As long as the amount of data used for testing is small, this solves the problems mentioned above.
+Hack SQL Fake takes a different approach - parse and execute SQL SELECT, INSERT, UPDATE, and DELETE queries against an in-memory "database" stored with nested arrays. As long as the amount of data used for testing is small, this solves the problems mentioned above. This means that you can exercise as much of your actual code as possible with very little effort. It also means that "test setup" functions may not need to be written, the same functions that create production data can be invoked to generate test data.
 
 ## Usage
 

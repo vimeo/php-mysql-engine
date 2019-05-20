@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Dict, Str};
 
@@ -148,7 +148,7 @@ abstract final class JoinProcessor {
     $right = C\first($right_dataset);
     // TODO this should change to use $schema if schema is available
     if ($left === null || $right === null) {
-      throw new DBMockParseException("Attempted NATURAL join with no data present");
+      throw new SQLFakeParseException("Attempted NATURAL join with no data present");
     }
     foreach ($left as $column => $val) {
       $name = Str\split($column, '.') |> C\lastx($$);
@@ -162,7 +162,7 @@ abstract final class JoinProcessor {
 
     // MySQL actually doesn't throw if there's no matching columns, but I think we can take the liberty to assume it's not what you meant to do and throw here
     if ($filter === null) {
-      throw new DBMockParseException("NATURAL join keyword was used with tables that do not share any column names");
+      throw new SQLFakeParseException("NATURAL join keyword was used with tables that do not share any column names");
     }
 
     return $filter;

@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 //
 // Data Storage Types
@@ -92,7 +92,7 @@ type order_by_clause = vec<shape('expression' => Expression, 'direction' => Sort
 
 /**
  * A simple representation of a table schema, used to make the application smarter.
- * This allows db mock to provide fully typed rows, validate that columns exist,
+ * This allows SQL Fake to provide fully typed rows, validate that columns exist,
  * enforce primary key constraints, check if indexes would be used, and more
  */
 type table_schema = shape(

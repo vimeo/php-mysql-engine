@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Vec};
 
@@ -29,7 +29,7 @@ final class InsertParser {
 
     // if we got here, the first token had better be a INSERT
     if ($this->tokens[$this->pointer]['value'] !== 'INSERT') {
-      throw new DBMockParseException("Parser error: expected INSERT");
+      throw new SQLFakeParseException("Parser error: expected INSERT");
     }
     $this->pointer++;
 
@@ -53,7 +53,7 @@ final class InsertParser {
     // next token has to be a table name
     $token = $this->tokens[$this->pointer];
     if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
-      throw new DBMockParseException("Expected table name after INSERT");
+      throw new SQLFakeParseException("Expected table name after INSERT");
     }
     $this->pointer++;
 
@@ -78,7 +78,7 @@ final class InsertParser {
             C\contains_key(self::CLAUSE_ORDER, $token['value']) &&
             self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
           ) {
-            throw new DBMockParseException("Unexpected clause {$token['value']}");
+            throw new SQLFakeParseException("Unexpected clause {$token['value']}");
           }
 
           switch ($token['value']) {
@@ -88,13 +88,13 @@ final class InsertParser {
                 $token = $this->tokens[$this->pointer];
                 // VALUES must be followed by paren and then a list of values
                 if ($token === null || $token['value'] !== '(') {
-                  throw new DBMockParseException("Expected ( after VALUES");
+                  throw new SQLFakeParseException("Expected ( after VALUES");
                 }
                 $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
                 $values_tokens = Vec\slice($this->tokens, $this->pointer + 1, $close - $this->pointer - 1);
                 $values = $this->parseValues($values_tokens);
                 if (C\count($values) !== C\count($query->insertColumns)) {
-                  throw new DBMockParseException(
+                  throw new SQLFakeParseException(
                     "Insert list contains ".
                     C\count($query->insertColumns).
                     ' fields, but values clause contains '.
@@ -106,17 +106,17 @@ final class InsertParser {
               } while (($this->tokens[$this->pointer + 1]['value'] ?? null) === ',' && $this->pointer++);
               break;
             default:
-              throw new DBMockParseException("Unexpected clause {$token['value']}");
+              throw new SQLFakeParseException("Unexpected clause {$token['value']}");
           }
           $this->currentClause = $token['value'];
           break;
         case TokenType::IDENTIFIER:
           if ($needs_comma) {
-            throw new DBMockParseException("Expected , between expressions in INSERT");
+            throw new SQLFakeParseException("Expected , between expressions in INSERT");
           }
 
           if ($this->currentClause !== 'COLUMN_LIST') {
-            throw new DBMockParseException("Unexpected token {$token['value']} in INSERT");
+            throw new SQLFakeParseException("Unexpected token {$token['value']} in INSERT");
           }
 
           $query->insertColumns[] = $token['value'];
@@ -129,22 +129,22 @@ final class InsertParser {
             break;
           }
 
-          throw new DBMockParseException("Unexpected (");
+          throw new SQLFakeParseException("Unexpected (");
         case TokenType::SEPARATOR:
           if ($token['value'] === ',') {
             if (!$needs_comma) {
-              throw new DBMockParseException("Unexpected ,");
+              throw new SQLFakeParseException("Unexpected ,");
             }
             $needs_comma = false;
           } else if ($this->currentClause === 'COLUMN_LIST' && $needs_comma && $token['value'] === ')') {
             // closing the insert column list?
             $needs_comma = false;
             if (($this->tokens[$this->pointer + 1]['value'] ?? null) !== 'VALUES') {
-              throw new DBMockParseException("Expected VALUES after insert column list");
+              throw new SQLFakeParseException("Expected VALUES after insert column list");
             }
             break;
           } else {
-            throw new DBMockParseException("Unexpected {$token['value']}");
+            throw new SQLFakeParseException("Unexpected {$token['value']}");
           }
           break;
         case TokenType::RESERVED:
@@ -154,7 +154,7 @@ final class InsertParser {
             foreach ($expected as $index => $keyword) {
               $next = $this->tokens[$next_pointer + $index] ?? null;
               if ($next === null || $next['value'] !== $keyword) {
-                throw new DBMockParseException("Unexpected keyword near ON");
+                throw new SQLFakeParseException("Unexpected keyword near ON");
               }
             }
             $this->pointer += 3;
@@ -162,16 +162,16 @@ final class InsertParser {
             list($this->pointer, $query->updateExpressions) = $p->parse(/* $skip_set */ true);
             break;
           }
-          throw new DBMockParseException("Unexpected {$token['value']}");
+          throw new SQLFakeParseException("Unexpected {$token['value']}");
         default:
-          throw new DBMockParseException("Unexpected token {$token['value']}");
+          throw new SQLFakeParseException("Unexpected token {$token['value']}");
       }
 
       $this->pointer++;
     }
 
     if (C\is_empty($query->insertColumns) || C\is_empty($query->values)) {
-      throw new DBMockParseException("Missing values to insert");
+      throw new SQLFakeParseException("Missing values to insert");
     }
 
     return $query;
@@ -198,7 +198,7 @@ final class InsertParser {
         case TokenType::SQLFUNCTION:
         case TokenType::PAREN:
           if ($needs_comma) {
-            throw new DBMockParseException("Expected , between expressions in SET clause near {$token['value']}");
+            throw new SQLFakeParseException("Expected , between expressions in SET clause near {$token['value']}");
           }
           $expression_parser = new ExpressionParser($tokens, $pointer - 1);
           $start = $pointer;
@@ -210,15 +210,15 @@ final class InsertParser {
           if ($token['value'] === ',') {
             if (!$needs_comma) {
               echo "le comma one";
-              throw new DBMockParseException("Unexpected ,");
+              throw new SQLFakeParseException("Unexpected ,");
             }
             $needs_comma = false;
           } else {
-            throw new DBMockParseException("Unexpected {$token['value']}");
+            throw new SQLFakeParseException("Unexpected {$token['value']}");
           }
           break;
         default:
-          throw new DBMockParseException("Unexpected token {$token['value']}");
+          throw new SQLFakeParseException("Unexpected token {$token['value']}");
       }
       $pointer++;
     }

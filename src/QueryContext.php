@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 abstract final class QueryContext {
 
@@ -15,7 +15,7 @@ abstract final class QueryContext {
   /**
    * 1: quiet, print nothing
    * 2: verbose, print every query as it executes
-   * 3: very verbose, print query results as well TODO port over DB mock show for this?
+   * 3: very verbose, print query results as well
    */
   public static Verbosity $verbosity = Verbosity::QUIET;
 

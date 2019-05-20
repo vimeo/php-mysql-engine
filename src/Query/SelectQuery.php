@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Dict, Keyset, Str, Vec};
 
@@ -21,7 +21,7 @@ final class SelectQuery extends Query {
 
   public function addSelectExpression(Expression $expr): void {
     if ($this->needsSeparator) {
-      throw new DBMockParseException("Unexpected expression!");
+      throw new SQLFakeParseException("Unexpected expression!");
     }
     $this->selectExpressions[] = $expr;
     $this->needsSeparator = true;
@@ -35,7 +35,7 @@ final class SelectQuery extends Query {
   public function aliasRecentExpression(string $name): void {
     $k = C\last_key($this->selectExpressions);
     if ($k === null || $this->mostRecentHasAlias) {
-      throw new DBMockParseException("Unexpected AS");
+      throw new SQLFakeParseException("Unexpected AS");
     }
     $this->selectExpressions[$k]->name = $name;
     $this->mostRecentHasAlias = true;
@@ -200,7 +200,7 @@ final class SelectQuery extends Query {
         if ($expr is SubqueryExpression) {
           invariant($val is KeyedContainer<_, _>, 'subquery results must be KeyedContainer');
           if (C\count($val) > 1) {
-            throw new DBMockRuntimeException("Subquery returned more than one row");
+            throw new SQLFakeRuntimeException("Subquery returned more than one row");
           }
           if (C\count($val) === 0) {
             $val = null;
@@ -208,7 +208,7 @@ final class SelectQuery extends Query {
             foreach ($val as $r) {
               $r as KeyedContainer<_, _>;
               if (C\count($r) !== 1) {
-                throw new DBMockRuntimeException("Subquery result should contain 1 column");
+                throw new SQLFakeRuntimeException("Subquery result should contain 1 column");
               }
               $val = C\onlyx($r);
             }

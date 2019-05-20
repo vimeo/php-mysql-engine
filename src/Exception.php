@@ -1,9 +1,9 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
-abstract class DBMockException extends \Exception {}
-final class DBMockNotImplementedException extends DBMockException {}
-final class DBMockParseException extends DBMockException {}
-final class DBMockRuntimeException extends DBMockException {}
-final class DBMockUniqueKeyViolation extends DBMockException {}
+abstract class SQLFakeException extends \Exception {}
+final class SQLFakeNotImplementedException extends SQLFakeException {}
+final class SQLFakeParseException extends SQLFakeException {}
+final class SQLFakeRuntimeException extends SQLFakeException {}
+final class SQLFakeUniqueKeyViolation extends SQLFakeException {}

@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Dict, Keyset, Math, Str};
 
@@ -101,7 +101,7 @@ abstract final class Logger {
 	}
 
 	/**
-	 * _db_mock_format_table_row(): generate a horizontal table row with separators
+	 * generate a horizontal table row with separators
 	 *
 	 * This function creates a horizontal table row, given a map of column names and
 	 * maximum string lengths, it uses these lengths to determine the padding for each

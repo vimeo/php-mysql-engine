@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Str};
 
@@ -23,7 +23,7 @@ final class DeleteParser {
 
     // if we got here, the first token had better be a DELETE
     if ($this->tokens[$this->pointer]['value'] !== 'DELETE') {
-      throw new DBMockParseException("Parser error: expected DELETE");
+      throw new SQLFakeParseException("Parser error: expected DELETE");
     }
     $this->pointer++;
     $count = C\count($this->tokens);
@@ -40,7 +40,7 @@ final class DeleteParser {
             C\contains_key(self::CLAUSE_ORDER, $token['value']) &&
             self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
           ) {
-            throw new DBMockParseException("Unexpected clause {$token['value']}");
+            throw new SQLFakeParseException("Unexpected clause {$token['value']}");
           }
           $this->currentClause = $token['value'];
           switch ($token['value']) {
@@ -48,7 +48,7 @@ final class DeleteParser {
               $this->pointer++;
               $token = $this->tokens[$this->pointer];
               if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
-                throw new DBMockParseException("Expected table name after FROM");
+                throw new SQLFakeParseException("Expected table name after FROM");
               }
               $table = shape(
                 'name' => $token['value'],
@@ -71,7 +71,7 @@ final class DeleteParser {
               list($this->pointer, $query->limitClause) = $p->parse();
               break;
             default:
-              throw new DBMockParseException("Unexpected clause {$token['value']}");
+              throw new SQLFakeParseException("Unexpected clause {$token['value']}");
           }
           break;
         case TokenType::RESERVED:
@@ -94,22 +94,22 @@ final class DeleteParser {
             $this->currentClause = 'FROM';
             break;
           }
-          throw new DBMockParseException("Unexpected token {$token['value']}");
+          throw new SQLFakeParseException("Unexpected token {$token['value']}");
         case TokenType::SEPARATOR:
           // a semicolon to end the query is valid, but nothing else is in this context
           if ($token['value'] !== ';') {
-            throw new DBMockParseException("Unexpected {$token['value']}");
+            throw new SQLFakeParseException("Unexpected {$token['value']}");
           }
           break;
         default:
-          throw new DBMockParseException("Unexpected token {$token['value']}");
+          throw new SQLFakeParseException("Unexpected token {$token['value']}");
       }
 
       $this->pointer++;
     }
 
     if ($query->fromClause === null) {
-      throw new DBMockParseException("Expected FROM in DELETE statement");
+      throw new SQLFakeParseException("Expected FROM in DELETE statement");
     }
 
     return $query;

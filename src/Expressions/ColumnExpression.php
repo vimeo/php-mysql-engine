@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Str};
 
@@ -46,14 +46,14 @@ final class ColumnExpression extends Expression {
     	foreach ($columns as $index => $col){
     		if (($table === null || $col['table'] === $table) && $col['column'] === $column){
     			// if we already found a match for this column and then find another, it's an error for it to be ambiguous
-    			if ($found) throw new DBMockParseException("Column {$column} in field list is ambiguous");
+    			if ($found) throw new SQLFakeParseException("Column {$column} in field list is ambiguous");
     			$this->index = $index;
     			$found = true;
     		}
     	}
     }
 
-    if (!$found) throw new DBMockParseException("Column {$column} not found on table {$table}");
+    if (!$found) throw new SQLFakeParseException("Column {$column} not found on table {$table}");
     */
   }
 
@@ -88,7 +88,7 @@ final class ColumnExpression extends Expression {
     if (QueryContext::$strictMode) {
       // we've running in strict mode but we still ran into a column that was missing.
       // this means we're selecting on a column that does not exist
-      throw new DBMockRuntimeException("Column with index ".$this->columnExpression." not found in row");
+      throw new SQLFakeRuntimeException("Column with index ".$this->columnExpression." not found in row");
     } else {
       return null;
     }

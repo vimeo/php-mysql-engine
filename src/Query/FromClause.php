@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
 
@@ -23,7 +23,7 @@ final class FromClause {
   public function aliasRecentExpression(string $name): void {
     $k = C\last_key($this->tables);
     if ($k === null || $this->mostRecentHasAlias) {
-      throw new DBMockParseException("Unexpected AS");
+      throw new SQLFakeParseException("Unexpected AS");
     }
     $this->tables[$k]['alias'] = $name;
     $this->mostRecentHasAlias = true;
@@ -57,7 +57,7 @@ final class FromClause {
         $name = $table['alias'] ?? $table_name;
         $schema = QueryContext::getSchema($database, $table_name);
         if ($schema === null && QueryContext::$strictMode) {
-          throw new DBMockRuntimeException("Table $table_name not found in schema and strict mode is enabled");
+          throw new SQLFakeRuntimeException("Table $table_name not found in schema and strict mode is enabled");
         }
 
         $res = $conn->getServer()->getTable($database, $table_name);

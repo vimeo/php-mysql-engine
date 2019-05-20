@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 // parse the LIMIT clause, which can be used for SELECT, UPDATE, or DELETE
 final class LimitParser {
@@ -11,12 +11,12 @@ final class LimitParser {
 
     // if we got here, the first token had better be LIMIT
     if ($this->tokens[$this->pointer]['value'] !== 'LIMIT') {
-      throw new DBMockParseException("Parser error: expected LIMIT");
+      throw new SQLFakeParseException("Parser error: expected LIMIT");
     }
     $this->pointer++;
     $next = $this->tokens[$this->pointer] ?? null;
     if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {
-      throw new DBMockParseException("Expected integer after LIMIT");
+      throw new SQLFakeParseException("Expected integer after LIMIT");
     }
     $limit = (int)($next['value']);
     $offset = 0;
@@ -26,14 +26,14 @@ final class LimitParser {
         $this->pointer += 2;
         $next = $this->tokens[$this->pointer] ?? null;
         if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {
-          throw new DBMockParseException("Expected integer after OFFSET");
+          throw new SQLFakeParseException("Expected integer after OFFSET");
         }
         $offset = (int)($next['value']);
       } elseif ($next['value'] === ',') {
         $this->pointer += 2;
         $next = $this->tokens[$this->pointer] ?? null;
         if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {
-          throw new DBMockParseException("Expected integer after OFFSET");
+          throw new SQLFakeParseException("Expected integer after OFFSET");
         }
 
         // in LIMIT 1, 100 the offset is 1 and 100 is the row count, so swap them here

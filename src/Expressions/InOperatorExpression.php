@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
 
@@ -22,20 +22,20 @@ final class InOperatorExpression extends Expression {
   public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
     $inList = $this->inList;
     if ($inList === null || C\count($inList) === 0) {
-      throw new DBMockParseException("Parse error: empty IN list");
+      throw new SQLFakeParseException("Parse error: empty IN list");
     }
 
     //
     // Handle NULL as a special case: MySQL evaluates both "IN (NULL)" and "NOT IN (NULL)" to false,
     // but while "IN (NULL)" might make sense when running a query with an empty IN list,
     // "NOT IN (NULL)" almost certainly doesn't match what the developer is expecting.
-    // To avoid confusion, we just throw an DBMockException here.
+    // To avoid confusion, we just throw an SQLFakeException here.
     //
     if (C\count($inList) === 1 && $inList[0]->evaluate($row, $conn) === null) {
       if (!$this->negated) {
         return false;
       } else {
-        throw new DBMockRuntimeException(
+        throw new SQLFakeRuntimeException(
           "You're probably trying to use NOT IN with an empty array, but MySQL would evaluate this to false.",
         );
       }
@@ -50,7 +50,7 @@ final class InOperatorExpression extends Expression {
         foreach ($ret as $r) {
           $r as KeyedContainer<_, _>;
           if (C\count($r) !== 1) {
-            throw new DBMockRuntimeException("Subquery result should contain 1 column");
+            throw new SQLFakeRuntimeException("Subquery result should contain 1 column");
           }
           foreach ($r as $val) {
             if ($value == $val) {

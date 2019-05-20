@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 /**
  * Contains an entier query you can run. this expression is the reason that every expression

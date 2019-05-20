@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Math, Str};
 
@@ -73,7 +73,7 @@ final class FunctionExpression extends Expression {
       // GROUP_CONCAT might be a nice one to implement but it does have a lot of params and isn't really used in our codebase
     }
 
-    throw new DBMockRuntimeException("Function ".$this->functionName." not implemented yet");
+    throw new SQLFakeRuntimeException("Function ".$this->functionName." not implemented yet");
   }
 
   public function functionName(): string {
@@ -175,7 +175,7 @@ final class FunctionExpression extends Expression {
 
     $args = $this->args;
     if (C\count($args) !== 2) {
-      throw new DBMockRuntimeException("MySQL MOD() function must be called with two arguments");
+      throw new SQLFakeRuntimeException("MySQL MOD() function must be called with two arguments");
     }
     $n = $args[0];
     $n_value = (int)$n->evaluate($row, $conn);
@@ -206,7 +206,7 @@ final class FunctionExpression extends Expression {
 
     $args = $this->args;
     if (C\count($args) !== 3) {
-      throw new DBMockRuntimeException("MySQL IF() function must be called with three arguments");
+      throw new SQLFakeRuntimeException("MySQL IF() function must be called with three arguments");
     }
     $condition = $args[0];
 
@@ -224,7 +224,7 @@ final class FunctionExpression extends Expression {
 
     $args = $this->args;
     if (C\count($args) !== 2 && C\count($args) !== 3) {
-      throw new DBMockRuntimeException("MySQL SUBSTRING() function must be called with two or three arguments");
+      throw new SQLFakeRuntimeException("MySQL SUBSTRING() function must be called with two or three arguments");
     }
     $subject = $args[0];
     $string = (string)$subject->evaluate($row, $conn);
@@ -249,7 +249,7 @@ final class FunctionExpression extends Expression {
 
     $args = $this->args;
     if (C\count($args) !== 1) {
-      throw new DBMockRuntimeException("MySQL LOWER() function must be called with one argument");
+      throw new SQLFakeRuntimeException("MySQL LOWER() function must be called with one argument");
     }
     $subject = $args[0];
     $string = (string)$subject->evaluate($row, $conn);
@@ -262,7 +262,7 @@ final class FunctionExpression extends Expression {
 
     $args = $this->args;
     if (C\count($args) !== 1) {
-      throw new DBMockRuntimeException("MySQL LENGTH() function must be called with one argument");
+      throw new SQLFakeRuntimeException("MySQL LENGTH() function must be called with one argument");
     }
     $subject = $args[0];
     $string = (string)$subject->evaluate($row, $conn);
@@ -275,7 +275,7 @@ final class FunctionExpression extends Expression {
 
     $args = $this->args;
     if (C\count($args) !== 1) {
-      throw new DBMockRuntimeException("MySQL BINARY() function must be called with one argument");
+      throw new SQLFakeRuntimeException("MySQL BINARY() function must be called with one argument");
     }
     $subject = $args[0];
     return $subject->evaluate($row, $conn);
@@ -286,7 +286,7 @@ final class FunctionExpression extends Expression {
 
     $args = $this->args;
     if (C\count($args) !== 1) {
-      throw new DBMockRuntimeException("MySQL CHAR_LENGTH() function must be called with one argument");
+      throw new SQLFakeRuntimeException("MySQL CHAR_LENGTH() function must be called with one argument");
     }
     $subject = $args[0];
     $string = (string)$subject->evaluate($row, $conn);
@@ -298,7 +298,7 @@ final class FunctionExpression extends Expression {
     $row = $this->maybeUnrollGroupedDataset($row);
 
     if (!C\count($this->args)) {
-      throw new DBMockRuntimeException("MySQL COALESCE() function must be called with at least one argument");
+      throw new SQLFakeRuntimeException("MySQL COALESCE() function must be called with at least one argument");
     }
 
     foreach ($this->args as $arg) {
@@ -316,7 +316,7 @@ final class FunctionExpression extends Expression {
     $args = $this->args;
 
     if (C\count($args) < 2) {
-      throw new DBMockRuntimeException("MySQL GREATEST() function must be called with at two arguments");
+      throw new SQLFakeRuntimeException("MySQL GREATEST() function must be called with at two arguments");
     }
 
     $values = vec[];
@@ -333,7 +333,7 @@ final class FunctionExpression extends Expression {
 
     $args = $this->args;
     if (C\count($args) !== 2) {
-      throw new DBMockRuntimeException("MySQL NULLIF() function must be called with two arguments");
+      throw new SQLFakeRuntimeException("MySQL NULLIF() function must be called with two arguments");
     }
     $left = $args[0]->evaluate($row, $conn);
     $right = $args[1]->evaluate($row, $conn);
@@ -346,7 +346,7 @@ final class FunctionExpression extends Expression {
 
     $args = $this->args;
     if (C\count($args) !== 1) {
-      throw new DBMockRuntimeException("MySQL FROM_UNIXTIME() mock only implemented for 1 argument");
+      throw new SQLFakeRuntimeException("MySQL FROM_UNIXTIME() SQLFake only implemented for 1 argument");
     }
 
     $column = $args[0]->evaluate($row, $conn);
@@ -364,7 +364,7 @@ final class FunctionExpression extends Expression {
     $row = $this->maybeUnrollGroupedDataset($row);
     $args = $this->args;
     if (C\count($args) < 2) {
-      throw new DBMockRuntimeException("MySQL CONCAT() function must be called with at least two arguments");
+      throw new SQLFakeRuntimeException("MySQL CONCAT() function must be called with at least two arguments");
     }
     $final_concat = "";
     foreach ($args as $k => $arg) {
@@ -378,11 +378,11 @@ final class FunctionExpression extends Expression {
     $row = $this->maybeUnrollGroupedDataset($row);
     $args = $this->args;
     if (C\count($args) < 2) {
-      throw new DBMockRuntimeException("MySQL CONCAT_WS() function must be called with at least two arguments");
+      throw new SQLFakeRuntimeException("MySQL CONCAT_WS() function must be called with at least two arguments");
     }
     $separator = $args[0]->evaluate($row, $conn);
     if ($separator === null) {
-      throw new DBMockRuntimeException("MySQL CONCAT_WS() function required non null separator");
+      throw new SQLFakeRuntimeException("MySQL CONCAT_WS() function required non null separator");
     }
     $separator = (string)$separator;
     $final_concat = "";
@@ -404,7 +404,7 @@ final class FunctionExpression extends Expression {
     $args = $this->args;
     $num_args = C\count($args);
     if ($num_args < 2) {
-      throw new DBMockRuntimeException("MySQL FIELD() function must be called with at least two arguments");
+      throw new SQLFakeRuntimeException("MySQL FIELD() function must be called with at least two arguments");
     }
 
     $value = $args[0]->evaluate($row, $conn);
@@ -423,16 +423,16 @@ final class FunctionExpression extends Expression {
     $args = $this->args;
     $num_args = C\count($args);
     if ($num_args !== 1) {
-      throw new DBMockRuntimeException("MySQL VALUES() function must be called with one argument");
+      throw new SQLFakeRuntimeException("MySQL VALUES() function must be called with one argument");
     }
 
     $arg = $args[0];
     if (!$arg is ColumnExpression) {
-      throw new DBMockRuntimeException("MySQL VALUES() function should be called with a column name");
+      throw new SQLFakeRuntimeException("MySQL VALUES() function should be called with a column name");
     }
 
-    // a bit hacky here, override so that the expression pulls the value from the db_mock_values.* fields set in Query::applySet
-    $arg->prefixColumnExpression('db_mock_values.');
+    // a bit hacky here, override so that the expression pulls the value from the sql_fake_values.* fields set in Query::applySet
+    $arg->prefixColumnExpression('sql_fake_values.');
     return $arg->evaluate($row, $conn);
   }
 

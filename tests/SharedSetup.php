@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 final class SharedSetup {
 	public static async function initAsync(): Awaitable<AsyncMysqlConnection> {

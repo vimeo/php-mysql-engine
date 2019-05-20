@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
 
@@ -24,7 +24,7 @@ final class UpdateParser {
 
     // if we got here, the first token had better be a UPDATE
     if ($this->tokens[$this->pointer]['value'] !== 'UPDATE') {
-      throw new DBMockParseException("Parser error: expected UPDATE");
+      throw new SQLFakeParseException("Parser error: expected UPDATE");
     }
     $this->pointer++;
     $count = C\count($this->tokens);
@@ -32,7 +32,7 @@ final class UpdateParser {
     // next token has to be a table name
     $token = $this->tokens[$this->pointer];
     if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
-      throw new DBMockParseException("Expected table name after UPDATE");
+      throw new SQLFakeParseException("Expected table name after UPDATE");
     }
 
     $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
@@ -53,7 +53,7 @@ final class UpdateParser {
             C\contains_key(self::CLAUSE_ORDER, $token['value']) &&
             self::CLAUSE_ORDER[$this->current_clause] >= self::CLAUSE_ORDER[$token['value']]
           ) {
-            throw new DBMockParseException("Unexpected clause {$token['value']}");
+            throw new SQLFakeParseException("Unexpected clause {$token['value']}");
           }
           $this->current_clause = $token['value'];
           switch ($token['value']) {
@@ -75,17 +75,17 @@ final class UpdateParser {
               list($this->pointer, $query->setClause) = $p->parse();
               break;
             default:
-              throw new DBMockParseException("Unexpected clause {$token['value']}");
+              throw new SQLFakeParseException("Unexpected clause {$token['value']}");
           }
           break;
         case TokenType::SEPARATOR:
           // a semicolon to end the query is valid, but nothing else is in this context
           if ($token['value'] !== ';') {
-            throw new DBMockParseException("Unexpected {$token['value']}");
+            throw new SQLFakeParseException("Unexpected {$token['value']}");
           }
           break;
         default:
-          throw new DBMockParseException("Unexpected token {$token['value']}");
+          throw new SQLFakeParseException("Unexpected token {$token['value']}");
       }
 
       $this->pointer++;

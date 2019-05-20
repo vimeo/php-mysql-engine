@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 /**
  * Represents a unary operator (one that takes only one argument)
@@ -21,7 +21,7 @@ final class UnaryExpression extends Expression {
   <<__Override>>
   public function evaluate(row $row, AsyncMysqlConnection $conn): mixed {
     if ($this->subject === null) {
-      throw new DBMockRuntimeException("Attempted to evaluate unary operation with no operand");
+      throw new SQLFakeRuntimeException("Attempted to evaluate unary operation with no operand");
     }
     $val = $this->subject->evaluate($row, $conn);
     switch ($this->operator) {
@@ -32,7 +32,7 @@ final class UnaryExpression extends Expression {
       case '~':
         return ~(int)$val;
       default:
-        throw new DBMockRuntimeException("Unimplemented unary operand {$this->name}");
+        throw new SQLFakeRuntimeException("Unimplemented unary operand {$this->name}");
     }
 
     return $val;
@@ -41,7 +41,7 @@ final class UnaryExpression extends Expression {
   <<__Override>>
   public function setNextChild(Expression $expr, bool $overwrite = false): void {
     if ($this->subject is nonnull && !$overwrite) {
-      throw new DBMockParseException("Unexpected expression after unary operand");
+      throw new SQLFakeParseException("Unexpected expression after unary operand");
     }
     $this->subject = $expr;
   }

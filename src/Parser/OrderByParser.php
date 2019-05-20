@@ -1,6 +1,6 @@
 <?hh // strict
 
-namespace Slack\DBMock;
+namespace Slack\SQLFake;
 
 use namespace HH\Lib\C;
 
@@ -18,14 +18,14 @@ final class OrderByParser {
 
     // if we got here, the first token had better be ORDER
     if ($this->tokens[$this->pointer]['value'] !== 'ORDER') {
-      throw new DBMockParseException("Parser error: expected ORDER");
+      throw new SQLFakeParseException("Parser error: expected ORDER");
     }
 
     $this->pointer++;
     $next = $this->tokens[$this->pointer] ?? null;
     $expressions = vec[];
     if ($next === null || $next['value'] !== 'BY') {
-      throw new DBMockParseException("Expected BY after ORDER");
+      throw new SQLFakeParseException("Expected BY after ORDER");
     }
 
     while (true) {
