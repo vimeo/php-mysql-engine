@@ -14,7 +14,7 @@ final class SQLLexer {
   // this regex contains all MySQL operands and words patterns (including whitespace) that can separate SQL Tokens
   // the longer ones come first which is important because of how preg_split works
   private static string $token_split_regex =
-    '/(\<\=\>|\r\n|\!\=|\>\=|\<\=|\<\>|\<\<|\>\>|\:\=|\\|&&|\|\||\:\=|\/\*|\*\/|\-\-|\>|\<|\||\=|\^|\(|\)|\t|\n|\'|"|`|,|@|\s|\+|\-|\*|\/|;)/';
+    '/(\<\=\>|\r\n|\!\=|\>\=|\<\=|\<\>|\<\<|\>\>|\:\=|&&|\|\||\:\=|\/\*|\*\/|\-\-|\>|\<|\||\=|\^|\(|\)|\t|\n|\'|"|`|,|@|\s|\+|\-|\*|\/|;|\\\)/';
 
   public function lex(string $sql): vec<string> {
 
@@ -67,6 +67,16 @@ final class SQLLexer {
         continue;
       }
 
+      if (!$escape_next && C\contains_key(keyset['\'', '"'], $token)) {
+        if ($quote !== null && $quote === $token) {
+          $quote = null;
+        } else if ($quote !== null) {
+          continue;
+        } else {
+          $quote = $token;
+        }
+      }
+
       // we need to handle sequences that look like comments, but are inside quoted strings. to do that, we also need to know when quoted strings start and end
       // since a comment could contain a quote, and a quote could contain a comment, we can't safely process either first without being aware of the other
       // so first we check if the next token should be escaped, and then if it's a quote character
@@ -74,14 +84,6 @@ final class SQLLexer {
         $escape_next = true;
       } else {
         $escape_next = false;
-      }
-
-      if (!$escape_next && C\contains_key(keyset['\'', '"'], $token)) {
-        if ($quote !== null && $quote === $token) {
-          $quote = null;
-        } else {
-          $quote = $token;
-        }
       }
 
       // if we are inside a quoted string, do not check for comment sequences
