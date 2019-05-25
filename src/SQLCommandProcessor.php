@@ -25,14 +25,7 @@ abstract final class SQLCommandProcessor {
       throw new SQLFakeNotImplementedException("Transactions are not yet supported");
     }
 
-    try {
-      $query = SQLParser::parse($sql);
-    } catch (\Exception $e) {
-      // this makes debugging a failing unit test easier, show the actual query that failed parsing along with the parser error
-      $msg = $e->getMessage();
-      $type = \get_class($e);
-      throw new SQLFakeParseException("SQL Fake $type: $msg in SQL query: $sql");
-    }
+    $query = SQLParser::parse($sql);
 
     if ($query is SelectQuery) {
       return tuple($query->execute($conn), 0);
