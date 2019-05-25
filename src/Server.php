@@ -6,7 +6,7 @@ use namespace HH\Lib\C;
 
 final class Server {
 
-  public function __construct(public string $name) {}
+  public function __construct(public string $name, public ?server_config $config = null) {}
 
   private static dict<string, Server> $instances = dict[];
   private static keyset<string> $snapshot_names = keyset[];
@@ -17,6 +17,10 @@ final class Server {
 
   public static function get(string $name): ?this {
     return static::$instances[$name] ?? null;
+  }
+
+  public function setConfig(server_config $config): void {
+    $this->config = $config;
   }
 
   public static function getOrCreate(string $name): this {

@@ -97,4 +97,9 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
   public function recvGtid(): string {
     return 'stubbed';
   }
+
+  <<__Override>>
+  public function elapsedMicros(): int {
+    return 100;
+  }
 }

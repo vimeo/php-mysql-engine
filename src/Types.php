@@ -151,3 +151,13 @@ enum DataType: string {
   DECIMAL = 'DECIMAL';
   NUMERIC = 'NUMERIC';
 }
+
+
+type server_config = shape(
+  // i.e. 5.6, 5.7
+  'mysql_version' => string,
+  ?'is_vitess' => bool,
+  'strict_sql_mode' => bool,
+  // name of a database in table configuration to copy schema from
+  ?'inherit_schema_from' => string,
+);

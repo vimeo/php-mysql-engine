@@ -21,6 +21,11 @@ function init(dict<string, dict<string, table_schema>> $schema = dict[], bool $s
   QueryContext::$strictMode = $strict;
 }
 
+function add_server(string $hostname, server_config $config): void {
+  $server = Server::getOrCreate($hostname);
+  $server->setConfig($config);
+}
+
 function snapshot(string $name): void {
   Server::snapshot($name);
 }

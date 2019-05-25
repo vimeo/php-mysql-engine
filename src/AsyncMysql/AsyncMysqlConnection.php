@@ -42,6 +42,16 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
     dict<string, string> $query_attributes = dict[],
   ): Awaitable<AsyncMysqlQueryResult> {
     Logger::log(Verbosity::QUERIES, "SQLFake [verbose]: $query");
+
+    $config = $this->server->config;
+    if ($config['strict_sql_mode'] ?? false){
+      QueryContext::$strictMode = true;
+    }
+
+    if (($config['inherit_schema_from'] ?? '') !== '') {
+      $this->dbname = $config['inherit_schema_from'] ?? '';
+    }
+
     list($results, $rows_affected) = SQLCommandProcessor::execute($query, $this);
     Logger::logResult($this->getServer()->name, $results, $rows_affected);
     return new AsyncMysqlQueryResult(vec($results), $rows_affected);
