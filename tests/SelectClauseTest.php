@@ -12,12 +12,15 @@ final class SelectClauseTest extends HackTest {
 	<<__Override>>
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		static::$conn = await SharedSetup::initAsync();
+		// block hole logging
+		Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
 	}
 
 	<<__Override>>
 	public async function beforeEachTestAsync(): Awaitable<void> {
 		restore('setup');
-		QueryContext::$strictMode = false;
+		QueryContext::$strictSchemaMode = false;
+		QueryContext::$strictSQLMode = false;
 	}
 
 	public async function testNoFromClause(): Awaitable<void> {
@@ -95,7 +98,7 @@ final class SelectClauseTest extends HackTest {
 
 	public async function testNonexistentColumnInWhereStrict(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		QueryContext::$strictMode = true;
+		QueryContext::$strictSchemaMode = true;
 		expect(() ==> $conn->query("SELECT id FROM table3 WHERE group_id=12345 AND doesnotexist='name2'"))->toThrow(
 			SQLFakeRuntimeException::class,
 			"Column with index doesnotexist not found in row",
@@ -224,6 +227,6 @@ final class SelectClauseTest extends HackTest {
 		expect(
 			() ==> $conn->query("select group_id, table_4_id from association_table LIMIT 2 ORDER BY group_id, 2 DESC"),
 		)
-			->toThrow(SQLFakeParseException::class, "Unexpected ORDER in SQL query");
+			->toThrow(SQLFakeParseException::class, "Unexpected ORDER");
 	}
 }

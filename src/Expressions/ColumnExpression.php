@@ -85,7 +85,7 @@ final class ColumnExpression extends Expression {
       return $row[$this->name];
     }
 
-    if (QueryContext::$strictMode) {
+    if (QueryContext::$strictSchemaMode) {
       // we've running in strict mode but we still ran into a column that was missing.
       // this means we're selecting on a column that does not exist
       throw new SQLFakeRuntimeException("Column with index ".$this->columnExpression." not found in row");

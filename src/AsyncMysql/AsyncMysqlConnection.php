@@ -44,9 +44,14 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
     Logger::log(Verbosity::QUERIES, "SQLFake [verbose]: $query");
 
     $config = $this->server->config;
-    $strict_before = QueryContext::$strictMode;
+    $strict_sql_before = QueryContext::$strictSQLMode;
     if ($config['strict_sql_mode'] ?? false) {
-      QueryContext::$strictMode = true;
+      QueryContext::$strictSQLMode = true;
+    }
+
+    $strict_schema_before = QueryContext::$strictSchemaMode;
+    if ($config['strict_schema_mode'] ?? false) {
+      QueryContext::$strictSchemaMode = true;
     }
 
     if (($config['inherit_schema_from'] ?? '') !== '') {
@@ -57,12 +62,15 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
       list($results, $rows_affected) = SQLCommandProcessor::execute($query, $this);
     } catch (\Exception $e) {
       // this makes debugging a failing unit test easier, show the actual query that failed parsing along with the parser error
-      QueryContext::$strictMode = $strict_before;
+      QueryContext::$strictSQLMode = $strict_sql_before;
+      QueryContext::$strictSchemaMode = $strict_schema_before;
       $msg = $e->getMessage();
       $type = \get_class($e);
-      throw new SQLFakeParseException("SQL Fake $type: $msg in SQL query: $sql");
+      Logger::log(Verbosity::QUIET, "SQL Fake $type: $msg in SQL query: $query");
+      throw $e;
     }
-    QueryContext::$strictMode = $strict_before;
+    QueryContext::$strictSQLMode = $strict_sql_before;
+    QueryContext::$strictSchemaMode = $strict_schema_before;
     Logger::logResult($this->getServer()->name, $results, $rows_affected);
     return new AsyncMysqlQueryResult(vec($results), $rows_affected);
   }

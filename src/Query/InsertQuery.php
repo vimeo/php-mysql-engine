@@ -23,7 +23,7 @@ final class InsertQuery extends Query {
     Metrics::trackQuery(QueryType::INSERT, $conn->getServer()->name, $table_name, $this->sql);
 
     $schema = QueryContext::getSchema($database, $table_name);
-    if ($schema === null && QueryContext::$strictMode) {
+    if ($schema === null && QueryContext::$strictSchemaMode) {
       throw new SQLFakeRuntimeException("Table $table_name not found in schema and strict mode is enabled");
     }
 
@@ -67,9 +67,10 @@ final class InsertQuery extends Query {
             );
             $rows_affected += $affected;
             continue;
-          } else {
-            // otherwise throw
+          } else if (!QueryContext::$relaxUniqueConstraints) {
             throw new SQLFakeUniqueKeyViolation($msg);
+          } else {
+            continue;
           }
         }
       }

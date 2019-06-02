@@ -56,7 +56,7 @@ final class FromClause {
         // TODO if different database, should $name have that in it as well for other things like column references? probably, right?
         $name = $table['alias'] ?? $table_name;
         $schema = QueryContext::getSchema($database, $table_name);
-        if ($schema === null && QueryContext::$strictMode) {
+        if ($schema === null && QueryContext::$strictSchemaMode) {
           throw new SQLFakeRuntimeException("Table $table_name not found in schema and strict mode is enabled");
         }
 

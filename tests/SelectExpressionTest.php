@@ -21,12 +21,15 @@ final class SelectExpressionTest extends HackTest {
 	<<__Override>>
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		static::$conn = await SharedSetup::initAsync();
+		// block hole logging
+		Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
 	}
 
 	<<__Override>>
 	public async function beforeEachTestAsync(): Awaitable<void> {
 		restore('setup');
-		QueryContext::$strictMode = false;
+		QueryContext::$strictSchemaMode = false;
+		QueryContext::$strictSQLMode = false;
 	}
 
 	public async function testSelectStar(): Awaitable<void> {

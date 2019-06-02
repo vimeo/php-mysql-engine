@@ -43,7 +43,7 @@ abstract final class DataIntegrity {
       return null;
     }
 
-    if (QueryContext::$strictMode) {
+    if (QueryContext::$strictSQLMode) {
       // if we got this far the column has no default and isn't nullable, strict would throw
       // but default MySQL mode would coerce to a valid value
       throw new SQLFakeRuntimeException("Column '{$field_name}' on '{$table_name}' does not allow null values");
@@ -82,7 +82,7 @@ abstract final class DataIntegrity {
         if ($field_nullable) {
           // explicit null value and nulls are allowed, let it through
           continue;
-        } else if (QueryContext::$strictMode) {
+        } else if (QueryContext::$strictSQLMode) {
           // if we got this far the column has no default and isn't nullable, strict would throw
           // but default MySQL mode would coerce to a valid value
           throw new SQLFakeRuntimeException("Column '{$field_name}' on '{$schema['name']}' does not allow null values");
@@ -97,7 +97,7 @@ abstract final class DataIntegrity {
             if ($row[$field_name] is bool) {
               $row[$field_name] = (int)$row[$field_name];
             } else if (!$row[$field_name] is int) {
-              if (QueryContext::$strictMode) {
+              if (QueryContext::$strictSQLMode) {
                 $field_str = \var_export($row[$field_name], true);
                 throw new SQLFakeRuntimeException(
                   "Invalid value {$field_str} for column '{$field_name}' on '{$schema['name']}', expected int",
@@ -109,7 +109,7 @@ abstract final class DataIntegrity {
             break;
           case 'double':
             if (!$row[$field_name] is float) {
-              if (QueryContext::$strictMode) {
+              if (QueryContext::$strictSQLMode) {
                 $field_str = \var_export($row[$field_name], true);
                 throw new SQLFakeRuntimeException(
                   "Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected float",
@@ -121,7 +121,7 @@ abstract final class DataIntegrity {
             break;
           default:
             if (!$row[$field_name] is string) {
-              if (QueryContext::$strictMode) {
+              if (QueryContext::$strictSQLMode) {
                 $field_str = \var_export($row[$field_name], true);
                 throw new SQLFakeRuntimeException(
                   "Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected string",

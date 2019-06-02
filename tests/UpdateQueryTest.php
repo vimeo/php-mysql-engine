@@ -96,7 +96,7 @@ final class UpdateQueryTest extends HackTest {
 
 	public async function testTypeCoercionStrict(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
-		QueryContext::$strictMode = true;
+		QueryContext::$strictSQLMode = true;
 		expect(() ==> $conn->query("UPDATE table3 set name=1 WHERE id=6"))->toThrow(
 			SQLFakeRuntimeException::class,
 			"Invalid value '1' for column 'name' on 'table3', expected string",
@@ -106,11 +106,14 @@ final class UpdateQueryTest extends HackTest {
 	<<__Override>>
 	public static async function beforeFirstTestAsync(): Awaitable<void> {
 		static::$conn = await SharedSetup::initAsync();
+		// block hole logging
+		Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
 	}
 
 	<<__Override>>
 	public async function beforeEachTestAsync(): Awaitable<void> {
 		restore('setup');
-		QueryContext::$strictMode = false;
+		QueryContext::$strictSchemaMode = false;
+		QueryContext::$strictSQLMode = false;
 	}
 }

@@ -14,12 +14,15 @@ final class InsertQueryTest extends HackTest {
     init(TEST_SCHEMA, true);
     $pool = new AsyncMysqlConnectionPool(darray[]);
     static::$conn = await $pool->connect("example", 1, 'db1', '', '');
+    // block hole logging
+    Logger::setHandle(new \Facebook\CLILib\TestLib\StringOutput());
   }
 
   <<__Override>>
   public async function beforeEachTestAsync(): Awaitable<void> {
     Server::reset();
-    QueryContext::$strictMode = false;
+    QueryContext::$strictSQLMode = false;
+    QueryContext::$strictSchemaMode = false;
   }
 
   public async function testSingleInsert(): Awaitable<void> {
@@ -113,7 +116,7 @@ final class InsertQueryTest extends HackTest {
 
   public async function testExplicitNullForNotNullableFieldStrict(): Awaitable<void> {
     $conn = static::$conn as nonnull;
-    QueryContext::$strictMode = true;
+    QueryContext::$strictSQLMode = true;
     expect(
       () ==> $conn->query("INSERT INTO table_with_more_fields (id, name, not_null_default) VALUES (1, 'test', null)"),
     )->toThrow(
@@ -195,7 +198,7 @@ final class InsertQueryTest extends HackTest {
 
   public async function testMissingNotNullFieldNoDefaultStrict(): Awaitable<void> {
     $conn = static::$conn as nonnull;
-    QueryContext::$strictMode = true;
+    QueryContext::$strictSQLMode = true;
     expect(() ==> $conn->query("INSERT INTO table2 (id, table_1_id) VALUES (1, 1)"))->toThrow(
       SQLFakeRuntimeException::class,
       "Column 'description' on 'table2' does not allow null values",
@@ -215,7 +218,7 @@ final class InsertQueryTest extends HackTest {
 
   public async function testWrongDataTypeStrict(): Awaitable<void> {
     $conn = static::$conn as nonnull;
-    QueryContext::$strictMode = true;
+    QueryContext::$strictSQLMode = true;
     expect(() ==> $conn->query("INSERT INTO table2 (id, table_1_id, description) VALUES (1, 'notastring', 'test')"))
       ->toThrow(
         SQLFakeRuntimeException::class,

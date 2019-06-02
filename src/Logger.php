@@ -3,11 +3,27 @@
 namespace Slack\SQLFake;
 
 use namespace HH\Lib\{C, Dict, Keyset, Math, Str};
+use namespace HH\Lib\Experimental\IO;
 
 abstract final class Logger {
+
+	protected static ?IO\WriteHandle $handle = null;
+
+	public static function setHandle(IO\WriteHandle $handle): void {
+		self::$handle = $handle;
+	}
+
 	public static function log(Verbosity $verbosity, string $message): void {
 		if (QueryContext::$verbosity >= $verbosity) {
-			echo "\n".$message;
+			self::write("\n".$message);
+		}
+	}
+
+	protected static function write(string $message): void {
+		if (self::$handle is nonnull) {
+			\HH\Asio\join(self::$handle->writeAsync($message));
+		} else {
+			\error_log($message);
 		}
 	}
 
@@ -30,13 +46,13 @@ abstract final class Logger {
 	public static function logResult(string $server, dataset $data, int $rows_affected): void {
 		if (QueryContext::$verbosity >= Verbosity::RESULTS) {
 			if ($rows_affected > 0) {
-				echo "{$rows_affected} rows affected\n";
+				self::write("{$rows_affected} rows affected\n");
 				return;
 			} elseif (!$data) {
-				echo "No results\n";
+				self::write("No results\n");
 				return;
 			}
-			echo static::formatData($data, $server);
+			self::write(static::formatData($data, $server));
 		}
 	}
 

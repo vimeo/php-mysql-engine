@@ -10,7 +10,19 @@ abstract final class QueryContext {
    *
    * This should be turned on if schema is available
    */
-  public static bool $strictMode = false;
+  public static bool $strictSchemaMode = false;
+
+  /**
+   * Emulate MySQL strict SQL mode. Invalid values for columns will
+   * throw instead of silently coercing the data
+   */
+  public static bool $strictSQLMode = false;
+
+  /**
+   * Set to true to allow unique key violations to be ignored temporarily
+   * May be useful when importing test data
+   */
+  public static bool $relaxUniqueConstraints = false;
 
   /**
    * 1: quiet, print nothing

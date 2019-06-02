@@ -207,7 +207,7 @@ abstract class Query {
           // throw on invalid data types if strict mode
           $row = DataIntegrity::coerceToSchema($row, $table_schema);
           $result = DataIntegrity::checkUniqueConstraints($original_table, $row, $table_schema, $row_id);
-          if ($result is nonnull) {
+          if ($result is nonnull && !QueryContext::$relaxUniqueConstraints) {
             throw new SQLFakeUniqueKeyViolation($result[0]);
           }
         }

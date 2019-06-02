@@ -158,6 +158,7 @@ type server_config = shape(
   'mysql_version' => string,
   ?'is_vitess' => bool,
   'strict_sql_mode' => bool,
+  'strict_schema_mode' => bool,
   // name of a database in table configuration to copy schema from
   ?'inherit_schema_from' => string,
 );
