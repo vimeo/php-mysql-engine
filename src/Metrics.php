@@ -109,7 +109,9 @@ abstract final class Metrics {
       $matched = false;
 
       // filter out this library
-      if (Str\contains($trace[0]['file'], __DIR__)) {
+      if (
+        Str\contains($trace[0]['file'], \realpath(__DIR__.'/..')) || $trace[0]['class'] === AsyncMysqlConnection::class
+      ) {
         $trace = Vec\drop($trace, 1);
         continue;
       }
