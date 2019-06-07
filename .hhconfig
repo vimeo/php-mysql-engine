@@ -1,1 +1,2 @@
 hackfmt.line_width=120
+assume_php=false
