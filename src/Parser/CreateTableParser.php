@@ -41,16 +41,6 @@ type parsed_table = shape(
 type parsed_field = shape(
 	'name' => string,
 	'type' => string,
-	'length' => string,
-	'unsigned' => bool,
-	'null' => bool,
-	?'default' => string,
-	...
-);
-
-type partial_parsed_field = shape(
-	'name' => string,
-	'type' => string,
 	?'length' => string,
 	?'unsigned' => bool,
 	?'null' => bool,
@@ -59,7 +49,7 @@ type partial_parsed_field = shape(
 );
 
 type parsed_index = shape(
-	'name' => string,
+	?'name' => string,
 	'type' => string,
 	'cols' => vec<
 		shape(
@@ -118,9 +108,10 @@ final class CreateTableParser {
 
 			# <space>
 			# <newline>
-			$m = [];
-			if (Regex\matches($sql, re"!\s+!A", $pos)) {
-				$pos += Str\length($m[0]);
+
+			$match = Regex\first_match($sql, re"!\s+!A", $pos);
+			if ($match is nonnull) {
+				$pos += Str\length($match[0]);
 				continue;
 			}
 
@@ -147,10 +138,11 @@ final class CreateTableParser {
 
 
 			# <regular identifier>
-			# <key word>
-			if (Regex\matches($sql, re"![[:alpha:]][[:alnum:]_]*!A", $pos)) {
-				$source_map[] = tuple($pos, Str\length($m[0]));
-				$pos += Str\length($m[0]);
+			# <key word>g
+			$match = Regex\first_match($sql, re"![[:alpha:]][[:alnum:]_]*!A", $pos);
+			if ($match is nonnull) {
+				$source_map[] = tuple($pos, Str\length($match[0] ?? ''));
+				$pos += Str\length($match[0]);
 				continue;
 			}
 
@@ -170,9 +162,10 @@ final class CreateTableParser {
 			#	<unsigned integer> [ <period> [ <unsigned integer> ] ]
 			#	<period> <unsigned integer>
 			#	<unsigned integer> ::= <digit>...
-			if (Regex\matches($sql, re"!(\d+\.?\d*|\.\d+)!A", $pos)) {
-				$source_map[] = tuple($pos, Str\length($m[0]));
-				$pos += Str\length($m[0]);
+			$match = Regex\first_match($sql, re"!(\d+\.?\d*|\.\d+)!A", $pos);
+			if ($match is nonnull) {
+				$source_map[] = tuple($pos, Str\length($match[0]));
+				$pos += Str\length($match[0]);
 				continue;
 			}
 
@@ -275,7 +268,7 @@ final class CreateTableParser {
 
 				$s = Vec\drop($s, 1);
 
-				$table = $this->parseCreateTable($s, $sql);
+				$table = $this->parseCreateTable($s, $stmt['sql']);
 				$tables[$table['name']] = $table;
 			}
 
@@ -283,7 +276,7 @@ final class CreateTableParser {
 
 				$s = Vec\drop($s, 1);
 
-				$table = $this->parseCreateTable($s, $sql);
+				$table = $this->parseCreateTable($s, $stmt['sql']);
 				$table['props']['temp'] = '1';
 				$tables[$table['name']] = $table;
 			}
@@ -442,7 +435,6 @@ final class CreateTableParser {
 				$index = shape(
 					'type' => 'INDEX',
 					'cols' => vec[],
-					'name' => '',
 				);
 
 				if (C\contains_key(keyset['UNIQUE', 'UNIQUE_INDEX', 'UNIQUE_KEY'], $tokens[0])) {
@@ -477,7 +469,6 @@ final class CreateTableParser {
 				$index = shape(
 					'type' => 'PRIMARY',
 					'cols' => vec[],
-					'name' => '',
 				);
 
 				$tokens = Vec\drop($tokens, 1);
@@ -510,7 +501,6 @@ final class CreateTableParser {
 				$index = shape(
 					'type' => 'FULLTEXT',
 					'cols' => vec[],
-					'name' => '',
 				);
 
 				if (C\contains_key(keyset['SPATIAL', 'SPATIAL INDEX', 'SPATIAL KEY'], $tokens[0])) {
@@ -702,19 +692,18 @@ final class CreateTableParser {
 				die("Unsupported field type: {$f['type']}");
 		}
 
-
 		# [NOT NULL | NULL]
-		if (Str\uppercase($tokens[0]) === 'NOT NULL') {
+		if (!C\is_empty($tokens) && Str\uppercase($tokens[0]) === 'NOT NULL') {
 			$f['null'] = false;
 			$tokens = Vec\drop($tokens, 1);
 		}
-		if (Str\uppercase($tokens[0]) === 'NULL') {
+		if (!C\is_empty($tokens) && Str\uppercase($tokens[0]) === 'NULL') {
 			$f['null'] = true;
 			$tokens = Vec\drop($tokens, 1);
 		}
 
 		# [DEFAULT default_value]
-		if (Str\uppercase($tokens[0]) === 'DEFAULT') {
+		if (!C\is_empty($tokens) && Str\uppercase($tokens[0]) === 'DEFAULT') {
 			$f['default'] = $this->decodeValue($tokens[1]);
 			if ($f['default'] === 'NULL') {
 				$f['null'] = true;
@@ -725,7 +714,7 @@ final class CreateTableParser {
 		}
 
 		# [AUTO_INCREMENT]
-		if (Str\uppercase($tokens[0]) === 'AUTO_INCREMENT') {
+		if (!C\is_empty($tokens) && Str\uppercase($tokens[0]) === 'AUTO_INCREMENT') {
 			$f['auto_increment'] = true;
 			$tokens = Vec\drop($tokens, 1);
 		}
@@ -791,7 +780,7 @@ final class CreateTableParser {
 					$t = $this->vecUnshift(inout $tokens);
 					$props[$prop] = $t;
 
-					if ($tokens[0] === ',') {
+					if (!C\is_empty($tokens) && $tokens[0] === ',') {
 						$tokens = Vec\drop($tokens, 1);
 					}
 					break;
@@ -808,7 +797,7 @@ final class CreateTableParser {
 
 					$t = $this->vecUnshift(inout $tokens);
 					$props[$prop] = $t;
-					if ($tokens[0] === ',') {
+					if (!C\is_empty($tokens) && $tokens[0] === ',') {
 						$tokens = Vec\drop($tokens, 1);
 					}
 					break;
@@ -866,6 +855,9 @@ final class CreateTableParser {
 		$maps = dict[];
 		foreach ($lists as $l) {
 			$a = Str\split($l, ' ');
+			if (!C\contains_key($maps, $a[0])) {
+				$maps[$a[0]] = vec[];
+			}
 			$maps[$a[0]][] = $a;
 		}
 		$smap = dict[];
@@ -910,7 +902,7 @@ final class CreateTableParser {
 					continue;
 				}
 			}
-			if ($smap[$tokenUpper]) {
+			if (C\contains_key($smap, $tokenUpper)) {
 				$out[] = $tokenUpper;
 				$out_map[] = $source_map[$i];
 				$i++;
@@ -926,11 +918,11 @@ final class CreateTableParser {
 	}
 
 	private function parseIndexType(inout vec<string> $tokens, inout parsed_index $index): void {
-		if ($tokens[0] === 'USING BTREE') {
+		if (!C\is_empty($tokens) && $tokens[0] === 'USING BTREE') {
 			$index['mode'] = 'btree';
 			$tokens = Vec\drop($tokens, 1);
 		}
-		if ($tokens[0] === 'USING HASH') {
+		if (!C\is_empty($tokens) && $tokens[0] === 'USING HASH') {
 			$index['mode'] = 'hash';
 			$tokens = Vec\drop($tokens, 1);
 		}
@@ -988,7 +980,7 @@ final class CreateTableParser {
 		#  | index_type
 		#  | WITH PARSER parser_name
 
-		if ($tokens[0] === 'KEY_BLOCK_SIZE') {
+		if (!C\is_empty($tokens) && $tokens[0] === 'KEY_BLOCK_SIZE') {
 			$tokens = Vec\drop($tokens, 1);
 			if ($tokens[0] === '=') {
 				Vec\drop($tokens, 1);
@@ -999,7 +991,7 @@ final class CreateTableParser {
 
 		$this->parseIndexType(inout $tokens, inout $index);
 
-		if ($tokens[0] === 'WITH PARSER') {
+		if (!C\is_empty($tokens) && $tokens[0] === 'WITH PARSER') {
 			$index['parser'] = $tokens[1];
 			$tokens = Vec\drop($tokens, 2);
 		}
@@ -1010,51 +1002,51 @@ final class CreateTableParser {
 	# helper functions for parsing bits of field definitions
 	#
 
-	private function parseFieldLength(inout vec<string> $tokens, inout partial_parsed_field $f): void {
-		if ($tokens[0] === '(' && $tokens[2] === ')') {
+	private function parseFieldLength(inout vec<string> $tokens, inout parsed_field $f): void {
+		if (!C\is_empty($tokens) && $tokens[0] === '(' && $tokens[2] === ')') {
 			$f['length'] = $tokens[1];
 			$tokens = Vec\drop($tokens, 3);
 		}
 	}
 
-	private function parseFieldLengthDecimals(inout vec<string> $tokens, inout partial_parsed_field $f): void {
-		if ($tokens[0] === '(' && $tokens[2] === ',' && $tokens[4] === ')') {
+	private function parseFieldLengthDecimals(inout vec<string> $tokens, inout parsed_field $f): void {
+		if (!C\is_empty($tokens) && $tokens[0] === '(' && $tokens[2] === ',' && $tokens[4] === ')') {
 			$f['length'] = $tokens[1];
 			$f['decimals'] = $tokens[3];
 			$tokens = Vec\drop($tokens, 5);
 		}
 	}
 
-	private function parseFieldUnsigned(inout vec<string> $tokens, inout partial_parsed_field $f): void {
-		if (Str\uppercase($tokens[0]) === 'UNSIGNED') {
+	private function parseFieldUnsigned(inout vec<string> $tokens, inout parsed_field $f): void {
+		if (!C\is_empty($tokens) && Str\uppercase($tokens[0]) === 'UNSIGNED') {
 			$f['unsigned'] = true;
 			$tokens = Vec\drop($tokens, 1);
 		}
 	}
 
-	private function parseFieldZerofill(inout vec<string> $tokens, inout partial_parsed_field $f): void {
-		if (Str\uppercase($tokens[0]) === 'ZEROFILL') {
+	private function parseFieldZerofill(inout vec<string> $tokens, inout parsed_field $f): void {
+		if (!C\is_empty($tokens) && Str\uppercase($tokens[0]) === 'ZEROFILL') {
 			$f['zerofill'] = true;
 			$tokens = Vec\drop($tokens, 1);
 		}
 	}
 
-	private function parseFieldCharset(inout vec<string> $tokens, inout partial_parsed_field $f): void {
-		if (Str\uppercase($tokens[0]) === 'CHARACTER SET') {
+	private function parseFieldCharset(inout vec<string> $tokens, inout parsed_field $f): void {
+		if (!C\is_empty($tokens) && Str\uppercase($tokens[0]) === 'CHARACTER SET') {
 			$f['character_set'] = $tokens[1];
 			$tokens = Vec\drop($tokens, 2);
 		}
 	}
 
-	private function parseFieldCollate(inout vec<string> $tokens, inout partial_parsed_field $f): void {
-		if (Str\uppercase($tokens[0]) === 'COLLATE') {
+	private function parseFieldCollate(inout vec<string> $tokens, inout parsed_field $f): void {
+		if (!C\is_empty($tokens) && Str\uppercase($tokens[0]) === 'COLLATE') {
 			$f['collation'] = $tokens[1];
 			$tokens = Vec\drop($tokens, 2);
 		}
 	}
 
 	private function parseValueList(inout vec<string> $tokens): ?vec<string> {
-		if ($tokens[0] !== '(') {
+		if (C\is_empty($tokens) || $tokens[0] !== '(') {
 			return null;
 		}
 		$tokens = Vec\drop($tokens, 1);
