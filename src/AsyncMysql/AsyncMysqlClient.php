@@ -21,10 +21,10 @@ final class AsyncMysqlClient extends \AsyncMysqlClient {
 		string $host,
 		int $port,
 		string $dbname,
-		string $user,
-		string $password,
-		int $timeout_micros = -1,
-		?\MySSLContextProvider $ssl_provider = null,
+		string $_user,
+		string $_password,
+		int $_timeout_micros = -1,
+		?\MySSLContextProvider $_ssl_provider = null,
 	): Awaitable<\AsyncMysqlConnection> {
 		return new AsyncMysqlConnection($host, $port, $dbname);
 	}
@@ -34,9 +34,9 @@ final class AsyncMysqlClient extends \AsyncMysqlClient {
 		string $host,
 		int $port,
 		string $dbname,
-		string $user,
-		string $password,
-		\AsyncMysqlConnectionOptions $conn_opts,
+		string $_user,
+		string $_password,
+		\AsyncMysqlConnectionOptions $_conn_opts,
 	): Awaitable<\AsyncMysqlConnection> {
 		return new AsyncMysqlConnection($host, $port, $dbname);
 	}
@@ -47,10 +47,10 @@ final class AsyncMysqlClient extends \AsyncMysqlClient {
 		string $host,
 		int $port,
 		string $dbname,
-		string $user,
-		string $password,
-		\AsyncMysqlConnectionOptions $conn_opts,
-		dict<string, string> $query_attributes = dict[],
+		string $_user,
+		string $_password,
+		\AsyncMysqlConnectionOptions $_conn_opts,
+		dict<string, string> $_query_attributes = dict[],
 	): Awaitable<(\AsyncMysqlConnectResult, Vector<\AsyncMysqlQueryResult>)> {
 		$conn = new AsyncMysqlConnection($host, $port, $dbname);
 		$results = await Vec\map_async($queries, $query ==> $conn->query($query));
@@ -59,5 +59,5 @@ final class AsyncMysqlClient extends \AsyncMysqlClient {
 	}
 
 	<<__Override>>
-	public static function adoptConnection(\AsyncMysqlConnection $connection): void {}
+	public static function adoptConnection(\AsyncMysqlConnection $_connection): void {}
 }

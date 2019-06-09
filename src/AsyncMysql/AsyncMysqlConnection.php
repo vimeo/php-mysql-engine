@@ -2,6 +2,8 @@
 
 namespace Slack\SQLFake;
 
+use namespace HH\Lib\Vec;
+
 /* HHAST_IGNORE_ALL[UnusedParameter] */
 
 /* HH_IGNORE_ERROR[2049] */
@@ -84,12 +86,13 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
   }
 
   <<__Override>>
-  public function multiQuery(
-    Traversable<string> $query,
-    int $timeout_micros = -1,
-    dict<string, string> $query_attributes = dict[],
-  ): mixed {
-    throw new SQLFakeNotImplementedException('multiQuery not yet implemented');
+  public async function multiQuery(
+    Traversable<string> $queries,
+    int $_timeout_micros = -1,
+    dict<string, string> $_query_attributes = dict[],
+  ): Awaitable<Vector<AsyncMysqlQueryResult>> {
+    $results = await Vec\map_async($queries, $query ==> $this->query($query));
+    return Vector::fromItems($results);
   }
 
   <<__Override>>
