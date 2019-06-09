@@ -78,11 +78,9 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
   }
 
   <<__Override>>
-  public async function queryf(
-    \HH\FormatString<\HH\SQLFormatter> $query,
-    mixed ...$args
-  ): Awaitable<AsyncMysqlQueryResult> {
-    throw new SQLFakeNotImplementedException('queryf not yet implemented');
+  public function queryf(\HH\FormatString<\HH\SQLFormatter> $query, mixed ...$args): Awaitable<AsyncMysqlQueryResult> {
+    $sql = QueryFormatter::formatQuery((string)$query, ...$args);
+    return $this->query($sql);
   }
 
   <<__Override>>

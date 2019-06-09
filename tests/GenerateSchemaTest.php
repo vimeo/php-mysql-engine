@@ -7,7 +7,7 @@ use function Facebook\FBExpect\expect;
 
 final class GenerateSchemaTest extends HackTest {
 
-	public async function testParseSchema(): Awaitable<void> {
+	public async function testGenerateSchema(): Awaitable<void> {
 		$expected = dict[
 			'test' => shape(
 				'name' => 'test',
