@@ -8,29 +8,7 @@ use function Facebook\FBExpect\expect;
 final class CreateTableParserTest extends HackTest {
 
 	public async function testParseSchema(): Awaitable<void> {
-		$sql = <<<EOT
-CREATE TABLE `test` (
-  `id` varchar(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  `value` varchar(255) CHARACTER SET ascii COLLATE ascii_bin NOT NULL,
-  PRIMARY KEY (`id`)
-);
-
-CREATE TABLE `test2` (
-  `id` bigint(20) unsigned NOT NULL,
-  `name` varchar(100) NOT NULL,
-  PRIMARY KEY (`id`,`name`),
-  KEY `name` (`name`)
-);
-
-CREATE TABLE `test3` (
-  `id` bigint(20) unsigned NOT NULL,
-  `ch` char(64) DEFAULT NULL,
-  `deleted` tinyint(3) unsigned NOT NULL DEFAULT '0',
-  `name` varchar(100) NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`),
-);
-EOT;
+		$sql = \file_get_contents(__DIR__.'/fixtures/SchemaExample.sql');
 
 		$expected = dict[
 			'test' => shape(
@@ -159,7 +137,7 @@ EOT;
 						],
 					),
 					shape(
-						'type' => 'INDEX',
+						'type' => 'UNIQUE',
 						'cols' => vec[
 							shape(
 								'name' => 'name',

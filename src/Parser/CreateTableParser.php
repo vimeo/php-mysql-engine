@@ -437,7 +437,7 @@ final class CreateTableParser {
 					'cols' => vec[],
 				);
 
-				if (C\contains_key(keyset['UNIQUE', 'UNIQUE_INDEX', 'UNIQUE_KEY'], $tokens[0])) {
+				if (C\contains_key(keyset['UNIQUE', 'UNIQUE INDEX', 'UNIQUE KEY'], $tokens[0])) {
 					$index['type'] = 'UNIQUE';
 				}
 
