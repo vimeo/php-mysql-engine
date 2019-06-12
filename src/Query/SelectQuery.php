@@ -102,7 +102,7 @@ final class SelectQuery extends Query {
       foreach ($data as $row) {
         $hashes = '';
         foreach ($group_by as $expr) {
-          $hashes .= \sha1($expr->evaluate($row, $conn));
+          $hashes .= \sha1((string)$expr->evaluate($row, $conn));
         }
         $hash = \sha1($hashes);
         if (!C\contains_key($grouped_data, $hash)) {

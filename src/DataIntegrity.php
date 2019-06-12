@@ -170,7 +170,7 @@ abstract final class DataIntegrity {
           // binary types behave differently than other varchars in MySQL, and we need to emulate that behavior
           // specifically, qprintf uses addslashes to escape, and we need to strip those here to match MySQL's behavior
           if (Str\search_ci((string)$field['type'], 'BLOB') !== null) {
-            $row[$field_name] = \stripslashes($row[$field_name]);
+            $row[$field_name] = \stripslashes((string)$row[$field_name]);
           } else {
             $row[$field_name] = (string)$row[$field_name];
           }

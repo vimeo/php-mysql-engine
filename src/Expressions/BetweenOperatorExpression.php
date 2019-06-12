@@ -133,7 +133,7 @@ final class BetweenOperatorExpression extends Expression {
       'end' => $this->end ? \var_dump($this->end, true) : dict[],
     ];
 
-    if ($this->name) {
+    if ((bool)$this->name) {
       $ret['name'] = $this->name;
     }
     return $ret;

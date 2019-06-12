@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\C;
+use namespace HH\Lib\{C, Str};
 
 /**
  * a statement like X IN (1, 2, 3)
@@ -102,7 +102,7 @@ final class InOperatorExpression extends Expression {
       'negated' => $this->negated,
     ];
 
-    if ($this->name) {
+    if (!Str\is_empty($this->name)) {
       $ret['name'] = $this->name;
     }
     return $ret;

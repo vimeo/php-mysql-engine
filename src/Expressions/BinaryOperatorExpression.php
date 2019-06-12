@@ -24,7 +24,7 @@ final class BinaryOperatorExpression extends Expression {
     // this gets overwritten once we have an operator
     $this->precedence = 0;
     $this->type = TokenType::OPERATOR;
-    if ($operator) {
+    if (!Str\is_empty($operator)) {
       $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[$operator];
     }
 
@@ -188,7 +188,7 @@ final class BinaryOperatorExpression extends Expression {
           case '%':
           case 'MOD':
             // mod is float-aware, not ints only like PHP's % operator
-            return \fmod($left_number, $right_number);
+            return \fmod((float)$left_number, (float)$right_number);
           case '/':
             return $left_number / $right_number;
           case 'DIV':
@@ -310,7 +310,7 @@ final class BinaryOperatorExpression extends Expression {
       'right' => $this->right ? \var_dump($this->right, true) : dict[],
     ];
 
-    if ($this->name) {
+    if (!Str\is_empty($this->name)) {
       $ret['name'] = $this->name;
     }
     if ($this->negated) {
@@ -321,12 +321,12 @@ final class BinaryOperatorExpression extends Expression {
 
   <<__Override>>
   public function isWellFormed(): bool {
-    return $this->right && $this->operator;
+    return $this->right && !Str\is_empty($this->operator);
   }
 
   <<__Override>>
   public function setNextChild(Expression $expr, bool $overwrite = false): void {
-    if (!$this->operator || ($this->right && !$overwrite)) {
+    if (Str\is_empty($this->operator) || ($this->right && !$overwrite)) {
       throw new SQLFakeParseException("Parse error");
     }
     $this->right = $expr;

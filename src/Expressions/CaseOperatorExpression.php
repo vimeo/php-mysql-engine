@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\C;
+use namespace HH\Lib\{C, Str};
 
 /**
  * a statement like CASE WHEN X THEN Y ELSE Z END
@@ -146,7 +146,7 @@ final class CaseOperatorExpression extends Expression {
       'else' => $this->else ? \var_dump($this->else, true) : dict[],
     ];
 
-    if ($this->name) {
+    if (!Str\is_empty($this->name)) {
       $ret['name'] = $this->name;
     }
     return $ret;
