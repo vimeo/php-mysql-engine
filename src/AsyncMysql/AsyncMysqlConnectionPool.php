@@ -38,7 +38,9 @@ final class AsyncMysqlConnectionPool extends \AsyncMysqlConnectionPool {
 
     $this->poolMisses++;
     $this->createdPoolConnections++;
-    return new AsyncMysqlConnection($host, $port, $dbname);
+    $conn = new AsyncMysqlConnection($host, $port, $dbname);
+    static::$pool[$host] = $conn;
+    return $conn;
   }
 
   <<__Override>>

@@ -36,6 +36,7 @@ abstract final class Metrics {
    * only turn this on if you have a good use for it
    */
   public static bool $enableCallstacks = false;
+  public static bool $enable = false;
 
   /**
    * Filter out function names matching these patterns from the beginning of your callstack to make the stacks more concise
@@ -50,6 +51,7 @@ abstract final class Metrics {
 
   public static function reset(): void {
     self::$queryMetrics = vec[];
+    self::$enable = false;
   }
 
   public static function getCountByQueryType(): query_counts {
@@ -89,6 +91,11 @@ abstract final class Metrics {
    * While a query may hit multiple tables, we only include the first one currently
    */
   public static function trackQuery(QueryType $type, string $host, string $table_name, string $sql): void {
+
+    if (!self::$enable){
+      return;
+    }
+
     $metric = shape(
       'type' => $type,
       'host' => $host,

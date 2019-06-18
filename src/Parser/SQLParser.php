@@ -6,9 +6,15 @@ use namespace HH\Lib\{C, Regex, Str, Vec};
 
 final class SQLParser {
 
-  // static is better for memoize. Memoize so that the same SQL query passed in a second time is parsed from cache
-  <<__Memoize>>
   public static function parse(string $sql): Query {
+    // memoize hit rate on write queries is very low - so only memoize selects to avoid ballooning memory usage
+    if (Str\starts_with_ci($sql, 'SELECT')) {
+      return static::parseMemoized($sql);
+    }
+    return static::parseImpl($sql);
+  }
+
+  private static function parseImpl(string $sql): Query {
     $tokens = (new SQLLexer())->lex($sql);
     $tokens = self::buildTokenListFromLexemes($tokens);
 
@@ -64,6 +70,11 @@ final class SQLParser {
     }
 
     throw new SQLFakeParseException("Parse error: unexpected end of input");
+  }
+
+  <<__Memoize>>
+  private static function parseMemoized(string $sql): Query {
+    return static::parseImpl($sql);
   }
 
   /*
