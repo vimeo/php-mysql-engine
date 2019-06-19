@@ -170,6 +170,59 @@ final class SQLFunctionTest extends HackTest {
 		);
 	}
 
+	public async function testSubstringIndex(): Awaitable<void> {
+		$conn = static::$conn as nonnull;
+		$results = await $conn->query(
+			"SELECT SUBSTRING_INDEX('first middle last', ' ', 1) as firstname, SUBSTRING_INDEX('first middle last', ' ', -1) as lastname",
+		);
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['firstname' => 'first', 'lastname' => 'last'],
+			],
+			'multiple delimiter',
+		);
+
+		$results = await $conn->query(
+			"SELECT SUBSTRING_INDEX('username@example.com', '@', 1) as user, SUBSTRING_INDEX('username@example.com', '@', -1) as domain",
+		);
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['user' => 'username', 'domain' => 'example.com'],
+			],
+			'single delimiter',
+		);
+
+		$results = await $conn->query(
+			"SELECT SUBSTRING_INDEX('username@fake@example.com', '@', 0) as nothing",
+		);
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['nothing' => ''],
+			],
+			'zero index',
+		);
+
+		$results = await $conn->query(
+			"SELECT SUBSTRING_INDEX('username@example.com', '@', -4) as full",
+		);
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['full' => 'username@example.com'],
+			],
+			'handle index lower than expected',
+		);
+
+		$results = await $conn->query(
+			"SELECT SUBSTRING_INDEX('username@example.com', '@', 4) as full",
+		);
+		expect($results->rows())->toBeSame(
+			vec[
+				dict['full' => 'username@example.com'],
+			],
+			'handle index greater than expected',
+		);
+	}
+
 	public async function testLength(): Awaitable<void> {
 		$conn = static::$conn as nonnull;
 		$results = await $conn->query("SELECT LENGTH('foobar')");

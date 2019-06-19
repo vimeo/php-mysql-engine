@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Math, Str};
+use namespace HH\Lib\{C, Math, Str, Vec};
 
 /**
  * emulates a call to a built-in MySQL function
@@ -48,6 +48,8 @@ final class FunctionExpression extends Expression {
       case 'SUBSTRING':
       case 'SUBSTR':
         return $this->sqlSubstring($row, $conn);
+      case 'SUBSTRING_INDEX':
+        return $this->sqlSubstringIndex($row, $conn);
       case 'LENGTH':
         return $this->sqlLength($row, $conn);
       case 'LOWER':
@@ -242,6 +244,35 @@ final class FunctionExpression extends Expression {
     }
 
     return \mb_substr($string, $pos);
+  }
+
+  private function sqlSubstringIndex(row $row, AsyncMysqlConnection $conn): mixed {
+    $row = $this->maybeUnrollGroupedDataset($row);
+
+    $args = $this->args;
+    if (C\count($args) !== 3) {
+      throw new SQLFakeRuntimeException("MySQL SUBSTRING_INDEX() function must be called with three arguments");
+    }
+    $subject = $args[0];
+    $string = (string)$subject->evaluate($row, $conn);
+
+    $delimiter = $args[1];
+    $delim = (string)$delimiter->evaluate($row, $conn);
+
+    // MySQL string positions 1-indexed, PHP strings are 0-indexed. So substract one from pos
+    $pos = $args[2];
+    if ($pos is nonnull){
+      $count = (int)$pos->evaluate($row, $conn);
+      $parts = Str\split($string, $delim);
+      if ($count < 0){
+        $slice = \array_slice($parts, $count);
+      } else {
+        $slice = \array_slice($parts, 0, $count);
+      }
+
+      return Str\join($slice, $delim);
+    }
+    return '';
   }
 
   private function sqlLower(row $row, AsyncMysqlConnection $conn): mixed {
