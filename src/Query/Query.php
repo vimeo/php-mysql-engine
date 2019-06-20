@@ -192,7 +192,7 @@ abstract class Query {
         }
       }
       foreach ($set_clauses as $clause) {
-        $existing_value = $row[$clause['column']];
+        $existing_value = $row[$clause['column']] ?? null;
         $expr = $clause['expression'];
         $new_value = $clause['expression']->evaluate($update_row, $conn);
 
