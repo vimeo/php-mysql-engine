@@ -2,7 +2,7 @@
 
 namespace Slack\SQLFake;
 
-use namespace HH\Lib\{C, Math, Str, Vec};
+use namespace HH\Lib\{C, Math, Str};
 
 /**
  * emulates a call to a built-in MySQL function
