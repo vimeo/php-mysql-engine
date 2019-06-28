@@ -239,7 +239,7 @@ final class ExpressionParser {
             //
 
             // look for a row expression like (col1, col2, col3)
-            $second_token = $arg_tokens[1];
+            $second_token = $arg_tokens[1] ?? null;
             if ($second_token !== null && $second_token['type'] === TokenType::SEPARATOR) {
               list($distinct, $elements) = $this->getListExpression($arg_tokens);
               if ($distinct) {
