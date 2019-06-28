@@ -38,7 +38,7 @@ final class DeleteQuery extends Query {
     $rows_to_delete = Keyset\keys($filtered_rows);
     $remaining_rows =
       Vec\filter_with_key($original_table, ($row_num, $_) ==> !C\contains_key($rows_to_delete, $row_num));
-    $rows_affected = C\count($remaining_rows) - C\count($original_table);
+    $rows_affected = C\count($original_table) - C\count($remaining_rows);
 
     // write it back to the database
     $conn->getServer()->saveTable($database, $table_name, $remaining_rows);
