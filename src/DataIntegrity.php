@@ -127,7 +127,7 @@ abstract final class DataIntegrity {
                   "Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected string",
                 );
               } else {
-                $row[$field_name] = (float)$row[$field_name];
+                $row[$field_name] = (string)$row[$field_name];
               }
             }
             break;
