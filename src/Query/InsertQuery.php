@@ -65,7 +65,8 @@ final class InsertQuery extends Query {
               $schema,
               $row,
             );
-            $rows_affected += $affected;
+            // MySQL always counts dupe inserts twice intentionally
+						$rows_affected += $affected * 2;
             continue;
           } else if (!QueryContext::$relaxUniqueConstraints) {
             throw new SQLFakeUniqueKeyViolation($msg);
