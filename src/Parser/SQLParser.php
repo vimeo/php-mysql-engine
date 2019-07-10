@@ -111,7 +111,9 @@ final class SQLParser {
         // unescape everything except for % and _ (which only get unescaped during LIKE operations)
         // there are a few other special sequnces we leave unescaped like \r, \n, \t, \b, \Z, \0
         // https://dev.mysql.com/doc/refman/5.7/en/string-literals.html
-        $token = Regex\replace($token, re"/\\\\([^%_rntbZ0])/", '\1');
+        // it's possible we need to replace several of these escape sequences with the appropriate unicode character, as
+        // we're doing for \0 here
+        $token = Regex\replace($token, re"/\\\\([^%_rntbZ0])/", '\1') |> Regex\replace($$, re"/\\\\0/", "\0");
         $out[] = shape(
           'type' => TokenType::STRING_CONSTANT,
           'value' => $token,
