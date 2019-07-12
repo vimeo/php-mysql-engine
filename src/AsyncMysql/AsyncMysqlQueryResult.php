@@ -89,7 +89,8 @@ final class AsyncMysqlQueryResult extends \AsyncMysqlQueryResult {
 
   <<__Override>>
   public function noIndexUsed(): bool {
-    // TODO
+    // TODO: it would be really interesting to actually try to determine if a query could use an index
+    // and set this value so that this could be instrumented in tests
     return true;
   }
 

@@ -38,23 +38,6 @@ final class ColumnExpression extends Expression {
     }
 
     $this->name = $this->columnName;
-
-    /* TODO turn this on once we have DB schemas in place
-    // Most of the time,
-    $found = false;
-    if ($index === -1){
-    	foreach ($columns as $index => $col){
-    		if (($table === null || $col['table'] === $table) && $col['column'] === $column){
-    			// if we already found a match for this column and then find another, it's an error for it to be ambiguous
-    			if ($found) throw new SQLFakeParseException("Column {$column} in field list is ambiguous");
-    			$this->index = $index;
-    			$found = true;
-    		}
-    	}
-    }
-
-    if (!$found) throw new SQLFakeParseException("Column {$column} not found on table {$table}");
-    */
   }
 
   <<__Override>>

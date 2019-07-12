@@ -95,7 +95,7 @@ final class AsyncMysqlConnection extends \AsyncMysqlConnection {
 
   <<__Override>>
   public function escapeString(string $data): string {
-    // TODO not implemented
+    // not actually escaping obviously
     return $data;
   }
 

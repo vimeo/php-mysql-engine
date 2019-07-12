@@ -42,8 +42,6 @@ final class FromClause {
 
     foreach ($this->tables as $table) {
 
-      // TODO where's the thing
-
       $schema = null;
       if (Shapes::keyExists($table, 'subquery')) {
         $res = $table['subquery']->evaluate(dict[], $conn);
@@ -76,8 +74,6 @@ final class FromClause {
         }
 
         foreach ($res as $row) {
-          // TODO hooks here to emulate strict sql mode as well
-          // TODO move this to insert/update only?
           $m = dict[];
           foreach ($ordered_fields as $field) {
             if (!C\contains_key($row, $field)) {

@@ -146,7 +146,6 @@ abstract final class JoinProcessor {
 
     $left = C\first($left_dataset);
     $right = C\first($right_dataset);
-    // TODO this should change to use $schema if schema is available
     if ($left === null || $right === null) {
       throw new SQLFakeParseException("Attempted NATURAL join with no data present");
     }
