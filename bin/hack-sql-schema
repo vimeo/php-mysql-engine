@@ -1,0 +1,39 @@
+#!/usr/bin/env hhvm
+<?hh // strict
+
+use type Slack\SQLFake\BuildSchemaCLI;
+
+<<__EntryPoint>>
+async function hack_sql_schema_async(): Awaitable<noreturn> {
+  $root = \realpath(__DIR__.'/..');
+  $found_autoloader = false;
+  while (true) {
+    $autoloader = $root.'/vendor/hh_autoload.hh';
+	$autoloader_hack = $root.'/vendor/autoload.hack';
+	if (\file_exists($autoloader_hack)) {
+      $found_autoloader = true;
+      require_once($autoloader_hack);
+	  \Facebook\AutoloadMap\initialize();
+      break;
+    }
+    if (\file_exists($autoloader)) {
+      $found_autoloader = true;
+      require_once($autoloader);
+      break;
+	}
+    if ($root === '') {
+      break;
+    }
+    $parts = \explode('/', $root);
+    \array_pop(&$parts);
+    $root = \implode('/', $parts);
+  }
+
+  if (!$found_autoloader) {
+    \fprintf(\STDERR, "Failed to find autoloader.\n");
+    exit(1);
+  }
+
+  $result = await BuildSchemaCLI::runAsync();
+  exit($result);
+}

@@ -1,5 +1,8 @@
 {
   "name": "slack/hack-sql-fake",
+  "bin": [
+    "bin/hack-sql-schema"
+  ],
   "description": "Database Testing library for Hacklang",
   "type": "library",
   "authors": [
@@ -11,12 +14,13 @@
   "require": {
     "hhvm/hsl": "=3.30.0",
     "hhvm/hsl-experimental": "=3.30.4",
-    "facebook/hack-codegen": "4.0.2"
+    "facebook/hack-codegen": "4.0.2",
+    "facebook/hh-clilib": "^2.0.0",
+    "hhvm/hhvm-autoload": "=1.8"
   },
   "require-dev": {
     "hhvm/hhast": "=3.30.0",
     "facebook/fbexpect": "^2.2.0",
-    "hhvm/hhvm-autoload": "=1.8",
     "hhvm/hacktest": "=1.3"
   }
 }

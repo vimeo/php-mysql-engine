@@ -1,6 +1,6 @@
 <?hh // strict
 
-use namespace HH\Lib\Vec;
+use namespace HH\Lib\Keyset;
 
 namespace Slack\SQLFake;
 
@@ -41,7 +41,7 @@ final class SchemaGenerator {
 				$table_generated_schema['indexes'][] = shape(
 					'name' => $index['name'] ?? $index['type'],
 					'type' => $index['type'],
-					'fields' => Vec\map($index['cols'], $col ==> $col['name']),
+					'fields' => Keyset\map($index['cols'], $col ==> $col['name']),
 				);
 			}
 
