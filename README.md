@@ -145,3 +145,7 @@ Any function names matching those patterns will be removed from the end of the s
 ## Why doesn't it support `X`?
 
 This library aims to support everything its users use in MySQL, rather than every possibly feature MySQL offers. We welcome pull requests to add support for new syntax, sql functions, data types, bug fixes, and other features. See our #issues page for a wishlist.
+
+## Contributing
+
+See [Contributing](CONTRIBUTING.md)
