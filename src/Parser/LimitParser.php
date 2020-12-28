@@ -1,48 +1,66 @@
-<?hh // strict
+<?php
+namespace Vimeo\MysqlEngine\Parser;
 
-namespace Slack\SQLFake;
+use Vimeo\MysqlEngine\TokenType;
 
-// parse the LIMIT clause, which can be used for SELECT, UPDATE, or DELETE
-final class LimitParser {
+final class LimitParser
+{
+    /**
+     * @var int
+     */
+    private $pointer;
 
-  public function __construct(private int $pointer, private token_list $tokens) {}
+    /**
+     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
+     */
+    private $tokens;
 
-  public function parse(): (int, limit_clause) {
-
-    // if we got here, the first token had better be LIMIT
-    if ($this->tokens[$this->pointer]['value'] !== 'LIMIT') {
-      throw new SQLFakeParseException("Parser error: expected LIMIT");
+    /**
+     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     */
+    public function __construct(int $pointer, array $tokens)
+    {
+        $this->pointer = $pointer;
+        $this->tokens = $tokens;
     }
-    $this->pointer++;
-    $next = $this->tokens[$this->pointer] ?? null;
-    if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {
-      throw new SQLFakeParseException("Expected integer after LIMIT");
-    }
-    $limit = (int)($next['value']);
-    $offset = 0;
-    $next = $this->tokens[$this->pointer + 1] ?? null;
-    if ($next !== null) {
-      if ($next['value'] === 'OFFSET') {
-        $this->pointer += 2;
+
+    /**
+     * @return array{0:int, 1:array{rowcount:int, offset:int}}
+     */
+    public function parse()
+    {
+        if ($this->tokens[$this->pointer]['value'] !== 'LIMIT') {
+            throw new SQLFakeParseException("Parser error: expected LIMIT");
+        }
+        $this->pointer++;
         $next = $this->tokens[$this->pointer] ?? null;
         if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {
-          throw new SQLFakeParseException("Expected integer after OFFSET");
+            throw new SQLFakeParseException("Expected integer after LIMIT");
         }
-        $offset = (int)($next['value']);
-      } elseif ($next['value'] === ',') {
-        $this->pointer += 2;
-        $next = $this->tokens[$this->pointer] ?? null;
-        if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {
-          throw new SQLFakeParseException("Expected integer after OFFSET");
+        $limit = (int) $next['value'];
+        $offset = 0;
+        $next = $this->tokens[$this->pointer + 1] ?? null;
+        if ($next !== null) {
+            if ($next['value'] === 'OFFSET') {
+                $this->pointer += 2;
+                $next = $this->tokens[$this->pointer] ?? null;
+                if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {
+                    throw new SQLFakeParseException("Expected integer after OFFSET");
+                }
+                $offset = (int) $next['value'];
+            } else {
+                if ($next['value'] === ',') {
+                    $this->pointer += 2;
+                    $next = $this->tokens[$this->pointer] ?? null;
+                    if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {
+                        throw new SQLFakeParseException("Expected integer after OFFSET");
+                    }
+                    $offset = $limit;
+                    $limit = (int) $next['value'];
+                }
+            }
         }
-
-        // in LIMIT 1, 100 the offset is 1 and 100 is the row count, so swap them here
-        // confusing, right?
-        $offset = $limit;
-        $limit = (int)($next['value']);
-      }
+        return [$this->pointer, ['rowcount' => $limit, 'offset' => $offset]];
     }
-
-    return tuple($this->pointer, shape('rowcount' => $limit, 'offset' => $offset));
-  }
 }
+

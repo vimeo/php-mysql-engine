@@ -2,6 +2,8 @@ MIT License
 
 Copyright (c) 2019-present Scott Sandler
 Copyright (c) 2019-present Slack Technologies, Inc.
+Copyright (c) 2020-present Matt Brown
+Copyright (c) 2020-present Vimeo
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

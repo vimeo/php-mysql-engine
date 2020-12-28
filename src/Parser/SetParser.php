@@ -1,86 +1,100 @@
-<?hh // strict
+<?php
+namespace Vimeo\MysqlEngine\Parser;
 
-namespace Slack\SQLFake;
+use Vimeo\MysqlEngine\TokenType;
+use Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression;
+use Vimeo\MysqlEngine\Query\Expression\Expression;
+use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
+use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
 
-use namespace HH\Lib\C;
+final class SetParser
+{
+    /**
+     * @var int
+     */
+    private $pointer;
 
-// process the SET clause of an UPDATE, or the UPDATE portion of INSERT .. ON DUPLICATE KEY UPDATE
-final class SetParser {
+    /**
+     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
+     */
+    private $tokens;
 
-  public function __construct(private int $pointer, private token_list $tokens) {}
-
-
-  public function parse(bool $skip_set = false): (int, vec<BinaryOperatorExpression>) {
-
-    // if we got here, the first token had better be a SET
-    if (!$skip_set && $this->tokens[$this->pointer]['value'] !== 'SET') {
-      throw new SQLFakeParseException("Parser error: expected SET");
+    /**
+     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     */
+    public function __construct(int $pointer, array $tokens)
+    {
+        $this->pointer = $pointer;
+        $this->tokens = $tokens;
     }
-    $expressions = vec[];
-    $this->pointer++;
-    $count = C\count($this->tokens);
 
-    $needs_comma = false;
-    $end_of_set = false;
-    while ($this->pointer < $count) {
-      $token = $this->tokens[$this->pointer];
+    /**
+     * @return array{0: int, 1: array<int, BinaryOperatorExpression>}
+     */
+    public function parse(bool $skip_set = false)
+    {
+        if (!$skip_set && $this->tokens[$this->pointer]['value'] !== 'SET') {
+            throw new SQLFakeParseException("Parser error: expected SET");
+        }
+        $expressions = [];
+        $this->pointer++;
+        $count = \count($this->tokens);
+        $needs_comma = false;
+        $end_of_set = false;
 
-      switch ($token['type']) {
-        case TokenType::NUMERIC_CONSTANT:
-        case TokenType::STRING_CONSTANT:
-        case TokenType::NULL_CONSTANT:
-        case TokenType::OPERATOR:
-        case TokenType::SQLFUNCTION:
-        case TokenType::IDENTIFIER:
-        case TokenType::PAREN:
-          if ($needs_comma) {
-            throw new SQLFakeParseException("Expected , between expressions in SET clause");
-          }
-          $expression_parser = new ExpressionParser($this->tokens, $this->pointer - 1);
-          $start = $this->pointer;
-          list($this->pointer, $expression) = $expression_parser->buildWithPointer();
+        while ($this->pointer < $count) {
+            $token = $this->tokens[$this->pointer];
 
-          // the only valid kind of expression in a SET is "foo = bar"
-          if (!$expression is BinaryOperatorExpression || $expression->operator !== '=') {
-            throw new SQLFakeParseException("Failed parsing SET clause: unexpected expression");
-          }
+            switch ($token['type']) {
+                case TokenType::NUMERIC_CONSTANT:
+                case TokenType::STRING_CONSTANT:
+                case TokenType::NULL_CONSTANT:
+                case TokenType::OPERATOR:
+                case TokenType::SQLFUNCTION:
+                case TokenType::IDENTIFIER:
+                case TokenType::PAREN:
+                    if ($needs_comma) {
+                        throw new SQLFakeParseException("Expected , between expressions in SET clause");
+                    }
+                    $expression_parser = new ExpressionParser($this->tokens, $this->pointer - 1);
+                    $start = $this->pointer;
+                    list($this->pointer, $expression) = $expression_parser->buildWithPointer();
 
-          if (!$expression->left is ColumnExpression) {
-            throw new SQLFakeParseException("Left side of SET clause must be a column reference");
-          }
-
-          $expressions[] = $expression;
-          $needs_comma = true;
-          break;
-        case TokenType::SEPARATOR:
-          if ($token['value'] === ',') {
-            if (!$needs_comma) {
-              throw new SQLFakeParseException("Unexpected ,");
+                    if (!$expression instanceof BinaryOperatorExpression || $expression->operator !== '=') {
+                        throw new SQLFakeParseException("Failed parsing SET clause: unexpected expression");
+                    }
+                    if (!$expression->left instanceof ColumnExpression) {
+                        throw new SQLFakeParseException("Left side of SET clause must be a column reference");
+                    }
+                    $expressions[] = $expression;
+                    $needs_comma = true;
+                    break;
+                case TokenType::SEPARATOR:
+                    if ($token['value'] === ',') {
+                        if (!$needs_comma) {
+                            throw new SQLFakeParseException("Unexpected ,");
+                        }
+                        $needs_comma = false;
+                    } else {
+                        throw new SQLFakeParseException("Unexpected {$token['value']}");
+                    }
+                    break;
+                case TokenType::CLAUSE:
+                    $end_of_set = true;
+                    break;
+                default:
+                    throw new SQLFakeParseException("Unexpected {$token['value']} in SET");
             }
-            $needs_comma = false;
-          } else {
-            throw new SQLFakeParseException("Unexpected {$token['value']}");
-          }
-          break;
-        case TokenType::CLAUSE:
-          // return once we get to the next clause
-          $end_of_set = true;
-          break;
-        default:
-          throw new SQLFakeParseException("Unexpected {$token['value']} in SET");
-      }
-
-      if ($end_of_set) {
-        break;
-      }
-
-      $this->pointer++;
+            if ($end_of_set) {
+                break;
+            }
+            $this->pointer++;
+        }
+        if (!\count($expressions)) {
+            throw new SQLFakeParseException("Empty SET clause");
+        }
+        return [$this->pointer - 1, $expressions];
     }
-
-    if (!C\count($expressions)) {
-      throw new SQLFakeParseException("Empty SET clause");
-    }
-
-    return tuple($this->pointer - 1, $expressions);
-  }
 }
+

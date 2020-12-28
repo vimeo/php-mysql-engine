@@ -1,96 +1,114 @@
-<?hh // strict
+<?php
+namespace Vimeo\MysqlEngine\Parser;
 
-namespace Slack\SQLFake;
-
-use namespace HH\Lib\C;
-
-final class UpdateParser {
-
-  const dict<string, int> CLAUSE_ORDER = dict[
-    'UPDATE' => 1,
-    'SET' => 2,
-    'WHERE' => 3,
-    'ORDER' => 4,
-    'LIMIT' => 5,
-  ];
-
-  private string $current_clause = 'UPDATE';
-  private int $pointer = 0;
-
-  public function __construct(private token_list $tokens, private string $sql) {}
+use Vimeo\MysqlEngine\JoinType;
+use Vimeo\MysqlEngine\TokenType;
+use Vimeo\MysqlEngine\Query\UpdateQuery;
 
 
-  public function parse(): UpdateQuery {
+final class UpdateParser
+{
+    /**
+     * @var array<string, int>
+     */
+    const CLAUSE_ORDER = ['UPDATE' => 1, 'SET' => 2, 'WHERE' => 3, 'ORDER' => 4, 'LIMIT' => 5];
 
-    // if we got here, the first token had better be a UPDATE
-    if ($this->tokens[$this->pointer]['value'] !== 'UPDATE') {
-      throw new SQLFakeParseException("Parser error: expected UPDATE");
-    }
-    $this->pointer++;
-    $count = C\count($this->tokens);
+    /**
+     * @var string
+     */
+    private $current_clause = 'UPDATE';
 
-    // next token has to be a table name
-    $token = $this->tokens[$this->pointer];
-    if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
-      throw new SQLFakeParseException("Expected table name after UPDATE");
-    }
+    /**
+     * @var int
+     */
+    private $pointer = 0;
 
-    $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
+    /**
+     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
+     */
+    private $tokens;
 
-    $table = shape('name' => $token['value'], 'join_type' => JoinType::JOIN);
+    /**
+     * @var string
+     */
+    private $sql;
 
-    $query = new UpdateQuery($table, $this->sql);
-
-    $this->pointer++;
-
-    while ($this->pointer < $count) {
-      $token = $this->tokens[$this->pointer];
-
-      switch ($token['type']) {
-        case TokenType::CLAUSE:
-          // make sure clauses are in order
-          if (
-            C\contains_key(self::CLAUSE_ORDER, $token['value']) &&
-            self::CLAUSE_ORDER[$this->current_clause] >= self::CLAUSE_ORDER[$token['value']]
-          ) {
-            throw new SQLFakeParseException("Unexpected clause {$token['value']}");
-          }
-          $this->current_clause = $token['value'];
-          switch ($token['value']) {
-            case 'WHERE':
-              $expression_parser = new ExpressionParser($this->tokens, $this->pointer);
-              list($this->pointer, $expression) = $expression_parser->buildWithPointer();
-              $query->whereClause = $expression;
-              break;
-            case 'ORDER':
-              $p = new OrderByParser($this->pointer, $this->tokens);
-              list($this->pointer, $query->orderBy) = $p->parse();
-              break;
-            case 'LIMIT':
-              $p = new LimitParser($this->pointer, $this->tokens);
-              list($this->pointer, $query->limitClause) = $p->parse();
-              break;
-            case 'SET':
-              $p = new SetParser($this->pointer, $this->tokens);
-              list($this->pointer, $query->setClause) = $p->parse();
-              break;
-            default:
-              throw new SQLFakeParseException("Unexpected clause {$token['value']}");
-          }
-          break;
-        case TokenType::SEPARATOR:
-          // a semicolon to end the query is valid, but nothing else is in this context
-          if ($token['value'] !== ';') {
-            throw new SQLFakeParseException("Unexpected {$token['value']}");
-          }
-          break;
-        default:
-          throw new SQLFakeParseException("Unexpected token {$token['value']}");
-      }
-
-      $this->pointer++;
+    /**
+     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     */
+    public function __construct(array $tokens, string $sql)
+    {
+        $this->tokens = $tokens;
+        $this->sql = $sql;
     }
 
-    return $query;
-  }
+    /**
+     * @return UpdateQuery
+     */
+    public function parse()
+    {
+        if ($this->tokens[$this->pointer]['value'] !== 'UPDATE') {
+            throw new SQLFakeParseException("Parser error: expected UPDATE");
+        }
+
+        $this->pointer++;
+        $count = \count($this->tokens);
+        $token = $this->tokens[$this->pointer];
+
+        if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
+            throw new SQLFakeParseException("Expected table name after UPDATE");
+        }
+
+        $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
+        $table = ['name' => $token['value'], 'join_type' => JoinType::JOIN];
+        $query = new UpdateQuery($table, $this->sql);
+        $this->pointer++;
+
+        while ($this->pointer < $count) {
+            $token = $this->tokens[$this->pointer];
+            switch ($token['type']) {
+                case TokenType::CLAUSE:
+                    if (\array_key_exists($token['value'], self::CLAUSE_ORDER)
+                        && self::CLAUSE_ORDER[$this->current_clause] >= self::CLAUSE_ORDER[$token['value']]
+                    ) {
+                        throw new SQLFakeParseException("Unexpected clause {$token['value']}");
+                    }
+
+                    $this->current_clause = $token['value'];
+
+                    switch ($token['value']) {
+                        case 'WHERE':
+                            $expression_parser = new ExpressionParser($this->tokens, $this->pointer);
+                            list($this->pointer, $expression) = $expression_parser->buildWithPointer();
+                            $query->whereClause = $expression;
+                            break;
+                        case 'ORDER':
+                            $p = new OrderByParser($this->pointer, $this->tokens);
+                            list($this->pointer, $query->orderBy) = $p->parse();
+                            break;
+                        case 'LIMIT':
+                            $p = new LimitParser($this->pointer, $this->tokens);
+                            list($this->pointer, $query->limitClause) = $p->parse();
+                            break;
+                        case 'SET':
+                            $p = new SetParser($this->pointer, $this->tokens);
+                            list($this->pointer, $query->setClause) = $p->parse();
+                            break;
+                        default:
+                            throw new SQLFakeParseException("Unexpected clause {$token['value']}");
+                    }
+                    break;
+                case TokenType::SEPARATOR:
+                    if ($token['value'] !== ';') {
+                        throw new SQLFakeParseException("Unexpected {$token['value']}");
+                    }
+                    break;
+                default:
+                    throw new SQLFakeParseException("Unexpected token {$token['value']}");
+            }
+            $this->pointer++;
+        }
+        return $query;
+    }
 }
+

@@ -1,67 +1,77 @@
-<?hh // strict
+<?php
+namespace Vimeo\MysqlEngine\Parser;
 
-namespace Slack\SQLFake;
+use Vimeo\MysqlEngine\Query\Expression\Expression;
+use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
+use Vimeo\MysqlEngine\Query\Expression\PositionExpression;
+use Vimeo\MysqlEngine\TokenType;
 
-use namespace HH\Lib\C;
+final class OrderByParser
+{
+    /**
+     * @var int
+     */
+    private $pointer;
 
-// parse the ORDER BY clause, which can be used for SELECT, UPDATE, or DELETE
-final class OrderByParser {
+    /**
+     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
+     */
+    private $tokens;
 
-  public function __construct(
-    private int $pointer,
-    private token_list $tokens,
-    // this one is only used for SELECT queries.
-    private ?vec<Expression> $selectExpressions = null,
-  ) {}
+    /**
+     * @var array<int, Expression>|null
+     */
+    private $selectExpressions = null;
 
-  public function parse(): (int, order_by_clause) {
-
-    // if we got here, the first token had better be ORDER
-    if ($this->tokens[$this->pointer]['value'] !== 'ORDER') {
-      throw new SQLFakeParseException("Parser error: expected ORDER");
+    /**
+     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     * @param array<int, Expression>|null $selectExpressions
+     */
+    public function __construct(int $pointer, array $tokens, ?array $selectExpressions = null)
+    {
+        $this->pointer = $pointer;
+        $this->tokens = $tokens;
+        $this->selectExpressions = $selectExpressions;
     }
 
-    $this->pointer++;
-    $next = $this->tokens[$this->pointer] ?? null;
-    $expressions = vec[];
-    if ($next === null || $next['value'] !== 'BY') {
-      throw new SQLFakeParseException("Expected BY after ORDER");
-    }
-
-    while (true) {
-      $expression_parser = new ExpressionParser($this->tokens, $this->pointer);
-      if ($this->selectExpressions is nonnull) {
-        $expression_parser->setSelectExpressions($this->selectExpressions);
-      }
-      list($this->pointer, $expression) = $expression_parser->buildWithPointer();
-
-      // any constants in the ORDER BY must be positional references
-      if ($expression is ConstantExpression) {
-        // SELECT is evaluated before ORDER BY, so we can use a PositionExpression to grab the value
-        $position = (int)($expression->value);
-
-        $expression = new PositionExpression($position);
-      }
-
-      $next = $this->tokens[$this->pointer + 1] ?? null;
-
-      // default to ASC
-      $sort_direction = SortDirection::ASC;
-      if ($next !== null && C\contains_key(keyset['ASC', 'DESC'], $next['value'])) {
+    /**
+     * @return array{0:int, 1:array<int, array{expression:Expression, direction:'ASC'|'DESC'}>}
+     */
+    public function parse()
+    {
+        if ($this->tokens[$this->pointer]['value'] !== 'ORDER') {
+            throw new SQLFakeParseException("Parser error: expected ORDER");
+        }
         $this->pointer++;
-        $sort_direction = SortDirection::assert($next['value']);
-        $next = $this->tokens[$this->pointer + 1] ?? null;
-      }
-
-      $expressions[] = shape('expression' => $expression, 'direction' => $sort_direction);
-
-      // skip over commas and continue the processing, but if it's any other token break out of the loop
-      if ($next === null || $next['value'] !== ',') {
-        break;
-      }
-      $this->pointer++;
+        $next = $this->tokens[$this->pointer] ?? null;
+        $expressions = [];
+        if ($next === null || $next['value'] !== 'BY') {
+            throw new SQLFakeParseException("Expected BY after ORDER");
+        }
+        while (true) {
+            $expression_parser = new ExpressionParser($this->tokens, $this->pointer);
+            if ($this->selectExpressions !== null) {
+                $expression_parser->setSelectExpressions($this->selectExpressions);
+            }
+            list($this->pointer, $expression) = $expression_parser->buildWithPointer();
+            if ($expression instanceof ConstantExpression) {
+                $position = (int) $expression->value;
+                $expression = new PositionExpression($position);
+            }
+            $next = $this->tokens[$this->pointer + 1] ?? null;
+            $sort_direction = 'ASC';
+            if ($next !== null && ($next['value'] === 'ASC' || $next['value'] === 'DESC')) {
+                $this->pointer++;
+                $sort_direction = $next['value'];
+                $next = $this->tokens[$this->pointer + 1] ?? null;
+            }
+            $expressions[] = ['expression' => $expression, 'direction' => $sort_direction];
+            if ($next === null || $next['value'] !== ',') {
+                break;
+            }
+            $this->pointer++;
+        }
+        return [$this->pointer, $expressions];
     }
-
-    return tuple($this->pointer, $expressions);
-  }
 }
+

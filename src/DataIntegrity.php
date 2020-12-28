@@ -1,231 +1,255 @@
-<?hh // strict
+<?php
+namespace Vimeo\MysqlEngine;
 
-namespace Slack\SQLFake;
-
-use namespace HH\Lib\{C, Keyset, Vec, Str};
-
-/**
- * Manages data integrity checks for a table based on its schema
- *
- * Primary and unique keys
- * Ensuring all fields are present with appropriate data types
- * Nullable vs. not nullable
- * Default values
- */
-abstract final class DataIntegrity {
-
-  <<__Memoize>>
-  public static function namesForSchema(table_schema $schema): keyset<string> {
-    return Keyset\map($schema['fields'], $field ==> $field['name']);
-  }
-
-  protected static function getDefaultValueForField(
-    string $field_type,
-    bool $nullable,
-    ?string $default,
-    string $field_name,
-    string $table_name,
-  ): mixed {
-
-    if ($default !== null) {
-      switch ($field_type) {
-        case 'int':
-          return Str\to_int($default);
-          break;
-        case 'double':
-          return (float)$default;
-          break;
-        default:
-          return $default;
-          break;
-      }
-    } else if ($nullable) {
-      return null;
-    }
-
-    if (QueryContext::$strictSQLMode) {
-      // if we got this far the column has no default and isn't nullable, strict would throw
-      // but default MySQL mode would coerce to a valid value
-      throw new SQLFakeRuntimeException("Column '{$field_name}' on '{$table_name}' does not allow null values");
-    }
-
-    switch ($field_type) {
-      case 'int':
-        return 0;
-        break;
-      case 'double':
-        return 0.0;
-        break;
-      default:
-        return '';
-        break;
-    }
-  }
-
-  /**
-   * Ensure all fields from the table schema are present in the row
-   * Applies default values based on either DEFAULTs, nullable fields, or data types
-   */
-  public static function ensureFieldsPresent(dict<string, mixed> $row, table_schema $schema): dict<string, mixed> {
-
-    foreach ($schema['fields'] as $field) {
-
-      $field_name = $field['name'];
-      $field_type = $field['hack_type'];
-      $field_nullable = $field['null'] ?? false;
-      $field_default = $field['default'] ?? null;
-
-      if (!C\contains_key($row, $field_name)) {
-        $row[$field_name] =
-          self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema['name']);
-      } else if ($row[$field_name] === null) {
-        if ($field_nullable) {
-          // explicit null value and nulls are allowed, let it through
-          continue;
-        } else if (QueryContext::$strictSQLMode) {
-          // if we got this far the column has no default and isn't nullable, strict would throw
-          // but default MySQL mode would coerce to a valid value
-          throw new SQLFakeRuntimeException("Column '{$field_name}' on '{$schema['name']}' does not allow null values");
-        } else {
-          $row[$field_name] =
-            self::getDefaultValueForField($field_type, $field_nullable, $field_default, $field_name, $schema['name']);
-        }
-      } else {
-        // TODO more integrity constraints, check field length for varchars, check timestamps
-        switch ($field_type) {
-          case 'int':
-            if ($row[$field_name] is bool) {
-              $row[$field_name] = (int)$row[$field_name];
-            } else if (!$row[$field_name] is int) {
-              if (QueryContext::$strictSQLMode) {
-                $field_str = \var_export($row[$field_name], true);
-                throw new SQLFakeRuntimeException(
-                  "Invalid value {$field_str} for column '{$field_name}' on '{$schema['name']}', expected int",
-                );
-              } else {
-                $row[$field_name] = (int)$row[$field_name];
-              }
+final class DataIntegrity
+{
+    /**
+     * @return mixed
+     */
+    protected static function getDefaultValueForColumn(
+        FakePdo $conn,
+        string $php_type,
+        bool $nullable,
+        ?string $default,
+        ?string $column_name = null,
+        ?string $database_name = null,
+        ?string $table_name = null,
+        bool $auto_increment = false
+    ) {
+        if ($default !== null) {
+            if ($default === 'CURRENT_TIMESTAMP') {
+                $default = \date('Y-m-d H:i:s', time() + 5*60*60);
             }
-            break;
-          case 'double':
-            if (!$row[$field_name] is float) {
-              if (QueryContext::$strictSQLMode) {
-                $field_str = \var_export($row[$field_name], true);
-                throw new SQLFakeRuntimeException(
-                  "Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected float",
-                );
-              } else {
-                $row[$field_name] = (float)$row[$field_name];
-              }
+
+            switch ($php_type) {
+                case 'int':
+                    return (int) $default;
+                case 'float':
+                    return (float) $default;
+                default:
+                    return $default;
             }
-            break;
-          default:
-            if (!$row[$field_name] is string) {
-              if (QueryContext::$strictSQLMode) {
-                $field_str = \var_export($row[$field_name], true);
-                throw new SQLFakeRuntimeException(
-                  "Invalid value '{$field_str}' for column '{$field_name}' on '{$schema['name']}', expected string",
+        }
+
+        if ($nullable) {
+            return null;
+        }
+
+        if ($auto_increment && $column_name && $database_name && $table_name) {
+            return $conn->getServer()->getNextAutoIncrementValue($database_name, $table_name, $column_name);
+        }
+
+        switch ($php_type) {
+            case 'int':
+                return 0;
+
+            case 'float':
+                return 0.0;
+
+            default:
+                return '';
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @param array{name:string, fields:array<array{name:string, type:DataType::*, length:int, null:bool, hack_type:string, default:string}>, indexes:array<array{name:string, type:string, fields:array<string>}>, vitess_sharding:array{keyspace:string, sharding_key:string}} $schema
+     *
+     * @return array<string, mixed>
+     */
+    public static function ensureColumnsPresent(
+        FakePdo $conn,
+        array $row,
+        Schema\TableDefinition $table_definition
+    ) {
+        foreach ($table_definition->columns as $column_name => $column) {
+            $php_type = $column->getPhpType();
+            $column_nullable = $column->isNullable;
+
+            $column_default = $column instanceof Schema\Column\Defaultable ? $column->getDefault() : null;
+
+            if (!array_key_exists($column_name, $row)) {
+                $row[$column_name] = self::getDefaultValueForColumn(
+                    $conn,
+                    $php_type,
+                    $column_nullable,
+                    $column_default,
+                    $column_name,
+                    $table_definition->databaseName,
+                    $table_definition->name,
+                    $column instanceof Schema\Column\IntegerColumn && $column->isAutoIncrement()
                 );
-              } else {
-                $row[$field_name] = (string)$row[$field_name];
-              }
+            } else {
+                if ($row[$column_name] === null) {
+                    if ($column_nullable) {
+                        continue;
+                    } else {
+                        if (true) {
+                            $row[$column_name] = self::coerceValueToColumn($column, null);
+                        } else {
+                            throw new Processor\SQLFakeRuntimeException(
+                                "Column '{$column_name}' on '{$table_definition->name}' does not allow null values"
+                            );
+                        }
+                    }
+                } else {
+                    switch ($php_type) {
+                        case 'int':
+                            if (\is_bool($row[$column_name])) {
+                                $row[$column_name] = (int) $row[$column_name];
+                            } else {
+                                if (!\is_int($row[$column_name])) {
+                                    if (false) {
+                                        $field_str = \var_export($row[$column_name], true);
+                                        throw new Processor\SQLFakeRuntimeException(
+                                            "Invalid value {$field_str} for column '{$column_name}' on '{$table_definition->name}', expected int"
+                                        );
+                                    } else {
+                                        $row[$column_name] = (int) $row[$column_name];
+                                    }
+                                }
+                            }
+                            break;
+                        case 'float':
+                            if (!\is_float($row[$column_name])) {
+                                if (false) {
+                                    $field_str = \var_export($row[$column_name], true);
+                                    throw new Processor\SQLFakeRuntimeException(
+                                        "Invalid value '{$field_str}' for column '{$column_name}' on '{$table_definition->name}', expected float"
+                                    );
+                                } else {
+                                    $row[$column_name] = (double) $row[$column_name];
+                                }
+                            }
+                            break;
+                        default:
+                            if (!\is_string($row[$column_name])) {
+                                if (false) {
+                                    $field_str = \var_export($row[$column_name], true);
+                                    throw new Processor\SQLFakeRuntimeException(
+                                        "Invalid value '{$field_str}' for column '{$column_name}' on '{$table_definition->name}', expected string"
+                                    );
+                                } else {
+                                    $row[$column_name] = (string) $row[$column_name];
+                                }
+                            }
+                            break;
+                    }
+                }
             }
-            break;
         }
-      }
+        return $row;
     }
 
-    return $row;
-  }
+    /**
+     * @param array<string, mixed> $row
+     *
+     * @return array<string, mixed>
+     */
+    public static function coerceToSchema(
+        FakePdo $conn,
+        array $row,
+        Schema\TableDefinition $table_definition
+    ) {
+        $row = self::ensureColumnsPresent($conn, $row, $table_definition);
 
-  /**
-   * Ensure default values are present, coerce data types as MySQL would
-   */
-  public static function coerceToSchema(dict<string, mixed> $row, table_schema $schema): dict<string, mixed> {
+        foreach ($row as $column_name => $value) {
+            if (!isset($table_definition->columns[$column_name])) {
+                throw new \Exception("Column '$column_name' not found on '{$table_definition->name}'");
+            }
 
-    $fields = self::namesForSchema($schema);
-    $bad_fields = Keyset\keys($row) |> Keyset\diff($$, $fields);
-    if (!C\is_empty($bad_fields)) {
-      $bad_fields = Str\join($bad_fields, ', ');
-      throw new SQLFakeRuntimeException("Column(s) '{$bad_fields}' not found on '{$schema['name']}'");
-    }
+            $column = $table_definition->columns[$column_name];
 
-    $row = self::ensureFieldsPresent($row, $schema);
-
-    foreach ($schema['fields'] as $field) {
-
-      $field_name = $field['name'];
-      $field_type = $field['hack_type'];
-
-      // don't coerce null values on nullable fields
-      if ($field['null'] && $row[$field_name] === null) {
-        continue;
-      }
-
-      switch ($field_type) {
-        case 'int':
-          $row[$field_name] = (int)$row[$field_name];
-          break;
-        case 'string':
-          $row[$field_name] = (string)$row[$field_name];
-          break;
-        case 'double':
-        case 'float':
-          $row[$field_name] = (float)$row[$field_name];
-          break;
-        default:
-          throw new SQLFakeRuntimeException(
-            "DataIntegrity::coerceToSchema found unknown type for field: '{$field_name}:{$field_type}'",
-          );
-      }
-    }
-
-    return $row;
-  }
-
-  /**
-   * Check for unique key violations
-   * If there's a violation, this returns a string message, as well as the integer id of the row that conflicted
-   * Caller may decide to throw using the message, or make use of the row id to do an update
-   */
-  public static function checkUniqueConstraints(
-    dataset $table,
-    dict<string, mixed> $row,
-    table_schema $schema,
-    ?int $update_row_id = null,
-  ): ?(string, int) {
-
-    // gather all unique keys
-    $unique_keys = dict[];
-    foreach ($schema['indexes'] as $index) {
-      if ($index['type'] === 'PRIMARY') {
-        $unique_keys['PRIMARY'] = keyset($index['fields']);
-      } elseif ($index['type'] === 'UNIQUE') {
-        $unique_keys[$index['name']] = keyset($index['fields']);
-      }
-    }
-
-    foreach ($unique_keys as $name => $unique_key) {
-      // unique key that allows nullable fields? if any of this key's fields on our candidate row are null, skip this key
-      // primary keys don't ever allow this
-      if ($name !== 'PRIMARY' && C\any($unique_key, $key ==> $row[$key] === null)) {
-        continue;
-      }
-
-      // are there any existing rows in the table for which every unique key field matches this row?
-      foreach ($table as $row_id => $r) {
-        // if we're updating and this is the row from the original table that we're updating, don't check that one
-        if ($row_id === $update_row_id) {
-          continue;
+            $row[$column_name] = self::coerceValueToColumn($column, $value);
         }
-        if (C\every($unique_key, $field ==> $r[$field] === $row[$field])) {
-          $dupe_unique_key_value = Vec\map($unique_key, $field ==> (string)$row[$field]) |> Str\join($$, ', ');
-          return
-            tuple("Duplicate entry '{$dupe_unique_key_value}' for key '{$name}' in table '{$schema['name']}'", $row_id);
-        }
-      }
+
+        return $row;
     }
 
-    return null;
-  }
+    private static function coerceValueToColumn(
+        Schema\Column $column,
+        $value
+    ) {
+        $php_type = $column->getPhpType();
+
+        if ($column->isNullable && $value === null) {
+            return null;
+        }
+
+        switch ($php_type) {
+            case 'int':
+                return (int) $value;
+
+            case 'string':
+                $value = (string) $value;
+
+                if (($column instanceof Schema\Column\DateTime || $column instanceof Schema\Column\Timestamp)
+                    && \strlen($value) === 10
+                ) {
+                    $value .= ' 00:00:00';
+                }
+
+                return $value;
+
+            case 'float':
+                return (float) $value;
+
+            default:
+                throw new \Exception("DataIntegrity::coerceValueToSchema found unknown type for field: '{$php_type}'");
+        }
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $table
+     * @param array<string, mixed> $new_row
+     *
+     * @return array{0:string, 1:int}|null
+     */
+    public static function checkUniqueConstraints(array $table, array $new_row, Schema\TableDefinition $table_definition, ?int $update_row_id = null)
+    {
+        $unique_keys = [];
+
+        foreach ($table_definition->indexes as $name => $index) {
+            if ($index->type === 'PRIMARY') {
+                $unique_keys['PRIMARY'] = $index->columns;
+            } else {
+                if ($index->type === 'UNIQUE') {
+                    $unique_keys[$name] = $index->columns;
+                }
+            }
+        }
+
+        foreach ($unique_keys as $name => $unique_key) {
+            if ($name !== 'PRIMARY') {
+                foreach ($unique_key as $key) {
+                    if ($new_row[$key] === null) {
+                        continue 2;
+                    }
+                }
+            }
+
+            foreach ($table as $row_id => $existing_row) {
+                if ($row_id === $update_row_id) {
+                    continue;
+                }
+
+                $different_keys = array_filter(
+                    $unique_key,
+                    fn ($key) => $existing_row[$key] !== $new_row[$key] || !isset($new_row[$key])
+                );
+
+                // if all keys in the row match
+                if (!$different_keys) {
+                    $dupe_unique_key_value = \implode(
+                        ', ',
+                        \array_map(fn($field) => (string) $existing_row[$field], $unique_key)
+                    );
+                    return ["Duplicate entry '{$dupe_unique_key_value}' for key '{$name}' in table '{$table_definition->name}'", $row_id];
+                }
+            }
+        }
+
+        return null;
+    }
 }
+

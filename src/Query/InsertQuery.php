@@ -1,86 +1,50 @@
-<?hh // strict
+<?php
+namespace Vimeo\MysqlEngine\Query;
 
-namespace Slack\SQLFake;
+use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use Vimeo\MysqlEngine\Query\Expression\Expression;
 
-use namespace HH\Lib\C;
+final class InsertQuery
+{
+    /**
+     * @var string
+     */
+    public $table;
 
-final class InsertQuery extends Query {
+    /**
+     * @var string
+     */
+    public $sql;
 
-  public function __construct(public string $table, public string $sql, public bool $ignoreDupes) {}
+    /**
+     * @var bool
+     */
+    public $ignoreDupes;
 
-  public vec<BinaryOperatorExpression> $updateExpressions = vec[];
-  public vec<string> $insertColumns = vec[];
-  public vec<vec<Expression>> $values = vec[];
+    /**
+     * @var array<int, BinaryOperatorExpression>
+     */
+    public $updateExpressions = [];
 
-  /**
-   * Insert rows, with validation
-   * Returns number of rows affected
-   */
-  public function execute(AsyncMysqlConnection $conn): int {
-    list($database, $table_name) = Query::parseTableName($conn, $this->table);
-    $table = $conn->getServer()->getTable($database, $table_name) ?? vec[];
+    /**
+     * @var array<int, string>
+     */
+    public $insertColumns = [];
 
-    Metrics::trackQuery(QueryType::INSERT, $conn->getServer()->name, $table_name, $this->sql);
+    /**
+     * @var array<int, array<int, Expression>>
+     */
+    public $values = [];
 
-    $schema = QueryContext::getSchema($database, $table_name);
-    if ($schema === null && QueryContext::$strictSchemaMode) {
-      throw new SQLFakeRuntimeException("Table $table_name not found in schema and strict mode is enabled");
+    /**
+     * @var array{0: int, 1: array<int, BinaryOperatorExpression>}
+     */
+    public ?array $setClause = null;
+
+    public function __construct(string $table, string $sql, bool $ignoreDupes)
+    {
+        $this->table = $table;
+        $this->sql = $sql;
+        $this->ignoreDupes = $ignoreDupes;
     }
-
-    $rows_affected = 0;
-    foreach ($this->values as $value_list) {
-      $row = dict[];
-      foreach ($this->insertColumns as $key => $col) {
-        $row[$col] = $value_list[$key]->evaluate(dict[], $conn);
-      }
-
-      // can't enforce uniqueness or defaults if there is no schema available
-      if ($schema === null) {
-        $table[] = $row;
-        $rows_affected++;
-        continue;
-      }
-
-      // ensure all fields are present with appropriate types and default values
-      // throw for nonexistent fields
-      $row = DataIntegrity::coerceToSchema($row, $schema);
-
-      // check for unique key violations unless INSERT IGNORE was specified
-      if (!$this->ignoreDupes) {
-
-        $unique_key_violation = DataIntegrity::checkUniqueConstraints($table, $row, $schema);
-        if ($unique_key_violation is nonnull) {
-          list($msg, $row_id) = $unique_key_violation;
-          // is this an "INSERT ... ON DUPLICATE KEY UPDATE?"
-          // if so, this is where we apply the updates
-          if (!C\is_empty($this->updateExpressions)) {
-            $existing_row = $table[$row_id];
-            list($affected, $table) = $this->applySet(
-              $conn,
-              $database,
-              $table_name,
-              dict[$row_id => $existing_row],
-              $table,
-              $this->updateExpressions,
-              $schema,
-              $row,
-            );
-            // MySQL always counts dupe inserts twice intentionally
-						$rows_affected += $affected * 2;
-            continue;
-          } else if (!QueryContext::$relaxUniqueConstraints) {
-            throw new SQLFakeUniqueKeyViolation($msg);
-          } else {
-            continue;
-          }
-        }
-      }
-      $table[] = $row;
-      $rows_affected++;
-    }
-
-    // write it back to the database
-    $conn->getServer()->saveTable($database, $table_name, $table);
-    return $rows_affected;
-  }
 }

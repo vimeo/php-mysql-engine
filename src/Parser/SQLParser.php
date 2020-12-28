@@ -1,572 +1,421 @@
-<?hh // strict
+<?php
+namespace Vimeo\MysqlEngine\Parser;
 
-namespace Slack\SQLFake;
+use Vimeo\MysqlEngine\TokenType;
+use Vimeo\MysqlEngine\Query\Query;
 
-use namespace HH\Lib\{C, Regex, Str, Vec};
+final class SQLParser
+{
+    /**
+     * @var array<string, string>
+     */
+    const CLAUSES = ['SELECT' => 'SELECT', 'FROM' => 'FROM', 'WHERE' => 'WHERE', 'GROUP' => 'GROUP', 'HAVING' => 'HAVING', 'LIMIT' => 'LIMIT', 'ORDER' => 'ORDER', 'UPDATE' => 'UPDATE', 'SET' => 'SET', 'DELETE' => 'DELETE', 'UNION' => 'UNION', 'EXCEPT' => 'EXCEPT', 'INTERSECT' => 'INTERSECT', 'INSERT' => 'INSERT', 'VALUES' => 'VALUES'];
 
-final class SQLParser {
+    /**
+     * @var array<string, string>
+     */
+    const SEPARATORS = [')' => ')', ',' => ',', ';' => ';'];
 
-  public static function parse(string $sql): Query {
-    // memoize hit rate on write queries is very low - so only memoize selects to avoid ballooning memory usage
-    if (Str\starts_with_ci($sql, 'SELECT')) {
-      return static::parseMemoized($sql);
+    /**
+     * @var array<string, string>
+     */
+    const OPERATORS = ['INTERVAL' => 'INTERVAL', 'COLLATE' => 'COLLATE', '!' => '!', '~' => '~', '^' => '^', '*' => '*', '/' => '/', 'DIV' => 'DIV', '%' => '%', 'MOD' => 'MOD', '-' => '-', '+' => '+', '<<' => '<<', '>>' => '>>', '&' => '&', '|' => '|', '=' => '=', '<=>' => '<=>', '>=' => '>=', '>' => '>', '<=' => '<=', '<' => '<', '<>' => '<>', '!=' => '!=', 'IS' => 'IS', 'LIKE' => 'LIKE', 'REGEXP' => 'REGEXP', 'IN' => 'IN', 'EXISTS' => 'EXISTS', 'BETWEEN' => 'BETWEEN', 'CASE' => 'CASE', 'WHEN' => 'WHEN', 'THEN' => 'THEN', 'ELSE' => 'ELSE', 'END' => 'END', 'NOT' => 'NOT', 'AND' => 'AND', '&&' => '&&', 'XOR' => 'XOR', 'OR' => 'OR', '||' => '||'];
+
+    /**
+     * @var array<string, string>
+     */
+    const RESERVED_WORDS = ['ASC' => 'ASC', 'DESC' => 'DESC', 'AS' => 'AS', 'WITH' => 'WITH', 'ON' => 'ON', 'OFFSET' => 'OFFSET', 'BY' => 'BY', 'INTO' => 'INTO', 'ALL' => 'ALL', 'DISTINCT' => 'DISTINCT', 'DISTINCTROW' => 'DISTINCTROW', 'SQL_CALC_FOUND_ROWS' => 'SQL_CALC_FOUND_ROWS', 'HIGH_PRIORITY' => 'HIGH_PRIORITY', 'SQL_SMALL_RESULT' => 'SQL_SMALL_RESULT', 'SQL_BIG_RESULT' => 'SQL_BIG_RESULT', 'SQL_BUFFER_RESULT' => 'SQL_BUFFER_RESULT', 'SQL_CACHE' => 'SQL_CACHE', 'SQL_NO_CACHE' => 'SQL_NO_CACHE', 'JOIN' => 'JOIN', 'INNER' => 'INNER', 'OUTER' => 'OUTER', 'LEFT' => 'LEFT', 'RIGHT' => 'RIGHT', 'STRAIGHT_JOIN' => 'STRAIGHT_JOIN', 'NATURAL' => 'NATURAL', 'USING' => 'USING', 'CROSS' => 'CROSS', 'USE' => 'USE', 'IGNORE' => 'IGNORE', 'FORCE' => 'FORCE', 'PARTITION' => 'PARTITION', 'ROLLUP' => 'ROLLUP', 'INDEX' => 'INDEX', 'KEY' => 'KEY', 'FOR' => 'FOR', 'LOCK' => 'LOCK', 'DUPLICATE' => 'DUPLICATE', 'DELAYED' => 'DELAYED', 'LOW_PRIORITY' => 'LOW_PRIORITY'];
+
+    /**
+     * @return Query
+     */
+    public static function parse(string $sql)
+    {
+        if (\substr(\strtoupper($sql), 6) === 'SELECT') {
+            return static::parseMemoized($sql);
+        }
+        return static::parseImpl($sql);
     }
-    return static::parseImpl($sql);
-  }
 
-  private static function parseImpl(string $sql): Query {
-    $tokens = (new SQLLexer())->lex($sql);
-    $tokens = self::buildTokenListFromLexemes($tokens);
-
-    $token = $tokens[0];
-    // handle a query like (SELECT 1), just strip the surrounding parens
-    if ($token['type'] === TokenType::PAREN) {
-      $close = self::findMatchingParen(0, $tokens);
-      $tokens = Vec\slice($tokens, 1, $close - 1);
-      $token = $tokens[0];
+    /**
+     * @return Query
+     */
+    private static function parseImpl(string $sql)
+    {
+        $tokens = (new SQLLexer())->lex($sql);
+        $tokens = self::buildTokenListFromLexemes($tokens);
+        $token = $tokens[0];
+        if ($token['type'] === TokenType::PAREN) {
+            $close = self::findMatchingParen(0, $tokens);
+            $tokens = \array_slice($tokens, 1, $close - 1);
+            $token = $tokens[0];
+        }
+        if ($token['type'] !== TokenType::CLAUSE && $token['value'] !== 'TRUNCATE') {
+            throw new SQLFakeParseException("Unexpected {$token['value']}");
+        }
+        switch ($token['value']) {
+            case 'SELECT':
+                $select = new SelectParser(0, $tokens, $sql);
+                list($pointer, $query) = $select->parse();
+                if (\array_key_exists($pointer, $tokens)) {
+                    $next = $tokens[$pointer] ?? null;
+                    $val = $next ? $next['value'] : 'null';
+                    while ($next !== null
+                        && ($next['value'] === 'UNION' || $next['value'] === 'INTERSECT' || $next['value'] === 'EXCEPT')
+                    ) {
+                        $type = $next['value'];
+                        if ($next['value'] === 'UNION') {
+                            $next_plus = $tokens[$pointer + 1];
+                            if ($next_plus['value'] === 'ALL') {
+                                $type = 'UNION_ALL';
+                                $pointer++;
+                            }
+                        }
+                        $pointer++;
+                        $select = new SelectParser($pointer, $tokens, $sql);
+                        list($pointer, $q) = $select->parse();
+                        $query->addMultiQuery($type, $q);
+                        $next = $tokens[$pointer] ?? null;
+                    }
+                }
+                return $query;
+            case 'UPDATE':
+                $update = new UpdateParser($tokens, $sql);
+                return $update->parse();
+            case 'DELETE':
+                $delete = new DeleteParser($tokens, $sql);
+                return $delete->parse();
+            case 'INSERT':
+                $insert = new InsertParser($tokens, $sql);
+                return $insert->parse();
+            case 'TRUNCATE':
+                $truncate = new TruncateParser($tokens, $sql);
+                return $truncate->parse();
+            default:
+                throw new SQLFakeParseException("Unexpected {$token['value']}");
+        }
+        throw new SQLFakeParseException("Parse error: unexpected end of input");
     }
 
-    if ($token['type'] !== TokenType::CLAUSE) {
-      throw new SQLFakeParseException("Unexpected {$token['value']}");
+    /**
+     * @return Query
+     */
+    private static function parseMemoized(string $sql)
+    {
+        return static::parseImpl($sql);
     }
 
-    switch ($token['value']) {
-      case 'SELECT':
-        $select = new SelectParser(0, $tokens, $sql);
-        list($pointer, $query) = $select->parse();
-        // we still have something left here after parsing the whole top level query? hopefully it's a multi-query keyword
-        if (C\contains_key($tokens, $pointer)) {
-          $next = $tokens[$pointer] ?? null;
-          $val = $next ? $next['value'] : 'null';
-          while ($next !== null && C\contains_key(keyset['UNION', 'INTERSECT', 'EXCEPT'], $next['value'])) {
-            $type = $next['value'];
-            if ($next['value'] === 'UNION') {
-              $next_plus = $tokens[$pointer + 1];
-              if ($next_plus['value'] === 'ALL') {
-                $type = 'UNION_ALL';
-                $pointer++;
-              }
+    /**
+     * @param array<int, string> $tokens
+     *
+     * @return array<int, array{type:TokenType::*, value:string, raw:string}>
+     */
+    private static function buildTokenListFromLexemes(array $tokens)
+    {
+        $out = [];
+        $count = \count($tokens);
+        foreach ($tokens as $i => $token) {
+            if (\trim($token) === '') {
+                $k = \array_key_last($out);
+                if ($k !== null) {
+                    $previous = $out[$k];
+                    $previous['raw'] .= $token;
+                    $out[$k] = $previous;
+                }
+                continue;
+            }
+
+            if (\filter_var($token, \FILTER_VALIDATE_INT) !== false) {
+                $out[] = ['type' => TokenType::NUMERIC_CONSTANT, 'value' => $token, 'raw' => $token];
+                continue;
+            }
+
+            if (\filter_var($token, \FILTER_VALIDATE_FLOAT) !== false) {
+                $out[] = ['type' => TokenType::NUMERIC_CONSTANT, 'value' => $token, 'raw' => $token];
+                continue;
+            }
+
+            if ($token[0] === '\'' || $token[0] === '"') {
+                $raw = $token;
+                $token = \substr($token, 1, \strlen($token) - 2);
+                $token = \preg_replace("/\\\\0/", "\0", \preg_replace("/\\\\([^%_rntbZ0])/", '\\1', $token));
+                $out[] = ['type' => TokenType::STRING_CONSTANT, 'value' => $token, 'raw' => $raw];
+                continue;
+            } else {
+                if ($token[0] === '`') {
+                    $raw = $token;
+
+                    if (substr($token, -1) === '`') {
+                        $token = \substr($token, 1, -1);
+                    } else {
+                        if (substr($token, -2) === '`.') {
+                            $token = \substr($token, 1, -2) . '.';
+                        }
+                    }
+
+                    $previous_key = \array_key_last($out);
+                    if ($previous_key !== null
+                        && $out[$previous_key]['type'] === TokenType::IDENTIFIER
+                        && substr($out[$previous_key]['value'], -1) === '.'
+                    ) {
+                        $out[$previous_key]['value'] .= $token;
+                        continue;
+                    }
+
+                    $out[] = ['type' => TokenType::IDENTIFIER, 'value' => $token, 'raw' => $raw];
+                    continue;
+                }
+
+                if ($token[0] === '(') {
+                    $out[] = ['type' => TokenType::PAREN, 'value' => $token, 'raw' => $token];
+                    continue;
+                }
+
+                if ($token === '*') {
+                    $k = \array_key_last($out);
+
+                    if ($k === null) {
+                        throw new SQLFakeParseException("Parse error: unexpected *");
+                    }
+
+                    $previous = $out[$k];
+                    $out[$k] = $previous;
+
+                    $previous_type = $previous['type'];
+
+                    if ($previous_type !== TokenType::NUMERIC_CONSTANT
+                        && $previous_type !== TokenType::STRING_CONSTANT
+                        && $previous_type !== TokenType::NULL_CONSTANT
+                        && $previous_type !== TokenType::IDENTIFIER
+                        && $previous_type !== ')'
+                    ) {
+                        $out[] = ['type' => TokenType::IDENTIFIER, 'value' => $token, 'raw' => $token];
+                        continue;
+                    }
+
+                    if ($previous['type'] === TokenType::IDENTIFIER && \substr($previous['value'], -1) === '.') {
+                        $previous['value'] .= $token;
+                        $previous['raw'] .= $token;
+                        $out[$k] = $previous;
+                        continue;
+                    }
+                } else {
+                    if ($token === '-' || $token === '+') {
+                        $k = \array_key_last($out);
+
+                        if ($k === null) {
+                            throw new SQLFakeParseException("Parse error: unexpected {$token}");
+                        }
+
+                        $previous = $out[$k];
+
+                        $previous_type = $previous['type'];
+
+                        if ($previous_type !== TokenType::NUMERIC_CONSTANT
+                            && $previous_type !== TokenType::STRING_CONSTANT
+                            && $previous_type !== TokenType::NULL_CONSTANT
+                            && $previous_type !== TokenType::IDENTIFIER
+                            && $previous_type !== ')'
+                        ) {
+                            if ($token === '-') {
+                                $op = 'UNARY_MINUS';
+                            } else {
+                                $op = 'UNARY_PLUS';
+                            }
+
+                            $out[] = ['type' => TokenType::OPERATOR, 'value' => $op, 'raw' => $token];
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            $token_upper = \strtoupper($token);
+
+            if ($token_upper === 'NULL') {
+                $out[] = ['type' => TokenType::NULL_CONSTANT, 'value' => $token, 'raw' => $token];
+            } elseif ($token_upper === 'TRUE') {
+                $out[] = ['type' => TokenType::NUMERIC_CONSTANT, 'value' => '1', 'raw' => $token];
+            } elseif ($token_upper === 'FALSE') {
+                $out[] = ['type' => TokenType::NUMERIC_CONSTANT, 'value' => '0', 'raw' => $token];
+            } elseif (\array_key_exists($token_upper, self::CLAUSES)) {
+                $out[] = ['type' => TokenType::CLAUSE, 'value' => $token_upper, 'raw' => $token];
+            } elseif (\array_key_exists($token_upper, self::OPERATORS) && !self::isFunctionVersionOfOperator($token_upper, $i, $count, $tokens)) {
+                $out[] = ['type' => TokenType::OPERATOR, 'value' => $token_upper, 'raw' => $token];
+            } elseif (\array_key_exists($token_upper, self::RESERVED_WORDS)) {
+                $out[] = ['type' => TokenType::RESERVED, 'value' => $token_upper, 'raw' => $token];
+            } elseif (\array_key_exists($token_upper, self::SEPARATORS)) {
+                $out[] = ['type' => TokenType::SEPARATOR, 'value' => $token_upper, 'raw' => $token];
+            } elseif ($i < $count - 1 && $tokens[$i + 1] === '(') {
+                $out[] = ['type' => TokenType::SQLFUNCTION, 'value' => $token_upper, 'raw' => $token];
+            } else {
+                $previous_key = \array_key_last($out);
+                if ($previous_key !== null && $out[$previous_key]['type'] === TokenType::IDENTIFIER
+                    && substr($out[$previous_key]['value'], -1) === '.'
+                ) {
+                    $out[$previous_key]['value'] .= $token;
+                    continue;
+                }
+                $out[] = ['type' => TokenType::IDENTIFIER, 'value' => $token, 'raw' => $token];
+            }
+        }
+        return $out;
+    }
+
+    /**
+     * @param array<int, string> $tokens
+     *
+     * @return bool
+     */
+    private static function isFunctionVersionOfOperator(string $token_upper, int $i, int $count, array $tokens)
+    {
+        return $token_upper === 'MOD' && $i < $count - 1 && $tokens[$i + 1] === '(';
+    }
+
+    /**
+     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     *
+     * @return int
+     */
+    public static function findMatchingParen(int $pointer, array $tokens)
+    {
+        $paren_count = 0;
+        $remaining_tokens = \array_slice($tokens, $pointer);
+        $token_count = \count($remaining_tokens);
+        foreach ($remaining_tokens as $i => $token) {
+            if ($token['type'] === TokenType::PAREN) {
+                $paren_count++;
+            } else {
+                if ($token['type'] === TokenType::SEPARATOR && $token['value'] === ')') {
+                    $paren_count--;
+                    if ($paren_count === 0) {
+                        return $pointer + $i;
+                    }
+                }
+            }
+        }
+        throw new SQLFakeParseException("Unclosed parentheses at index {$pointer}");
+    }
+
+    /**
+     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     *
+     * @return int
+     */
+    public static function skipIndexHints(int $pointer, array $tokens)
+    {
+        $next_pointer = $pointer + 1;
+        $next = $tokens[$next_pointer] ?? null;
+
+        while ($next !== null
+            && $next['type'] === TokenType::RESERVED
+            && ($next['value'] === 'USE' || $next['value'] === 'IGNORE' || $next['value'] === 'FORCE')
+        ) {
+            $pointer += 2;
+            $hint_type = $next['value'];
+            $next = $tokens[$pointer] ?? null;
+            if ($next === null || ($next['value'] !== 'INDEX' && $next['value'] !== 'KEY')) {
+                throw new SQLFakeParseException("Expected INDEX or KEY in index hint");
             }
             $pointer++;
-            $select = new SelectParser($pointer, $tokens, $sql);
-            list($pointer, $q) = $select->parse();
-            $query->addMultiQuery(MultiOperand::assert($type), $q);
-
             $next = $tokens[$pointer] ?? null;
-          }
+            if ($next === null) {
+                if ($hint_type === 'USE') {
+                    $pointer--;
+                    return $pointer;
+                }
+                throw new SQLFakeParseException("Expected expected FOR or index list in index hint");
+            }
+            if ($next['value'] === 'FOR') {
+                $pointer++;
+                $next = $tokens[$pointer] ?? null;
+                if ($next === null) {
+                    throw new SQLFakeParseException("Expected JOIN, ORDER BY, or GROUP BY after FOR in index hint");
+                } else {
+                    if ($next['value'] === 'JOIN') {
+                        $pointer++;
+                        $next = $tokens[$pointer] ?? null;
+                    } else {
+                        if ($next['value'] === 'GROUP' || $next['value'] === 'ORDER') {
+                            $pointer++;
+                            $next = $tokens[$pointer] ?? null;
+                            if ($next === null || $next['value'] !== 'BY') {
+                                throw new SQLFakeParseException("Expected BY in index hint after GROUP or ORDER");
+                            }
+                            $pointer++;
+                            $next = $tokens[$pointer] ?? null;
+                        } else {
+                            throw new SQLFakeParseException("Expected JOIN, ORDER BY, or GROUP BY after FOR in index hint");
+                        }
+                    }
+                }
+            }
+            if ($next === null || $next['type'] !== TokenType::PAREN) {
+                if ($hint_type === 'USE') {
+                    $pointer--;
+                    return $pointer;
+                }
+                throw new SQLFakeParseException("Expected index expression after index hint");
+            }
+            $closing_paren_pointer = SQLParser::findMatchingParen($pointer, $tokens);
+            $arg_tokens = \array_slice($tokens, $pointer + 1, $closing_paren_pointer - $pointer - 1);
+            if (!\count($arg_tokens)) {
+                throw new SQLFakeParseException("Expected at least one argument to index hint");
+            }
+            $count = 0;
+            foreach ($arg_tokens as $arg) {
+                $count++;
+                if ($count % 2 === 1) {
+                    if ($arg['type'] !== TokenType::IDENTIFIER) {
+                        throw new SQLFakeParseException("Expected identifier in index hint");
+                    }
+                } else {
+                    if ($arg['value'] !== ',') {
+                        throw new SQLFakeParseException("Expected , or ) after index hint");
+                    }
+                }
+            }
+            $pointer = $closing_paren_pointer;
+            $next_pointer = $pointer + 1;
+            $next = $tokens[$next_pointer] ?? null;
         }
-        return $query;
-      case 'UPDATE':
-        $update = new UpdateParser($tokens, $sql);
-        return $update->parse();
-      case 'DELETE':
-        $delete = new DeleteParser($tokens, $sql);
-        return $delete->parse();
-      case 'INSERT':
-        $insert = new InsertParser($tokens, $sql);
-        return $insert->parse();
-      default:
-        throw new SQLFakeParseException("Unexpected {$token['value']}");
+        return $pointer;
     }
 
-    throw new SQLFakeParseException("Parse error: unexpected end of input");
-  }
-
-  <<__Memoize>>
-  private static function parseMemoized(string $sql): Query {
-    return static::parseImpl($sql);
-  }
-
-  /*
-   * Lexemes are just a vec of strings from the lexer
-   * This builds them into typed token shapes based on lists of reserved keywords and surrounding context
-   */
-  private static function buildTokenListFromLexemes(vec<string> $tokens): token_list {
-    $out = vec[];
-    $count = C\count($tokens);
-    foreach ($tokens as $i => $token) {
-
-      // skip white space, but tack it onto the tokens in another field for when we need to assemble the expression list
-      if (Str\trim($token) === '') {
-        $k = C\last_key($out);
-        if ($k !== null) {
-          $previous = $out[$k];
-          $previous['raw'] .= $token;
-          $out[$k] = $previous;
-        }
-        continue;
-      }
-
-      if (Str\to_int($token) is nonnull) {
-        $out[] = shape(
-          'type' => TokenType::NUMERIC_CONSTANT,
-          'value' => $token,
-          'raw' => $token,
-        );
-        continue;
-      } elseif (C\contains_key(keyset['\'', '"'], $token[0])) {
-        // chop off the quotes before storing the value
-        $raw = $token;
-        $token = Str\slice($token, 1, Str\length($token) - 2);
-        // unescape everything except for % and _ (which only get unescaped during LIKE operations)
-        // there are a few other special sequnces we leave unescaped like \r, \n, \t, \b, \Z, \0
-        // https://dev.mysql.com/doc/refman/5.7/en/string-literals.html
-        // it's possible we need to replace several of these escape sequences with the appropriate unicode character, as
-        // we're doing for \0 here
-        $token = Regex\replace($token, re"/\\\\([^%_rntbZ0])/", '\1') |> Regex\replace($$, re"/\\\\0/", "\0");
-        $out[] = shape(
-          'type' => TokenType::STRING_CONSTANT,
-          'value' => $token,
-          'raw' => $raw,
-        );
-        continue;
-      } elseif ($token[0] === '`') {
-        $raw = $token;
-        // Only chop off the ` if it's fully wrapping the identifier
-        if (Str\ends_with($token, '`')) {
-          $token = Str\strip_prefix($token, '`') |> Str\strip_suffix($$, '`');
-        } else if (Str\ends_with($token, '`.')) {
-          // for `foo`., it becomes foo.
-          $token = Str\strip_prefix($token, '`') |> Str\strip_suffix($$, '`.') |> $$.'.';
-        }
-
-        // if we find an identifier and previous token ended with ., smush them together
-        $previous_key = C\last_key($out);
-        if (
-          $previous_key is nonnull &&
-          $out[$previous_key]['type'] === TokenType::IDENTIFIER &&
-          Str\ends_with($out[$previous_key]['value'], '.')
-        ) {
-          $out[$previous_key]['value'] .= $token;
-          continue;
-        }
-
-        $out[] = shape(
-          'type' => TokenType::IDENTIFIER,
-          'value' => $token,
-          'raw' => $raw,
-        );
-        continue;
-      } elseif ($token[0] === '(') {
-        $out[] = shape('type' => TokenType::PAREN, 'value' => $token, 'raw' => $token);
-        continue;
-      } elseif ($token === '*') {
-        // the * character is special because it's sometimes an operator and most of the time it means "all columns"
-        $k = C\last_key($out);
-        if ($k === null) {
-          throw new SQLFakeParseException("Parse error: unexpected *");
-        }
-        $previous = $out[$k];
-        $out[$k] = $previous;
-        if (
-          !C\contains_key(
-            keyset[
-              TokenType::NUMERIC_CONSTANT,
-              TokenType::STRING_CONSTANT,
-              TokenType::NULL_CONSTANT,
-              TokenType::IDENTIFIER,
-            ],
-            $previous['type'],
-          ) &&
-          $previous['value'] !== ')'
-        ) {
-          $out[] = shape(
-            'type' => TokenType::IDENTIFIER,
-            'value' => $token,
-            'raw' => $token,
-          );
-          continue;
-        } elseif ($previous['type'] === TokenType::IDENTIFIER && Str\ends_with($previous['value'], '.')) {
-          // previous ended like "foo.", we should keep "foo.*" together as one token
-          $previous['value'] .= $token;
-          $previous['raw'] .= $token;
-          $out[$k] = $previous;
-          continue;
-        }
-      } elseif ($token === '-' || $token === '+') {
-        // these operands can be binary or unary operands
-        // for example "SELECT -5" or "SELECT 7 - 5" are both valid, in the first case it's a unary op
-        // we don't just combine it into the constant, because it's also valid for columns like SELECT -some_column FROM table
-        // similar to * we can identify this now based on context
-        $k = C\last_key($out);
-        if ($k === null) {
-          throw new SQLFakeParseException("Parse error: unexpected {$token}");
-        }
-        $previous = $out[$k];
-        if (
-          !C\contains_key(
-            keyset[
-              TokenType::NUMERIC_CONSTANT,
-              TokenType::STRING_CONSTANT,
-              TokenType::NULL_CONSTANT,
-              TokenType::IDENTIFIER,
-            ],
-            $previous['type'],
-
-          ) &&
-          $previous['value'] !== ')'
-        ) {
-          if ($token === '-') {
-            $op = 'UNARY_MINUS';
-          } else {
-            $op = 'UNARY_PLUS';
-          }
-          $out[] = shape(
-            'type' => TokenType::OPERATOR,
-            'value' => $op,
-            'raw' => $token,
-          );
-          continue;
-        }
-      }
-
-      $token_upper = Str\uppercase($token);
-
-      if ($token_upper === 'NULL') {
-        $out[] = shape(
-          'type' => TokenType::NULL_CONSTANT,
-          'value' => $token,
-          'raw' => $token,
-        );
-      } elseif ($token_upper === 'TRUE') {
-        $out[] = shape(
-          'type' => TokenType::NUMERIC_CONSTANT,
-          'value' => '1',
-          'raw' => $token,
-        );
-      } elseif ($token_upper === 'FALSE') {
-        $out[] = shape(
-          'type' => TokenType::NUMERIC_CONSTANT,
-          'value' => '0',
-          'raw' => $token,
-        );
-      } elseif (C\contains_key(self::CLAUSES, $token_upper)) {
-        $out[] = shape(
-          'type' => TokenType::CLAUSE,
-          'value' => $token_upper,
-          'raw' => $token,
-        );
-      } elseif (
-        C\contains_key(self::OPERATORS, $token_upper) &&
-        !self::isFunctionVersionOfOperator($token_upper, $i, $count, $tokens)
-      ) {
-        $out[] = shape(
-          'type' => TokenType::OPERATOR,
-          'value' => $token_upper,
-          'raw' => $token,
-        );
-      } elseif (C\contains_key(self::RESERVED_WORDS, $token_upper)) {
-        $out[] = shape(
-          'type' => TokenType::RESERVED,
-          'value' => $token_upper,
-          'raw' => $token,
-        );
-      } elseif (C\contains_key(self::SEPARATORS, $token_upper)) {
-        $out[] = shape(
-          'type' => TokenType::SEPARATOR,
-          'value' => $token_upper,
-          'raw' => $token,
-        );
-      } elseif ($i < $count - 1 && $tokens[$i + 1] === '(') {
-        $out[] = shape(
-          'type' => TokenType::SQLFUNCTION,
-          'value' => $token_upper,
-          'raw' => $token,
-        );
-      } else {
-        // if we find an identifier and previous token ended with ., smush them together
-        $previous_key = C\last_key($out);
-        if (
-          $previous_key is nonnull &&
-          $out[$previous_key]['type'] === TokenType::IDENTIFIER &&
-          Str\ends_with($out[$previous_key]['value'], '.')
-        ) {
-          $out[$previous_key]['value'] .= $token;
-          continue;
-        }
-        $out[] = shape(
-          'type' => TokenType::IDENTIFIER,
-          'value' => $token,
-          'raw' => $token,
-        );
-      }
-    }
-    return $out;
-  }
-
-  /**
-   * There seems to be a few operators that also exists as functions. MOD() for example.
-   * So we check if this particular find is an operator or a function.
-   */
-  private static function isFunctionVersionOfOperator(
-    string $token_upper,
-    int $i,
-    int $count,
-    vec<string> $tokens,
-  ): bool {
-    return $token_upper === 'MOD' && $i < $count - 1 && $tokens[$i + 1] === '(';
-  }
-
-  public static function findMatchingParen(int $pointer, token_list $tokens): int {
-    $paren_count = 0;
-    $remaining_tokens = Vec\drop($tokens, $pointer);
-    $token_count = C\count($remaining_tokens);
-    foreach ($remaining_tokens as $i => $token) {
-      if ($token['type'] === TokenType::PAREN) {
-        $paren_count++;
-      } elseif ($token['type'] === TokenType::SEPARATOR && $token['value'] === ')') {
-        $paren_count--;
-        if ($paren_count === 0) {
-          return $pointer + $i;
-        }
-      }
-    }
-
-    // if we get here, we didn't find the close
-    throw new SQLFakeParseException("Unclosed parentheses at index $pointer");
-  }
-
-  /*
-  * Skip over index hints, but might as well still syntax validate them while doing so
-  * Examples of index hints:
-  * FROM table1 USE INDEX (col1_index,col2_index)
-  * FROM t1 USE INDEX (i1) IGNORE INDEX FOR ORDER BY (i2)
-  */
-  public static function skipIndexHints(int $pointer, token_list $tokens): int {
-    $next_pointer = $pointer + 1;
-    $next = $tokens[$next_pointer] ?? null;
-    while (
-      $next !== null &&
-      $next['type'] === TokenType::RESERVED &&
-      C\contains_key(keyset['USE', 'IGNORE', 'FORCE'], $next['value'])
-    ) {
-      $pointer += 2;
-      $hint_type = $next['value'];
-      $next = $tokens[$pointer] ?? null;
-      if ($next === null || !C\contains_key(keyset['INDEX', 'KEY'], $next['value'])) {
-        throw new SQLFakeParseException("Expected INDEX or KEY in index hint");
-      }
-
-      $pointer++;
-      $next = $tokens[$pointer] ?? null;
-      if ($next === null) {
-        // USE hint is allowed to stop at "USE INDEX" which means "use no indexes"
-        if ($hint_type === 'USE') {
-          $pointer--;
-          return $pointer;
-        }
-        throw new SQLFakeParseException("Expected expected FOR or index list in index hint");
-      }
-
-      if ($next['value'] === 'FOR') {
-        $pointer++;
-        $next = $tokens[$pointer] ?? null;
-        if ($next === null) {
-          throw new SQLFakeParseException("Expected JOIN, ORDER BY, or GROUP BY after FOR in index hint");
-        } elseif ($next['value'] === 'JOIN') {
-          //this is fine
-          $pointer++;
-          $next = $tokens[$pointer] ?? null;
-        } elseif (C\contains_key(keyset['GROUP', 'ORDER'], $next['value'])) {
-          $pointer++;
-          $next = $tokens[$pointer] ?? null;
-          if ($next === null || $next['value'] !== 'BY') {
-            throw new SQLFakeParseException("Expected BY in index hint after GROUP or ORDER");
-          }
-
-          $pointer++;
-          $next = $tokens[$pointer] ?? null;
-        } else {
-          throw new SQLFakeParseException("Expected JOIN, ORDER BY, or GROUP BY after FOR in index hint");
-        }
-      }
-
-      if ($next === null || $next['type'] !== TokenType::PAREN) {
-        // USE hint is allowed to stop at "USE INDEX" which means "use no indexes"
-        if ($hint_type === 'USE') {
-          $pointer--;
-          return $pointer;
-        }
-        throw new SQLFakeParseException("Expected index expression after index hint");
-      }
-
-      $closing_paren_pointer = SQLParser::findMatchingParen($pointer, $tokens);
-      $arg_tokens = Vec\slice($tokens, $pointer + 1, $closing_paren_pointer - $pointer - 1);
-      if (!C\count($arg_tokens)) {
-        throw new SQLFakeParseException("Expected at least one argument to index hint");
-      }
-      $count = 0;
-      foreach ($arg_tokens as $arg) {
-        $count++;
-        if ($count % 2 === 1) {
-          if ($arg['type'] !== TokenType::IDENTIFIER) {
-            throw new SQLFakeParseException("Expected identifier in index hint");
-          }
-        } elseif ($arg['value'] !== ',') {
-          throw new SQLFakeParseException("Expected , or ) after index hint");
-        }
-      }
-
-      $pointer = $closing_paren_pointer;
-
-      // you can have multiple index hints... so if the next token starts another index hint we can go back into this while loop
-      $next_pointer = $pointer + 1;
-      $next = $tokens[$next_pointer] ?? null;
-
-    }
-
-    return $pointer;
-  }
-
-  /*
-  * Skip over lock hints, but might as well still syntax validate them while doing so
-  * Examples of index hints:
-  * FROM table1 WHERE ... FOR UPDATE
-  * FROM table1 WHERE ... LOCK IN SHARE MODE
-  */
-  public static function skipLockHints(int $pointer, token_list $tokens): int {
-    $next_pointer = $pointer + 1;
-    $next = $tokens[$next_pointer] ?? null;
-
-    if ($next !== null && $next['type'] === TokenType::RESERVED) {
-      if ($next['value'] === 'FOR') {
-        // skip over FOR UDPATE while validating it
-        $next_pointer++;
+    /**
+     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     *
+     * @return int
+     */
+    public static function skipLockHints(int $pointer, array $tokens)
+    {
+        $next_pointer = $pointer + 1;
         $next = $tokens[$next_pointer] ?? null;
-        if ($next === null) {
-          throw new SQLFakeParseException("Expected keyword after FOR");
+        if ($next !== null && $next['type'] === TokenType::RESERVED) {
+            if ($next['value'] === 'FOR') {
+                $next_pointer++;
+                $next = $tokens[$next_pointer] ?? null;
+                if ($next === null) {
+                    throw new SQLFakeParseException("Expected keyword after FOR");
+                }
+                if ($next['value'] === 'UPDATE') {
+                    return $pointer + 2;
+                }
+                throw new SQLFakeParseException("Unexpected keyword {$next['value']} after FOR");
+            } else {
+                if ($next['value'] === 'LOCK') {
+                    $expected = ['IN', 'SHARE', 'MODE'];
+                    foreach ($expected as $index => $keyword) {
+                        $next = $tokens[$next_pointer + $index + 1] ?? null;
+                        if ($next === null || $next['value'] !== $keyword) {
+                            throw new SQLFakeParseException("Unexpected keyword near LOCK");
+                        }
+                    }
+                    return $pointer + 4;
+                }
+            }
         }
-        // skip over FOR UPDATE
-        if ($next['value'] === 'UPDATE') {
-          return $pointer + 2;
-        }
-
-        throw new SQLFakeParseException("Unexpected keyword {$next['value']} after FOR");
-      } elseif ($next['value'] === 'LOCK') {
-        // skip over LOCK IN SHARE MODE while validating it
-        $expected = vec['IN', 'SHARE', 'MODE'];
-        foreach ($expected as $index => $keyword) {
-          $next = $tokens[$next_pointer + $index + 1] ?? null;
-          if ($next === null || $next['value'] !== $keyword) {
-            throw new SQLFakeParseException("Unexpected keyword near LOCK");
-          }
-        }
-        return $pointer + 4;
-      }
+        return $pointer;
     }
-
-    return $pointer;
-  }
-
-  const keyset<string> CLAUSES = keyset[
-    'SELECT',
-    'FROM',
-    'WHERE',
-    'GROUP',
-    'HAVING',
-    'LIMIT',
-    'ORDER',
-    'UPDATE',
-    'SET',
-    'DELETE',
-    'UNION',
-    'EXCEPT',
-    'INTERSECT',
-    'INSERT',
-    'VALUES',
-  ];
-
-  // left PAREN is not in here because it triggers special logic, so it has its own type of PAREN
-  const keyset<string> SEPARATORS = keyset[
-    ')',
-    ',',
-    ';',
-  ];
-
-  const keyset<string> OPERATORS = keyset[
-    'INTERVAL',
-    'COLLATE',
-    '!',
-    '~',
-    '^',
-    '*',
-    '/',
-    'DIV',
-    '%',
-    'MOD',
-    '-',
-    '+',
-    '<<',
-    '>>',
-    '&',
-    '|',
-    '=',
-    '<=>',
-    '>=',
-    '>',
-    '<=',
-    '<',
-    '<>',
-    '!=',
-    'IS',
-    'LIKE',
-    'REGEXP',
-    'IN',
-    'EXISTS',
-    'BETWEEN',
-    'CASE',
-    'WHEN',
-    'THEN',
-    'ELSE',
-    'END',
-    'NOT',
-    'AND',
-    '&&',
-    'XOR',
-    'OR',
-    '||',
-  ];
-
-  const keyset<string> RESERVED_WORDS = keyset[
-    'ASC',
-    'DESC',
-    'AS',
-    'WITH',
-    'ON',
-    'OFFSET',
-    'BY',
-    'INTO',
-    'ALL',
-    'DISTINCT',
-    'DISTINCTROW',
-    'SQL_CALC_FOUND_ROWS',
-    'HIGH_PRIORITY',
-    'SQL_SMALL_RESULT',
-    'SQL_BIG_RESULT',
-    'SQL_BUFFER_RESULT',
-    'SQL_CACHE',
-    'SQL_NO_CACHE',
-    'JOIN',
-    'INNER',
-    'OUTER',
-    'LEFT',
-    'RIGHT',
-    'STRAIGHT_JOIN',
-    'NATURAL',
-    'USING',
-    'CROSS',
-    'USE',
-    'IGNORE',
-    'FORCE',
-    'PARTITION',
-    'ROLLUP',
-    'INDEX',
-    'KEY',
-    'FOR',
-    'LOCK',
-    'DUPLICATE',
-    'DELAYED',
-    'LOW_PRIORITY',
-    'HIGH_PRIORITY',
-  ];
 }
+

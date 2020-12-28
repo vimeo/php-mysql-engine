@@ -1,26 +1,29 @@
 {
-  "name": "slack/hack-sql-fake",
-  "bin": [
-    "bin/hack-sql-schema"
-  ],
-  "description": "Database Testing library for Hacklang",
+  "name": "vimeo/php-mysql-engine",
+  "description": "A MySQL engine written in PHP for speeding up tests",
   "type": "library",
   "authors": [
     {
       "name": "Scott Sandler",
       "email": "ssandler@slack-corp.com"
+    },
+    {
+      "name": "Matt Brown",
+      "email": "github@muglug.com"
     }
   ],
   "require": {
-    "hhvm/hsl": "=3.30.0",
-    "hhvm/hsl-experimental": "=3.30.4",
-    "facebook/hack-codegen": "4.0.2",
-    "facebook/hh-clilib": "^2.0.0",
-    "hhvm/hhvm-autoload": "=1.8"
+    "php": "^7.4|^8",
+    "ext-pdo": "*",
+    "phpmyadmin/sql-parser": "^5.4",
+    "nyholm/dsn": "^2.0"
+  },
+  "autoload-dev": {
+    "psr-4": {
+        "Vimeo\\MysqlEngine\\": "src"
+    }
   },
   "require-dev": {
-    "hhvm/hhast": "=3.30.0",
-    "facebook/fbexpect": "^2.2.0",
-    "hhvm/hacktest": "=1.3"
+    "vimeo/psalm": "^4.3"
   }
 }
