@@ -3,6 +3,7 @@ namespace Vimeo\MysqlEngine\Processor;
 
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
+use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\JoinType;
@@ -170,10 +171,10 @@ final class JoinProcessor
         string $right_column
     ) {
         $left = new ColumnExpression(
-            ['type' => TokenType::IDENTIFIER, 'value' => $left_column, 'raw' => $left_column]
+            new Token(TokenType::IDENTIFIER, $left_column, $left_column)
         );
         $right = new ColumnExpression(
-            ['type' => TokenType::IDENTIFIER, 'value' => $right_column, 'raw' => $right_column]
+            new Token(TokenType::IDENTIFIER, $right_column, $right_column)
         );
         $expr = new BinaryOperatorExpression($left, false, '=', $right);
 

@@ -14,14 +14,14 @@ final class InsertParser
     private int $pointer = 0;
 
     /**
-     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
+     * @var array<int, Token>
      */
     private array $tokens;
 
     private string $sql;
 
     /**
-     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     * @param array<int, Token> $tokens
      */
     public function __construct(array $tokens, string $sql)
     {
@@ -34,13 +34,13 @@ final class InsertParser
      */
     public function parse()
     {
-        if ($this->tokens[$this->pointer]['value'] !== 'INSERT') {
+        if ($this->tokens[$this->pointer]->value !== 'INSERT') {
             throw new SQLFakeParseException("Parser error: expected INSERT");
         }
 
         $this->pointer++;
 
-        $v = $this->tokens[$this->pointer]['value'];
+        $v = $this->tokens[$this->pointer]->value;
 
         if ($v === 'LOW_PRIORITY' || $v === 'DELAYED' || $v === 'HIGH_PRIORITY') {
             $this->pointer++;
@@ -48,24 +48,24 @@ final class InsertParser
 
         $ignore_dupes = false;
 
-        if ($this->tokens[$this->pointer]['value'] === 'IGNORE') {
+        if ($this->tokens[$this->pointer]->value === 'IGNORE') {
             $ignore_dupes = true;
             $this->pointer++;
         }
 
-        if ($this->tokens[$this->pointer]['value'] === 'INTO') {
+        if ($this->tokens[$this->pointer]->value === 'INTO') {
             $this->pointer++;
         }
 
         $token = $this->tokens[$this->pointer];
 
-        if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
+        if ($token === null || $token->type !== TokenType::IDENTIFIER) {
             throw new SQLFakeParseException("Expected table name after INSERT");
         }
 
         $this->pointer++;
 
-        $query = new InsertQuery($token['value'], $this->sql, $ignore_dupes);
+        $query = new InsertQuery($token->value, $this->sql, $ignore_dupes);
         $count = \count($this->tokens);
         $needs_comma = false;
         $end_of_set = false;
@@ -73,25 +73,25 @@ final class InsertParser
         while ($this->pointer < $count) {
             $token = $this->tokens[$this->pointer];
 
-            if ($this->currentClause === 'SET' && $token['value'] === 'VALUES') {
-                $token['type'] = TokenType::SQLFUNCTION;
+            if ($this->currentClause === 'SET' && $token->value === 'VALUES') {
+                $token->type = TokenType::SQLFUNCTION;
             }
 
-            switch ($token['type']) {
+            switch ($token->type) {
                 case TokenType::CLAUSE:
-                    if (\array_key_exists($token['value'], self::CLAUSE_ORDER)
-                    && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
+                    if (\array_key_exists($token->value, self::CLAUSE_ORDER)
+                    && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token->value]
                     ) {
-                        throw new SQLFakeParseException("Unexpected clause {$token['value']}");
+                        throw new SQLFakeParseException("Unexpected clause {$token->value}");
                     }
 
-                    switch ($token['value']) {
+                    switch ($token->value) {
                         case 'VALUES':
                             do {
                                 $this->pointer++;
                                 $token = $this->tokens[$this->pointer];
 
-                                if ($token === null || $token['value'] !== '(') {
+                                if ($token === null || $token->value !== '(') {
                                     throw new SQLFakeParseException("Expected ( after VALUES");
                                 }
 
@@ -112,7 +112,7 @@ final class InsertParser
                                 }
                                 $query->values[] = $values;
                                 $this->pointer = $close;
-                            } while (($this->tokens[$this->pointer + 1]['value'] ?? null) === ','
+                            } while (($this->tokens[$this->pointer + 1]->value ?? null) === ','
                                 && $this->pointer++
                             );
 
@@ -123,10 +123,10 @@ final class InsertParser
                             break;
 
                         default:
-                            throw new SQLFakeParseException("Unexpected clause {$token['value']}");
+                            throw new SQLFakeParseException("Unexpected clause {$token->value}");
                     }
 
-                    $this->currentClause = $token['value'];
+                    $this->currentClause = $token->value;
                     break;
 
                 case TokenType::IDENTIFIER:
@@ -135,15 +135,15 @@ final class InsertParser
                     }
 
                     if ($this->currentClause !== 'COLUMN_LIST') {
-                        throw new SQLFakeParseException("Unexpected token {$token['value']} in INSERT");
+                        throw new SQLFakeParseException("Unexpected token {$token->value} in INSERT");
                     }
 
-                    $query->insertColumns[] = $token['value'];
+                    $query->insertColumns[] = $token->value;
                     $needs_comma = true;
                     break;
 
                 case TokenType::PAREN:
-                    if ($this->currentClause === 'INSERT' && $token['value'] === '(') {
+                    if ($this->currentClause === 'INSERT' && $token->value === '(') {
                         $this->currentClause = 'COLUMN_LIST';
                         break;
                     }
@@ -151,33 +151,33 @@ final class InsertParser
                     throw new SQLFakeParseException("Unexpected (");
 
                 case TokenType::SEPARATOR:
-                    if ($token['value'] === ',') {
+                    if ($token->value === ',') {
                         if (!$needs_comma) {
                             throw new SQLFakeParseException("Unexpected ,");
                         }
 
                         $needs_comma = false;
                     } else {
-                        if ($this->currentClause === 'COLUMN_LIST' && $needs_comma && $token['value'] === ')') {
+                        if ($this->currentClause === 'COLUMN_LIST' && $needs_comma && $token->value === ')') {
                             $needs_comma = false;
-                            if (($this->tokens[$this->pointer + 1]['value'] ?? null) !== 'VALUES') {
+                            if (($this->tokens[$this->pointer + 1]->value ?? null) !== 'VALUES') {
                                 throw new SQLFakeParseException("Expected VALUES after insert column list");
                             }
                             break;
                         }
 
-                        throw new SQLFakeParseException("Unexpected {$token['value']}");
+                        throw new SQLFakeParseException("Unexpected {$token->value}");
                     }
 
                     break;
 
                 case TokenType::RESERVED:
-                    if ($token['value'] === 'ON') {
+                    if ($token->value === 'ON') {
                         $expected = ['DUPLICATE', 'KEY', 'UPDATE'];
                         $next_pointer = $this->pointer + 1;
                         foreach ($expected as $index => $keyword) {
                             $next = $this->tokens[$next_pointer + $index] ?? null;
-                            if ($next === null || $next['value'] !== $keyword) {
+                            if ($next === null || $next->value !== $keyword) {
                                 throw new SQLFakeParseException("Unexpected keyword near ON");
                             }
                         }
@@ -187,10 +187,10 @@ final class InsertParser
                         break;
                     }
 
-                    throw new SQLFakeParseException("Unexpected {$token['value']}");
+                    throw new SQLFakeParseException("Unexpected {$token->value}");
 
                 default:
-                    throw new SQLFakeParseException("Unexpected token {$token['value']}");
+                    throw new SQLFakeParseException("Unexpected token {$token->value}");
             }
 
             $this->pointer++;
@@ -202,7 +202,7 @@ final class InsertParser
     }
 
     /**
-     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     * @param array<int, Token> $tokens
      *
      * @return array<int, Expression>
      */
@@ -215,7 +215,7 @@ final class InsertParser
         $end_of_set = false;
         while ($pointer < $count) {
             $token = $tokens[$pointer];
-            switch ($token['type']) {
+            switch ($token->type) {
                 case TokenType::IDENTIFIER:
                 case TokenType::NUMERIC_CONSTANT:
                 case TokenType::STRING_CONSTANT:
@@ -225,7 +225,7 @@ final class InsertParser
                 case TokenType::PAREN:
                     if ($needs_comma) {
                         throw new SQLFakeParseException(
-                            "Expected , between expressions in SET clause near {$token['value']}"
+                            "Expected , between expressions in SET clause near {$token->value}"
                         );
                     }
                     $expression_parser = new ExpressionParser($tokens, $pointer - 1);
@@ -235,18 +235,18 @@ final class InsertParser
                     $needs_comma = true;
                     break;
                 case TokenType::SEPARATOR:
-                    if ($token['value'] === ',') {
+                    if ($token->value === ',') {
                         if (!$needs_comma) {
                             echo "le comma one";
                             throw new SQLFakeParseException("Unexpected ,");
                         }
                         $needs_comma = false;
                     } else {
-                        throw new SQLFakeParseException("Unexpected {$token['value']}");
+                        throw new SQLFakeParseException("Unexpected {$token->value}");
                     }
                     break;
                 default:
-                    throw new SQLFakeParseException("Unexpected token {$token['value']}");
+                    throw new SQLFakeParseException("Unexpected token {$token->value}");
             }
             $pointer++;
         }

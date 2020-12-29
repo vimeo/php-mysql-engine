@@ -1,6 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Query\Expression;
 
+use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 
@@ -12,40 +13,40 @@ final class ConstantExpression extends Expression
     public $value;
 
     /**
-     * @param array{type: TokenType::*, value: scalar, raw: scalar} $token
+     * @param Token $token
      */
-    public function __construct(array $token)
+    public function __construct(Token $token)
     {
-        $this->type = $token['type'];
+        $this->type = $token->type;
         $this->precedence = 0;
-        $this->name = $token['value'];
+        $this->name = $token->value;
         $this->value = self::extractConstantValue($token);
     }
 
     /**
-     * @param array{type: TokenType::*, value: string, raw: string} $token
+     * @param Token $token
      *
      * @return null|scalar
      */
-    private static function extractConstantValue(array $token)
+    private static function extractConstantValue(Token $token)
     {
-        switch ($token['type']) {
+        switch ($token->type) {
             case TokenType::NUMERIC_CONSTANT:
-                if (\strpos((string) $token['value'], '.') !== false) {
-                    return (double) $token['value'];
+                if (\strpos($token->value, '.') !== false) {
+                    return (double) $token->value;
                 }
 
-                return (int) $token['value'];
+                return (int) $token->value;
 
             case TokenType::STRING_CONSTANT:
-                return (string) $token['value'];
+                return $token->value;
 
             case TokenType::NULL_CONSTANT:
                 return null;
 
             default:
                 throw new SQLFakeRuntimeException(
-                    "Attempted to assign invalid token type {$token['type']} to Constant Expression"
+                    "Attempted to assign invalid token type {$token->type} to Constant Expression"
                 );
         }
     }

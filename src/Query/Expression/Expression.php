@@ -3,6 +3,7 @@ namespace Vimeo\MysqlEngine\Query\Expression;
 
 use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
 use Vimeo\MysqlEngine\TokenType;
+use Vimeo\MysqlEngine\Parser\Token;
 
 abstract class Expression
 {
@@ -63,7 +64,7 @@ abstract class Expression
     }
 
     /**
-     * @param array<int, array{type: TokenType::*, value: string, raw: string}> $tokens
+     * @param array<int, Token> $tokens
      *
      * @return int
      */

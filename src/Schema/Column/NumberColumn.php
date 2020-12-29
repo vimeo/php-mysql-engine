@@ -13,8 +13,5 @@ interface NumberColumn
      */
     public function getMinValue();
 
-    /**
-     * @return $this
-     */
-    public function setDefault($mysql_default);
+    public function setDefault($mysql_default) : void;
 }

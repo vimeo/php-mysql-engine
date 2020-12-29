@@ -163,7 +163,7 @@ class FakePdoStatement extends \PDOStatement
     }
 
     public function fetch(
-        ?int $fetch_style = -123,
+        int $fetch_style = -123,
         int $cursor_orientation = \PDO::FETCH_ORI_NEXT,
         int $cursor_offset = 0
     ) {

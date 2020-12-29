@@ -1,6 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Query\Expression;
 
+use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\TokenType;
 
 final class ColumnExpression extends Expression
@@ -31,16 +32,16 @@ final class ColumnExpression extends Expression
     public $allowFallthrough = false;
 
     /**
-     * @param array{type: TokenType::*, value: string, raw: string} $token
+     * @param Token $token
      */
-    public function __construct(array $token)
+    public function __construct(Token $token)
     {
-        $this->type = $token['type'];
+        $this->type = $token->type;
         $this->precedence = 0;
-        $this->columnExpression = $token['value'];
-        $this->columnName = $token['value'];
-        if (\strpos($token['value'], '.') !== false) {
-            $parts = \explode('.', $token['value']);
+        $this->columnExpression = $token->value;
+        $this->columnName = $token->value;
+        if (\strpos($token->value, '.') !== false) {
+            $parts = \explode('.', $token->value);
             if (\count($parts) === 2) {
                 list($this->tableName, $this->columnName) = $parts;
             } else {
@@ -51,7 +52,7 @@ final class ColumnExpression extends Expression
         } else {
             $this->tableName = null;
         }
-        if ($token['value'] === '*') {
+        if ($token->value === '*') {
             $this->name = '*';
             return;
         }

@@ -23,7 +23,7 @@ final class DeleteParser
     private $pointer = 0;
 
     /**
-     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
+     * @var array<int, Token>
      */
     private $tokens;
 
@@ -33,7 +33,7 @@ final class DeleteParser
     private $sql;
 
     /**
-     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     * @param array<int, Token> $tokens
      */
     public function __construct(array $tokens, string $sql)
     {
@@ -46,7 +46,7 @@ final class DeleteParser
      */
     public function parse()
     {
-        if ($this->tokens[$this->pointer]['value'] !== 'DELETE') {
+        if ($this->tokens[$this->pointer]->value !== 'DELETE') {
             throw new SQLFakeParseException("Parser error: expected DELETE");
         }
         $this->pointer++;
@@ -55,24 +55,24 @@ final class DeleteParser
         while ($this->pointer < $count) {
             $token = $this->tokens[$this->pointer];
 
-            switch ($token['type']) {
+            switch ($token->type) {
                 case TokenType::CLAUSE:
-                    if (\array_key_exists($token['value'], self::CLAUSE_ORDER)
-                        && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
+                    if (\array_key_exists($token->value, self::CLAUSE_ORDER)
+                        && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token->value]
                     ) {
-                        throw new SQLFakeParseException("Unexpected clause {$token['value']}");
+                        throw new SQLFakeParseException("Unexpected clause {$token->value}");
                     }
 
-                    $this->currentClause = $token['value'];
+                    $this->currentClause = $token->value;
 
-                    switch ($token['value']) {
+                    switch ($token->value) {
                         case 'FROM':
                             $this->pointer++;
                             $token = $this->tokens[$this->pointer];
-                            if ($token === null || $token['type'] !== TokenType::IDENTIFIER) {
+                            if ($token === null || $token->type !== TokenType::IDENTIFIER) {
                                 throw new SQLFakeParseException("Expected table name after FROM");
                             }
-                            $table = ['name' => $token['value'], 'join_type' => JoinType::JOIN];
+                            $table = ['name' => $token->value, 'join_type' => JoinType::JOIN];
                             $query->fromClause = $table;
                             $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
                             break;
@@ -90,38 +90,38 @@ final class DeleteParser
                             list($this->pointer, $query->limitClause) = $p->parse();
                             break;
                         default:
-                            throw new SQLFakeParseException("Unexpected clause {$token['value']}");
+                            throw new SQLFakeParseException("Unexpected clause {$token->value}");
                     }
                     break;
 
                 case TokenType::RESERVED:
                 case TokenType::IDENTIFIER:
                     if ($this->currentClause === 'DELETE'
-                        && ($token['value'] === 'LOW_PRIORITY'
-                            || $token['value'] === 'QUICK'
-                            || $token['value'] === 'IGNORE')
+                        && ($token->value === 'LOW_PRIORITY'
+                            || $token->value === 'QUICK'
+                            || $token->value === 'IGNORE')
                     ) {
                         break;
                     }
 
-                    if ($this->currentClause === 'DELETE' && $token['type'] === TokenType::IDENTIFIER) {
-                        $table = ['name' => $token['value'], 'join_type' => JoinType::JOIN];
+                    if ($this->currentClause === 'DELETE' && $token->type === TokenType::IDENTIFIER) {
+                        $table = ['name' => $token->value, 'join_type' => JoinType::JOIN];
                         $query->fromClause = $table;
                         $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
                         $this->currentClause = 'FROM';
                         break;
                     }
 
-                    throw new SQLFakeParseException("Unexpected token {$token['value']}");
+                    throw new SQLFakeParseException("Unexpected token {$token->value}");
 
                 case TokenType::SEPARATOR:
-                    if ($token['value'] !== ';') {
-                        throw new SQLFakeParseException("Unexpected {$token['value']}");
+                    if ($token->value !== ';') {
+                        throw new SQLFakeParseException("Unexpected {$token->value}");
                     }
                     break;
 
                 default:
-                    throw new SQLFakeParseException("Unexpected token {$token['value']}");
+                    throw new SQLFakeParseException("Unexpected token {$token->value}");
             }
             $this->pointer++;
         }

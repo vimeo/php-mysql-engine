@@ -11,12 +11,12 @@ final class LimitParser
     private $pointer;
 
     /**
-     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
+     * @var array<int, Token>
      */
     private $tokens;
 
     /**
-     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     * @param array<int, Token> $tokens
      */
     public function __construct(int $pointer, array $tokens)
     {
@@ -29,34 +29,34 @@ final class LimitParser
      */
     public function parse()
     {
-        if ($this->tokens[$this->pointer]['value'] !== 'LIMIT') {
+        if ($this->tokens[$this->pointer]->value !== 'LIMIT') {
             throw new SQLFakeParseException("Parser error: expected LIMIT");
         }
         $this->pointer++;
         $next = $this->tokens[$this->pointer] ?? null;
-        if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {
+        if ($next === null || $next->type !== TokenType::NUMERIC_CONSTANT) {
             throw new SQLFakeParseException("Expected integer after LIMIT");
         }
-        $limit = (int) $next['value'];
+        $limit = (int) $next->value;
         $offset = 0;
         $next = $this->tokens[$this->pointer + 1] ?? null;
         if ($next !== null) {
-            if ($next['value'] === 'OFFSET') {
+            if ($next->value === 'OFFSET') {
                 $this->pointer += 2;
                 $next = $this->tokens[$this->pointer] ?? null;
-                if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {
+                if ($next === null || $next->type !== TokenType::NUMERIC_CONSTANT) {
                     throw new SQLFakeParseException("Expected integer after OFFSET");
                 }
-                $offset = (int) $next['value'];
+                $offset = (int) $next->value;
             } else {
-                if ($next['value'] === ',') {
+                if ($next->value === ',') {
                     $this->pointer += 2;
                     $next = $this->tokens[$this->pointer] ?? null;
-                    if ($next === null || $next['type'] !== TokenType::NUMERIC_CONSTANT) {
+                    if ($next === null || $next->type !== TokenType::NUMERIC_CONSTANT) {
                         throw new SQLFakeParseException("Expected integer after OFFSET");
                     }
                     $offset = $limit;
-                    $limit = (int) $next['value'];
+                    $limit = (int) $next->value;
                 }
             }
         }

@@ -2,6 +2,7 @@
 namespace Vimeo\MysqlEngine\Query\Expression;
 
 use Vimeo\MysqlEngine\Parser\ExpressionParser;
+use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
@@ -126,7 +127,7 @@ final class BinaryOperatorExpression extends Expression
     }
 
     /**
-     * @param array<int, array{type: TokenType::*, value: string, raw: string}> $tokens
+     * @param array<int, Token> $tokens
      */
     public function addRecursiveExpression(array $tokens, int $pointer, bool $negated = false) : int
     {

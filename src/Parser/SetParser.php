@@ -16,12 +16,12 @@ final class SetParser
     private $pointer;
 
     /**
-     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
+     * @var array<int, Token>
      */
     private $tokens;
 
     /**
-     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     * @param array<int, Token> $tokens
      */
     public function __construct(int $pointer, array $tokens)
     {
@@ -34,7 +34,7 @@ final class SetParser
      */
     public function parse(bool $skip_set = false)
     {
-        if (!$skip_set && $this->tokens[$this->pointer]['value'] !== 'SET') {
+        if (!$skip_set && $this->tokens[$this->pointer]->value !== 'SET') {
             throw new SQLFakeParseException("Parser error: expected SET");
         }
         $expressions = [];
@@ -46,7 +46,7 @@ final class SetParser
         while ($this->pointer < $count) {
             $token = $this->tokens[$this->pointer];
 
-            switch ($token['type']) {
+            switch ($token->type) {
                 case TokenType::NUMERIC_CONSTANT:
                 case TokenType::STRING_CONSTANT:
                 case TokenType::NULL_CONSTANT:
@@ -71,20 +71,20 @@ final class SetParser
                     $needs_comma = true;
                     break;
                 case TokenType::SEPARATOR:
-                    if ($token['value'] === ',') {
+                    if ($token->value === ',') {
                         if (!$needs_comma) {
                             throw new SQLFakeParseException("Unexpected ,");
                         }
                         $needs_comma = false;
                     } else {
-                        throw new SQLFakeParseException("Unexpected {$token['value']}");
+                        throw new SQLFakeParseException("Unexpected {$token->value}");
                     }
                     break;
                 case TokenType::CLAUSE:
                     $end_of_set = true;
                     break;
                 default:
-                    throw new SQLFakeParseException("Unexpected {$token['value']} in SET");
+                    throw new SQLFakeParseException("Unexpected {$token->value} in SET");
             }
             if ($end_of_set) {
                 break;

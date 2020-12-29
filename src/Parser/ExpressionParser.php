@@ -72,7 +72,7 @@ final class ExpressionParser
     private ?array $selectExpressions = null;
 
     /**
-     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
+     * @var array<int, Token>
      */
     private array $tokens;
 
@@ -85,7 +85,7 @@ final class ExpressionParser
     private bool $is_child = false;
 
     /**
-     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     * @param array<int, Token> $tokens
      */
     public function __construct(
         array $tokens,
@@ -102,7 +102,7 @@ final class ExpressionParser
     }
 
     /**
-     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     * @param array<int, Token> $tokens
      *
      * @return array{0: bool, 1: array<int, Expression>}
      */
@@ -116,10 +116,10 @@ final class ExpressionParser
 
         while ($pos < $token_count) {
             $arg = $tokens[$pos];
-            if ($arg['value'] === 'DISTINCT' || $arg['value'] === 'DISTINCTROW') {
+            if ($arg->value === 'DISTINCT' || $arg->value === 'DISTINCTROW') {
                 $distinct = true;
                 $pos++;
-                if ($tokens[$pos]['type'] === TokenType::PAREN) {
+                if ($tokens[$pos]->type === TokenType::PAREN) {
                     $close = SQLParser::findMatchingParen($pos, $tokens);
                     $pos++;
                     $t = $tokens[$pos];
@@ -134,7 +134,7 @@ final class ExpressionParser
                 continue;
             }
 
-            if ($arg['value'] === ',') {
+            if ($arg->value === ',') {
                 if ($needs_comma) {
                     $needs_comma = false;
                     $pos++;
@@ -155,13 +155,13 @@ final class ExpressionParser
     }
 
     /**
-     * @param array{type:TokenType::*, value:string, raw:string} $token
+     * @param Token $token
      *
      * @return Expression
      */
-    public function tokenToExpression(array $token)
+    public function tokenToExpression(Token $token)
     {
-        switch ($token['type']) {
+        switch ($token->type) {
             case TokenType::NUMERIC_CONSTANT:
             case TokenType::STRING_CONSTANT:
             case TokenType::NULL_CONSTANT:
@@ -170,7 +170,7 @@ final class ExpressionParser
             case TokenType::IDENTIFIER:
                 if ($this->selectExpressions !== null) {
                     foreach ($this->selectExpressions as $expr) {
-                        if ($expr->name === $token['value']) {
+                        if ($expr->name === $token->value) {
                             return $expr;
                         }
                     }
@@ -182,7 +182,7 @@ final class ExpressionParser
                     throw new \TypeError('Failed assertion');
                 })();
 
-                \assert($next['type'] === TokenType::PAREN, 'function is be followed by parentheses');
+                \assert($next->type === TokenType::PAREN, 'function is be followed by parentheses');
                 $closing_paren_pointer = SQLParser::findMatchingParen($this->pointer, $this->tokens);
                 $arg_tokens = \array_slice(
                     $this->tokens,
@@ -195,7 +195,7 @@ final class ExpressionParser
                 return $fn;
 
             default:
-                throw new SQLFakeNotImplementedException("Not implemented: {$token['value']}");
+                throw new SQLFakeNotImplementedException("Not implemented: {$token->value}");
         }
     }
 
@@ -207,7 +207,7 @@ final class ExpressionParser
         $token = $this->nextToken();
         $break_while = false;
         while ($token !== null) {
-            switch ($token['type']) {
+            switch ($token->type) {
                 case TokenType::PAREN:
                     $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
                     $arg_tokens = \array_slice($this->tokens, $this->pointer + 1, $close - $this->pointer - 1);
@@ -219,12 +219,12 @@ final class ExpressionParser
                     $this->pointer = $close;
                     $expr = new PlaceholderExpression();
 
-                    if ($arg_tokens[0]['value'] === 'SELECT') {
+                    if ($arg_tokens[0]->value === 'SELECT') {
                         $subquery_sql = \implode(
                             ' ',
                             \array_map(
                                 function ($token) {
-                                    return $token['value'];
+                                    return $token->value;
                                 },
                                 $arg_tokens
                             )
@@ -248,7 +248,7 @@ final class ExpressionParser
                                 }
                                 $pointer++;
                                 $next = $arg_tokens[$pointer];
-                                if ($next['value'] !== ',') {
+                                if ($next->value !== ',') {
                                     throw new SQLFakeParseException("Expected , in IN () list");
                                 }
                             }
@@ -262,7 +262,7 @@ final class ExpressionParser
                         }
 
                         $second_token = $arg_tokens[1] ?? null;
-                        if ($second_token !== null && $second_token['type'] === TokenType::SEPARATOR) {
+                        if ($second_token !== null && $second_token->type === TokenType::SEPARATOR) {
                             list($distinct, $elements) = $this->getListExpression($arg_tokens);
                             if ($distinct) {
                                 throw new SQLFakeParseException("Unexpected DISTINCT in row expression");
@@ -294,7 +294,7 @@ final class ExpressionParser
                     } else {
                         if (($this->expression->operator === null || $this->expression->operator === '')
                         && $this->expression instanceof BinaryOperatorExpression
-                        && $token['type'] === TokenType::IDENTIFIER
+                        && $token->type === TokenType::IDENTIFIER
                         ) {
                             $this->pointer--;
                             return $this->expression->left;
@@ -305,7 +305,7 @@ final class ExpressionParser
                     break;
 
                 case TokenType::OPERATOR:
-                    $operator = $token['value'];
+                    $operator = $token->value;
 
                     if ($operator === 'CASE') {
                         if (!$this->expression instanceof PlaceholderExpression) {
@@ -316,7 +316,7 @@ final class ExpressionParser
                             break;
                         }
 
-                        $this->expression = new CaseOperatorExpression($token);
+                        $this->expression = new CaseOperatorExpression();
                         break;
                     }
 
@@ -356,9 +356,9 @@ final class ExpressionParser
                                 if ($this->expression->operator !== 'IS') {
                                     $next = $this->peekNext();
                                     if ($next !== null
-                                    && ($next['type'] === TokenType::OPERATOR
-                                    && \strtoupper($next['value']) === 'IN'
-                                    || $next['type'] === TokenType::PAREN)
+                                    && ($next->type === TokenType::OPERATOR
+                                    && \strtoupper($next->value) === 'IN'
+                                    || $next->type === TokenType::PAREN)
                                     ) {
                                         $this->pointer = $this->expression->addRecursiveExpression(
                                             $this->tokens,
@@ -445,7 +445,7 @@ final class ExpressionParser
                     break;
 
                 default:
-                    throw new SQLFakeParseException("Expression parse error: unexpected {$token['value']}");
+                    throw new SQLFakeParseException("Expression parse error: unexpected {$token->value}");
             }
 
             $nextToken = $this->peekNext();
@@ -454,32 +454,32 @@ final class ExpressionParser
                 break;
             }
 
-            if ($nextToken['type'] === TokenType::CLAUSE
-                || $nextToken['type'] === TokenType::RESERVED
-                || $nextToken['type'] === TokenType::SEPARATOR
+            if ($nextToken->type === TokenType::CLAUSE
+                || $nextToken->type === TokenType::RESERVED
+                || $nextToken->type === TokenType::SEPARATOR
             ) {
-                if ($nextToken['value'] === 'VALUES' && !$this->expression->isWellFormed()) {
-                    $this->tokens[$this->pointer + 1]['type'] = TokenType::SQLFUNCTION;
+                if ($nextToken->value === 'VALUES' && !$this->expression->isWellFormed()) {
+                    $this->tokens[$this->pointer + 1]->type = TokenType::SQLFUNCTION;
                 } else {
                     break;
                 }
             }
 
             if ($this->expression->isWellFormed()) {
-                if ($nextToken['type'] === TokenType::IDENTIFIER) {
+                if ($nextToken->type === TokenType::IDENTIFIER) {
                     break;
                 }
-                if ($nextToken['value'] === 'ELSE'
-                    || $nextToken['value'] === 'THEN'
-                    || $nextToken['value'] === 'END'
+                if ($nextToken->value === 'ELSE'
+                    || $nextToken->value === 'THEN'
+                    || $nextToken->value === 'END'
                 ) {
                     break;
                 }
-                if ($nextToken['type'] !== TokenType::OPERATOR) {
-                    throw new SQLFakeParseException("Unexpected token {$nextToken['value']}");
+                if ($nextToken->type !== TokenType::OPERATOR) {
+                    throw new SQLFakeParseException("Unexpected token {$nextToken->value}");
                 }
                 if ($this->is_child) {
-                    $next_operator_precedence = $this->getPrecedence($nextToken['value']);
+                    $next_operator_precedence = $this->getPrecedence($nextToken->value);
                     if ($next_operator_precedence <= $this->min_precedence) {
                         break;
                     }
@@ -509,7 +509,7 @@ final class ExpressionParser
     }
 
     /**
-     * @return array{type:TokenType::*, value:string, raw:string}|null
+     * @return Token|null
      */
     private function nextToken()
     {
@@ -518,7 +518,7 @@ final class ExpressionParser
     }
 
     /**
-     * @return array{type:TokenType::*, value:string, raw:string}|null
+     * @return Token|null
      */
     private function peekNext()
     {

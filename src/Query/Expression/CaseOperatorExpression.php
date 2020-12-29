@@ -2,6 +2,7 @@
 namespace Vimeo\MysqlEngine\Query\Expression;
 
 use Vimeo\MysqlEngine\Parser\ExpressionParser;
+use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
@@ -43,10 +44,7 @@ final class CaseOperatorExpression extends Expression
      */
     public $wellFormed = false;
 
-    /**
-     * @param array{type: TokenType::*, value: string, raw: string} $_token
-     */
-    public function __construct(array $_token)
+    public function __construct()
     {
         $this->name = 'CASE';
         $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE['CASE'];
@@ -91,7 +89,7 @@ final class CaseOperatorExpression extends Expression
             case 'END':
                 if ($this->lastKeyword === 'THEN' && $this->then) {
                     $this->else = new ConstantExpression(
-                        ['type' => TokenType::NULL_CONSTANT, 'value' => 'null', 'raw' => 'null']
+                        new Token(TokenType::NULL_CONSTANT, 'null', 'null')
                     );
                 } else {
                     if ($this->lastKeyword !== 'ELSE' || !$this->else) {
@@ -142,7 +140,7 @@ final class CaseOperatorExpression extends Expression
     }
 
     /**
-     * @param array<int, array{type: TokenType::*, value: string, raw: string}> $tokens
+     * @param array<int, Token> $tokens
      */
     public function addRecursiveExpression(array $tokens, int $pointer, bool $negated = false) : int
     {

@@ -14,7 +14,7 @@ final class OrderByParser
     private $pointer;
 
     /**
-     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
+     * @var array<int, Token>
      */
     private $tokens;
 
@@ -24,7 +24,7 @@ final class OrderByParser
     private $selectExpressions = null;
 
     /**
-     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     * @param array<int, Token> $tokens
      * @param array<int, Expression>|null                                    $selectExpressions
      */
     public function __construct(int $pointer, array $tokens, ?array $selectExpressions = null)
@@ -39,13 +39,13 @@ final class OrderByParser
      */
     public function parse()
     {
-        if ($this->tokens[$this->pointer]['value'] !== 'ORDER') {
+        if ($this->tokens[$this->pointer]->value !== 'ORDER') {
             throw new SQLFakeParseException("Parser error: expected ORDER");
         }
         $this->pointer++;
         $next = $this->tokens[$this->pointer] ?? null;
         $expressions = [];
-        if ($next === null || $next['value'] !== 'BY') {
+        if ($next === null || $next->value !== 'BY') {
             throw new SQLFakeParseException("Expected BY after ORDER");
         }
         while (true) {
@@ -60,13 +60,13 @@ final class OrderByParser
             }
             $next = $this->tokens[$this->pointer + 1] ?? null;
             $sort_direction = 'ASC';
-            if ($next !== null && ($next['value'] === 'ASC' || $next['value'] === 'DESC')) {
+            if ($next !== null && ($next->value === 'ASC' || $next->value === 'DESC')) {
                 $this->pointer++;
-                $sort_direction = $next['value'];
+                $sort_direction = $next->value;
                 $next = $this->tokens[$this->pointer + 1] ?? null;
             }
             $expressions[] = ['expression' => $expression, 'direction' => $sort_direction];
-            if ($next === null || $next['value'] !== ',') {
+            if ($next === null || $next->value !== ',') {
                 break;
             }
             $this->pointer++;

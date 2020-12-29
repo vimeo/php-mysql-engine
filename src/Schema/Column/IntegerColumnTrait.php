@@ -44,6 +44,9 @@ trait IntegerColumnTrait
         return $this->unsigned;
     }
 
+    /**
+     * @return 'int'
+     */
     public function getPhpType() : string
     {
         return 'int';

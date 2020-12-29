@@ -4,6 +4,7 @@ namespace Vimeo\MysqlEngine\Parser;
 use Vimeo\MysqlEngine\JoinType;
 use Vimeo\MysqlEngine\JoinOperator;
 use Vimeo\MysqlEngine\TokenType;
+use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
@@ -19,12 +20,12 @@ final class FromParser
     private $pointer;
 
     /**
-     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
+     * @var array<int, Token>
      */
     private $tokens;
 
     /**
-     * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
+     * @param array<int, Token> $tokens
      */
     public function __construct(int $pointer, array $tokens)
     {
@@ -37,7 +38,7 @@ final class FromParser
      */
     public function parse()
     {
-        if ($this->tokens[$this->pointer]['value'] !== 'FROM') {
+        if ($this->tokens[$this->pointer]->value !== 'FROM') {
             throw new SQLFakeParseException("Parser error: expected FROM");
         }
         $from = new FromClause();
@@ -47,33 +48,33 @@ final class FromParser
         while ($this->pointer < $count) {
             $token = $this->tokens[$this->pointer];
 
-            switch ($token['type']) {
+            switch ($token->type) {
                 case TokenType::STRING_CONSTANT:
                     if (!$from->mostRecentHasAlias) {
-                        $from->aliasRecentExpression((string) $token['value']);
+                        $from->aliasRecentExpression((string) $token->value);
                         $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
                     } else {
-                        throw new SQLFakeParseException("Unexpected string constant {$token['raw']}");
+                        throw new SQLFakeParseException("Unexpected string constant {$token->raw}");
                     }
 
                     break;
 
                 case TokenType::IDENTIFIER:
                     if (\count($from->tables) === 0) {
-                        $table = ['name' => $token['value'], 'join_type' => JoinType::JOIN];
+                        $table = ['name' => $token->value, 'join_type' => JoinType::JOIN];
                         $from->addTable($table);
                         $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
                     } else {
                         if (!$from->mostRecentHasAlias) {
-                            $from->aliasRecentExpression((string) $token['value']);
+                            $from->aliasRecentExpression($token->value);
                             $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
                         }
                     }
                     break;
 
                 case TokenType::SEPARATOR:
-                    if ($token['value'] !== ',') {
-                        throw new SQLFakeParseException("Unexpected {$token['value']}");
+                    if ($token->value !== ',') {
+                        throw new SQLFakeParseException("Unexpected {$token->value}");
                     }
 
                     $this->pointer++;
@@ -93,14 +94,14 @@ final class FromParser
                     return [$this->pointer - 1, $from];
 
                 case TokenType::RESERVED:
-                    switch ($token['value']) {
+                    switch ($token->value) {
                         case 'AS':
                             $this->pointer++;
                             $next = $this->tokens[$this->pointer] ?? null;
-                            if ($next === null || $next['type'] !== TokenType::IDENTIFIER) {
+                            if ($next === null || $next->type !== TokenType::IDENTIFIER) {
                                 throw new SQLFakeParseException("Expected identifer after AS");
                             }
-                            $from->aliasRecentExpression($next['value']);
+                            $from->aliasRecentExpression($next->value);
                             $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
                             break;
 
@@ -122,7 +123,7 @@ final class FromParser
                             break;
 
                         default:
-                            throw new SQLFakeParseException("Unexpected {$token['value']}");
+                            throw new SQLFakeParseException("Unexpected {$token->value}");
                     }
                     break;
 
@@ -132,7 +133,7 @@ final class FromParser
                     break;
 
                 default:
-                    throw new SQLFakeParseException("Unexpected {$token['value']}");
+                    throw new SQLFakeParseException("Unexpected {$token->value}");
             }
 
             $this->pointer++;
@@ -142,7 +143,7 @@ final class FromParser
     }
 
     /**
-     * @param array{type:TokenType::*, value:string, raw:string} $token
+     * @param Token $token
      *
      * @return array{
      *         name: string,
@@ -153,11 +154,11 @@ final class FromParser
      *         join_expression: Expression|null
      *  }
      */
-    private function getTableOrSubquery(array $token)
+    private function getTableOrSubquery(Token $token)
     {
-        switch ($token['type']) {
+        switch ($token->type) {
             case TokenType::IDENTIFIER:
-                return $table = ['name' => $token['value'], 'join_type' => JoinType::JOIN];
+                return $table = ['name' => $token->value, 'join_type' => JoinType::JOIN];
             case TokenType::PAREN:
                 $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
                 $subquery_tokens = \array_slice(
@@ -174,7 +175,7 @@ final class FromParser
                     ' ',
                     \array_map(
                         function ($token) {
-                            return $token['value'];
+                            return $token->value;
                         },
                         $subquery_tokens
                     )
@@ -184,14 +185,14 @@ final class FromParser
                 $expr = new SubqueryExpression($select, '');
                 $this->pointer++;
                 $next = $this->tokens[$this->pointer] ?? null;
-                if ($next !== null && $next['value'] === 'AS') {
+                if ($next !== null && $next->value === 'AS') {
                     $this->pointer++;
                     $next = $this->tokens[$this->pointer];
                 }
-                if ($next === null || $next['type'] !== TokenType::IDENTIFIER) {
+                if ($next === null || $next->type !== TokenType::IDENTIFIER) {
                     throw new SQLFakeParseException("Every subquery must have an alias");
                 }
-                $name = $next['value'];
+                $name = $next->value;
                 $table = [
                     'name' => $name,
                     'subquery' => $expr,
@@ -205,7 +206,7 @@ final class FromParser
     }
 
     /**
-     * @param array{type:TokenType::*, value:string, raw:string} $token
+     * @param Token $token
      *
      * @return array{
      *         name: string,
@@ -216,28 +217,28 @@ final class FromParser
      *         join_expression: Expression|null
      * }
      */
-    private function buildJoin(string $left_table, array $token)
+    private function buildJoin(string $left_table, Token $token)
     {
-        $join_type = $token_value = $token['value'];
-        if ($token['value'] === 'INNER') {
+        $join_type = $token_value = $token->value;
+        if ($token->value === 'INNER') {
             $join_type = 'JOIN';
         }
         if ($token_value === 'INNER' || $token_value === 'CROSS' || $token_value === 'NATURAL') {
             $this->pointer++;
             $next = $this->tokens[$this->pointer] ?? null;
-            if ($next === null || $next['value'] !== 'JOIN') {
-                throw new SQLFakeParseException("Expected keyword JOIN after {$token['value']}");
+            if ($next === null || $next->value !== 'JOIN') {
+                throw new SQLFakeParseException("Expected keyword JOIN after {$token->value}");
             }
         } else {
             if ($token_value === 'LEFT' || $token_value === 'RIGHT') {
                 $this->pointer++;
                 $next = $this->tokens[$this->pointer] ?? null;
-                if ($next !== null && $next['value'] === 'OUTER') {
+                if ($next !== null && $next->value === 'OUTER') {
                     $this->pointer++;
                     $next = $this->tokens[$this->pointer] ?? null;
                 }
-                if ($next === null || $next['value'] !== 'JOIN') {
-                    throw new SQLFakeParseException("Expected keyword JOIN after {$token['value']}");
+                if ($next === null || $next->value !== 'JOIN') {
+                    throw new SQLFakeParseException("Expected keyword JOIN after {$token->value}");
                 }
             }
         }
@@ -253,21 +254,21 @@ final class FromParser
         if ($next === null) {
             return $table;
         }
-        if ($next['type'] === TokenType::IDENTIFIER) {
-            $table['alias'] = $next['value'];
+        if ($next->type === TokenType::IDENTIFIER) {
+            $table['alias'] = $next->value;
             $this->pointer++;
             $next = $this->tokens[$this->pointer] ?? null;
             if ($next === null) {
                 return $table;
             }
         } else {
-            if ($next['value'] === 'AS') {
+            if ($next->value === 'AS') {
                 $this->pointer++;
                 $next = $this->tokens[$this->pointer] ?? null;
-                if ($next === null || $next['type'] !== TokenType::IDENTIFIER) {
+                if ($next === null || $next->type !== TokenType::IDENTIFIER) {
                     throw new SQLFakeParseException("Expected identifier after AS");
                 }
-                $table['alias'] = $next['value'];
+                $table['alias'] = $next->value;
                 $this->pointer++;
                 $next = $this->tokens[$this->pointer] ?? null;
                 if ($next === null) {
@@ -282,15 +283,15 @@ final class FromParser
             return $table;
         }
 
-        if ($next['type'] !== TokenType::RESERVED || ($next['value'] !== 'ON' && $next['value'] !== 'USING')) {
+        if ($next->type !== TokenType::RESERVED || ($next->value !== 'ON' && $next->value !== 'USING')) {
             throw new SQLFakeParseException("Expected ON or USING join condition");
         }
 
-        if ($next['value'] === 'USING') {
+        if ($next->value === 'USING') {
             $table['join_operator'] = 'USING';
             $this->pointer++;
             $next = $this->tokens[$this->pointer] ?? null;
-            if ($next === null || $next['type'] !== TokenType::PAREN) {
+            if ($next === null || $next->type !== TokenType::PAREN) {
                 throw new SQLFakeParseException("Expected ( after USING clause");
             }
             $closing_paren_pointer = SQLParser::findMatchingParen($this->pointer, $this->tokens);
@@ -303,12 +304,12 @@ final class FromParser
             foreach ($arg_tokens as $arg) {
                 $count++;
                 if ($count % 2 === 1) {
-                    if ($arg['type'] !== TokenType::IDENTIFIER) {
+                    if ($arg->type !== TokenType::IDENTIFIER) {
                         throw new SQLFakeParseException("Expected identifier in USING clause");
                     }
-                    $filter = $this->addJoinFilterExpression($filter, $left_table, $table['name'], $arg['value']);
+                    $filter = self::addJoinFilterExpression($filter, $left_table, $table['name'], $arg->value);
                 } else {
-                    if ($arg['value'] !== ',') {
+                    if ($arg->value !== ',') {
                         throw new SQLFakeParseException("Expected , after argument in USING clause");
                     }
                 }
@@ -324,17 +325,17 @@ final class FromParser
         return $table;
     }
 
-    public function addJoinFilterExpression(
+    public static function addJoinFilterExpression(
         ?Expression $filter,
         string $left_table,
         string $right_table,
         string $column
     ) : BinaryOperatorExpression {
         $left = new ColumnExpression(
-            ['type' => TokenType::IDENTIFIER, 'value' => "{$left_table}.{$column}", 'raw' => '']
+            new Token(TokenType::IDENTIFIER, "{$left_table}.{$column}", '')
         );
         $right = new ColumnExpression(
-            ['type' => TokenType::IDENTIFIER, 'value' => "{$right_table}.{$column}", 'raw' => '']
+            new Token(TokenType::IDENTIFIER, "{$right_table}.{$column}", '')
         );
         $expr = new BinaryOperatorExpression($left, false, '=', $right);
         if ($filter !== null) {
