@@ -25,7 +25,9 @@ abstract class Processor
 
         return \array_filter(
             $data,
-            fn($row) => Expression\Evaluator::evaluate($where, $row, $conn)
+            function ($row) use ($where, $conn) {
+                return Expression\Evaluator::evaluate($where, $row, $conn);
+            }
         );
     }
 

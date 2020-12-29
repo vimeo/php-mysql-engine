@@ -3,7 +3,10 @@ namespace Vimeo\MysqlEngine\Schema;
 
 class Index
 {
-    public string $type;
+    /**
+     * @var string
+     */
+    public $type;
 
     public array $columns;
 

@@ -3,29 +3,65 @@ namespace Vimeo\MysqlEngine\Query;
 
 class CreateColumn
 {
-    public string $name;
+    /**
+     * @var string
+     */
+    public $name;
 
-    public string $type;
+    /**
+     * @var string
+     */
+    public $type;
 
-    public int $length;
+    /**
+     * @var int
+     */
+    public $length;
 
-    public int $decimals;
+    /**
+     * @var int
+     */
+    public $decimals;
 
-    public bool $unsigned;
+    /**
+     * @var bool
+     */
+    public $unsigned;
 
-    public bool $null;
+    /**
+     * @var bool
+     */
+    public $null;
 
-    public string $default;
+    /**
+     * @var string
+     */
+    public $default;
 
-    public array $values;
+    /**
+     * @var array
+     */
+    public $values;
 
-    public bool $auto_increment;
+    /**
+     * @var bool
+     */
+    public $auto_increment;
 
-    public bool $zerofill = false;
+    /**
+     * @var bool
+     */
+    public $zerofill = false;
 
-    public string $character_set;
+    /**
+     * @var string
+     */
+    public $character_set;
 
-    public string $collation;
+    /**
+     * @var string
+     */
+    public $collation;
 
     public $more;
 }

@@ -243,14 +243,21 @@ final class DataIntegrity
 
                 $different_keys = array_filter(
                     $unique_key,
-                    fn ($key) => $existing_row[$key] !== $new_row[$key] || !isset($new_row[$key])
+                    function ($key) use ($existing_row, $new_row) {
+                        return $existing_row[$key] !== $new_row[$key] || !isset($new_row[$key]);
+                    }
                 );
 
                 // if all keys in the row match
                 if (!$different_keys) {
                     $dupe_unique_key_value = \implode(
                         ', ',
-                        \array_map(fn($field) => (string) $existing_row[$field], $unique_key)
+                        \array_map(
+                            function ($field) use ($existing_row) {
+                                return (string) $existing_row[$field];
+                            },
+                            $unique_key
+                        )
                     );
                     return [
                         "Duplicate entry '{$dupe_unique_key_value}' for key"

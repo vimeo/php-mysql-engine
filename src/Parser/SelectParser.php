@@ -21,22 +21,22 @@ final class SelectParser
     /**
      * @var string
      */
-    private string $currentClause = 'SELECT';
+    private $currentClause = 'SELECT';
 
     /**
      * @var int
      */
-    private int $pointer;
+    private $pointer;
 
     /**
      * @var array<int, Token>
      */
-    private array $tokens;
+    private $tokens;
 
     /**
      * @var string
      */
-    private string $sql;
+    private $sql;
 
     /**
      * @param array<int, Token> $tokens

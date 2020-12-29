@@ -22,6 +22,7 @@ final class FromClause
      *  >
      */
     public $tables = [];
+    
     /**
      * @var bool
      */

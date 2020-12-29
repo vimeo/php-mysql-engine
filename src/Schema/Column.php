@@ -3,7 +3,10 @@ namespace Vimeo\MysqlEngine\Schema;
 
 abstract class Column
 {
-    public bool $isNullable = true;
+    /**
+     * @var bool
+     */
+    public $isNullable = true;
 
     /**
      * @return 'int'|'string'|'float'

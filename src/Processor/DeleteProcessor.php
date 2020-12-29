@@ -52,7 +52,9 @@ final class DeleteProcessor extends Processor
     ) {
         $remaining_rows = \array_filter(
             $original_table,
-            fn($row_num) => !\array_key_exists($row_num, $filtered_rows),
+            function ($row_num) use ($filtered_rows) {
+                return !\array_key_exists($row_num, $filtered_rows);
+            },
             \ARRAY_FILTER_USE_KEY
         );
 

@@ -5,25 +5,31 @@ use Vimeo\MysqlEngine\TokenType;
 
 class Token
 {
-	/**
-	 * @var TokenType::*
-	 */
-	public string $type;
+    /**
+     * @var TokenType::*
+     */
+    public $type;
 
-	public string $value;
+    /**
+     * @var string
+     */
+    public $value;
 
-	public string $raw;
+    /**
+     * @var string
+     */
+    public $raw;
 
-	/**
-	 * @param TokenType::* $type
-	 */
-	public function __construct(
-		string $type,
-		string $value,
-		string $raw
-	) {
-		$this->type = $type;
-		$this->value = $value;
-		$this->raw = $raw;
-	}
+    /**
+     * @param TokenType::* $type
+     */
+    public function __construct(
+        string $type,
+        string $value,
+        string $raw
+    ) {
+        $this->type = $type;
+        $this->value = $value;
+        $this->raw = $raw;
+    }
 }

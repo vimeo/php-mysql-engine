@@ -3,22 +3,40 @@ namespace Vimeo\MysqlEngine\Schema;
 
 class TableDefinition
 {
-    public string $name;
+    /**
+     * @var string
+     */
+    public $name;
 
-    public string $databaseName;
+    /**
+     * @var string
+     */
+    public $databaseName;
 
-    public string $defaultCharacterSet;
+    /**
+     * @var string
+     */
+    public $defaultCharacterSet;
 
-    public string $defaultCollation;
+    /**
+     * @var string
+     */
+    public $defaultCollation;
 
     /**
      * @var array<string, Column>
      */
-    public array $columns;
+    public $columns;
 
-    public array $primaryKeyColumns;
+    /**
+     * @var array
+     */
+    public $primaryKeyColumns;
 
-    public array $indexes;
+    /**
+     * @var array
+     */
+    public $indexes;
 
     /**
      * @var array<string, int>

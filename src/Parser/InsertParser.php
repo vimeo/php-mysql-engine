@@ -9,16 +9,25 @@ final class InsertParser
 {
     const CLAUSE_ORDER = ['INSERT' => 1, 'COLUMN_LIST' => 2, 'VALUES' => 3, 'ON' => 4, 'SET' => 5];
 
-    private string $currentClause = 'INSERT';
+    /**
+     * @var string
+     */
+    private $currentClause = 'INSERT';
 
-    private int $pointer = 0;
+    /**
+     * @var int
+     */
+    private $pointer = 0;
 
     /**
      * @var array<int, Token>
      */
-    private array $tokens;
+    private $tokens;
 
-    private string $sql;
+    /**
+     * @var string
+     */
+    private $sql;
 
     /**
      * @param array<int, Token> $tokens

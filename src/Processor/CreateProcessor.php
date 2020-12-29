@@ -22,7 +22,9 @@ final class CreateProcessor
         foreach ($stmt->fields as $field) {
             if ($field->key) {
                 $columns = \array_map(
-                    fn($column) => $column['name'],
+                    function ($column) {
+                        return $column['name'];
+                    },
                     $field->key->columns
                 );
 
@@ -121,7 +123,9 @@ final class CreateProcessor
             case DataType::ENUM:
                 return new Column\Enum(
                     array_map(
-                        fn ($param) => substr($param, 1, -1),
+                        function ($param) {
+                            return substr($param, 1, -1);
+                        },
                         $stmt->parameters
                     )
                 );
@@ -129,7 +133,9 @@ final class CreateProcessor
             case DataType::SET:
                 return new Column\Set(
                     array_map(
-                        fn ($param) => substr($param, 1, -1),
+                        function ($param){
+                            return substr($param, 1, -1);
+                        },
                         $stmt->parameters
                     )
                 );

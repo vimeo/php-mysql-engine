@@ -69,20 +69,32 @@ final class ExpressionParser
     /**
      * @var array<int, Expression>|null
      */
-    private ?array $selectExpressions = null;
+    private $selectExpressions = null;
 
     /**
      * @var array<int, Token>
      */
-    private array $tokens;
+    private $tokens;
 
-    private int $pointer = -1;
+    /**
+     * @var int
+     */
+    private $pointer = -1;
 
-    private Expression $expression;
+    /**
+     * @var Expression
+     */
+    private $expression;
 
-    public int $min_precedence = 0;
+    /**
+     * @var int
+     */
+    public $min_precedence = 0;
 
-    private bool $is_child = false;
+    /**
+     * @var bool
+     */
+    private $is_child = false;
 
     /**
      * @param array<int, Token> $tokens

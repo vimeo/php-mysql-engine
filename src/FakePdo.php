@@ -12,7 +12,10 @@ class FakePdo extends \PDO
      */
     public $lastInsertId;
 
-    public bool $stringifyResult = true;
+    /**
+     * @var bool
+     */
+    public $stringifyResult = true;
 
     /**
      * @readonly

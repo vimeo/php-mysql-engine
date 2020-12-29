@@ -217,7 +217,15 @@ final class SelectProcessor extends Processor
             $new_out = [];
 
             foreach ($out as $row) {
-                $key = \implode('-', \array_map(fn($col) => (string) $col, $row));
+                $key = \implode(
+                    '-',
+                    \array_map(
+                        function ($col) {
+                            return (string) $col;
+                        },
+                        $row
+                    )
+                );
 
                 if (!array_key_exists($key, $new_out)) {
                     $new_out[$key] = $row;
@@ -273,10 +281,12 @@ final class SelectProcessor extends Processor
         }
 
         return \array_map(
-            function ($row) {
+            function ($row) use ($remove_fields) {
                 return \array_filter(
                     $row,
-                    fn ($field) => !\array_key_exists($field, $remove_fields),
+                    function ($field) use ($remove_fields) {
+                        return !\array_key_exists($field, $remove_fields);
+                    },
                     \ARRAY_FILTER_USE_KEY
                 );
             },
@@ -291,7 +301,17 @@ final class SelectProcessor extends Processor
      */
     protected static function processMultiQuery(FakePdo $conn, SelectQuery $stmt, array $data)
     {
-        $row_encoder = fn($row) => \implode('-', \array_map(fn($col) => (string) $col, $row));
+        $row_encoder = function ($row) {
+            return \implode(
+                '-',
+                \array_map(
+                    function ($col) {
+                        return (string) $col;
+                    },
+                    $row
+                )
+            );
+        };
 
         foreach ($stmt->multiQueries as $sub) {
             $subquery_results = SelectProcessor::process($conn, $sub['query']);

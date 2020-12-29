@@ -3,7 +3,10 @@ namespace Vimeo\MysqlEngine;
 
 final class Server
 {
-    public string $name;
+    /**
+     * @var string
+     */
+    public $name;
 
     public ?ServerConfig $config = null;
 
@@ -121,10 +124,14 @@ final class Server
     protected function doSnapshot(string $name) : void
     {
         $this->snapshots[$name] = array_map(
-            fn($database) => array_map(
-                fn($table) => clone $table,
-                $database
-            ),
+            function ($database) {
+                return array_map(
+                    function ($table) {
+                        return clone $table;
+                    },
+                    $database
+                );
+            },
             $this->databases
         );
     }

@@ -7,44 +7,65 @@ use Vimeo\MysqlEngine\Query\Expression\Expression;
 
 final class SelectQuery
 {
-    public ?Expression $whereClause = null;
+    /**
+     * @var ?Expression
+     */
+    public $whereClause = null;
 
     /**
      * @var array<int, array{expression: Expression, direction: string}>|null
      */
-    public ?array $orderBy = null;
+    public $orderBy = null;
 
     /**
      * @var array{rowcount:int, offset:int}|null
      */
-    public ?array $limitClause = null;
+    public $limitClause = null;
 
     /**
      * @var array<int, Expression>
      */
-    public array $selectExpressions = [];
+    public $selectExpressions = [];
 
-    public ?FromClause $fromClause = null;
+    /**
+     * @var ?FromClause
+     */
+    public $fromClause = null;
 
     /**
      * @var array<int, Expression>|null
      */
-    public ?array $groupBy = null;
+    public $groupBy = null;
 
-    public ?Expression $havingClause = null;
+    /**
+     * @var ?Expression
+     */  
+    public $havingClause = null;
 
     /**
      * @var array<int, array{type:MultiOperand::*, query:SelectQuery}>
      */
-    public array $multiQueries = [];
+    public $multiQueries = [];
 
-    public array $options = [];
+    /**
+     * @var array
+     */
+    public $options = [];
 
-    public bool $needsSeparator = false;
+    /**
+     * @var bool
+     */
+    public $needsSeparator = false;
 
-    public bool $mostRecentHasAlias = false;
+    /**
+     * @var bool
+     */
+    public $mostRecentHasAlias = false;
 
-    public string $sql;
+    /**
+     * @var string
+     */
+    public $sql;
 
     public function __construct(string $sql)
     {

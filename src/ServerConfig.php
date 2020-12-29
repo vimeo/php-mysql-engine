@@ -3,15 +3,30 @@ namespace Vimeo\MysqlEngine;
 
 final class ServerConfig
 {
-    public string $mysqlVersion;
+    /**
+     * @var string
+     */
+    public $mysqlVersion;
 
-    public bool $isVitess;
+    /**
+     * @var bool
+     */
+    public $isVitess;
 
-    public bool $strictSqlMode;
+    /**
+     * @var bool
+     */
+    public $strictSqlMode;
 
-    public bool $strictSchemaMode;
+    /**
+     * @var bool
+     */
+    public $strictSchemaMode;
 
-    public string $insertSchemaFrom;
+    /**
+     * @var string
+     */
+    public $insertSchemaFrom;
 
     public function __construct(
         string $mysqlVersion,

@@ -3,9 +3,15 @@ namespace Vimeo\MysqlEngine\Query;
 
 class CreateIndex
 {
-    public string $name;
+    /**
+     * @var string
+     */
+    public $name;
 
-    public string $type;
+    /**
+     * @var string
+     */
+    public $type;
 
     /**
      * @var array<
@@ -17,13 +23,22 @@ class CreateIndex
      *     }
      * >
      */
-    public array $cols = [];
+    public $cols = [];
 
-    public string $mode;
+    /**
+     * @var string
+     */
+    public $mode;
 
-    public string $parser;
+    /**
+     * @var string
+     */
+    public $parser;
 
     public $more;
 
-    public string $key_block_size;
+    /**
+     * @var string
+     */
+    public $key_block_size;
 }

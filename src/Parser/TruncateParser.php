@@ -6,14 +6,20 @@ use Vimeo\MysqlEngine\Query\TruncateQuery;
 
 final class TruncateParser
 {
-    private int $pointer = 0;
+    /**
+     * @var int
+     */
+    private $pointer = 0;
 
     /**
      * @var array<int, Token>
      */
-    private array $tokens;
+    private $tokens;
 
-    private string $sql;
+    /**
+     * @var string
+     */
+    private $sql;
 
     /**
      * @param array<int, Token> $tokens

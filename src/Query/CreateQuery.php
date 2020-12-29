@@ -3,22 +3,28 @@ namespace Vimeo\MysqlEngine\Query;
 
 class CreateQuery
 {
-    public string $name;
+    /**
+     * @var string
+     */
+    public $name;
 
     /**
      * @var array<int, CreateColumn>
      */
-    public array $fields = [];
+    public $fields = [];
 
-    public string $sql;
+    /**
+     * @var string
+     */
+    public $sql;
     
     /**
      * @var array<int, CreateIndex>
      */
-    public array $indexes = [];
+    public $indexes = [];
     
     /**
      * @var array<string, string>
      */
-    public array $props;
+    public $props;
 }

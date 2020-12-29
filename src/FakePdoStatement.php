@@ -111,7 +111,12 @@ class FakePdoStatement extends \PDOStatement
                     $real_result = $this->realStatement->fetchAll(\PDO::FETCH_ASSOC);
 
                     if ($this->conn->stringifyResult && $fake_result) {
-                        $fake_result = array_map(fn($row) => self::stringify($row), $fake_result);
+                        $fake_result = array_map(
+                            function ($row) {
+                                return self::stringify($row);
+                            },
+                            $fake_result
+                        );
                     }
 
                     if ($real_result !== $fake_result) {
@@ -219,7 +224,9 @@ class FakePdoStatement extends \PDOStatement
         if ($fetch_style === \PDO::FETCH_ASSOC) {
             if ($this->conn->stringifyResult) {
                 return array_map(
-                    fn($row) => self::stringify($row),
+                    function ($row) {
+                        return self::stringify($row);
+                    },
                     $this->result ?: []
                 );
             }
@@ -326,7 +333,12 @@ class FakePdoStatement extends \PDOStatement
 
     private static function stringify(array $row)
     {
-        return \array_map(fn($value) => $value === null ? $value : (string) $value, $row);
+        return \array_map(
+            function ($value) {
+                return $value === null ? $value : (string) $value;
+            },
+            $row
+        );
     }
 
     /**
