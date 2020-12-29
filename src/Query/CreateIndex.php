@@ -17,7 +17,7 @@ class CreateIndex
      *     }
      * >
      */
-    public string $cols = [];
+    public array $cols = [];
 
     public string $mode;
 
