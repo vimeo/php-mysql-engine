@@ -3,9 +3,15 @@ namespace Vimeo\MysqlEngine;
 
 class FakePdo extends \PDO
 {
-    private Server $server;
+    /**
+     * @var Server
+     */
+    private $server;
 
-    private ?\PDO $real = null;
+    /**
+     * @var ?\PDO
+     */
+    private $real = null;
 
     /**
      * @var scalar
@@ -18,9 +24,10 @@ class FakePdo extends \PDO
     public $stringifyResult = true;
 
     /**
+     * @var ?string
      * @readonly
      */
-    public ?string $databaseName = null;
+    public $databaseName = null;
 
     public function __construct(string $dsn, string $username = '', string $passwd = '', array $options = [])
     {

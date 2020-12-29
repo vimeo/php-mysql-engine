@@ -18,7 +18,7 @@
     "phpmyadmin/sql-parser": "^5.4",
     "nyholm/dsn": "^2.0"
   },
-  "autoload-dev": {
+  "autoload": {
     "psr-4": {
         "Vimeo\\MysqlEngine\\": "src"
     }

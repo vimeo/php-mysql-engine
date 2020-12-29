@@ -8,33 +8,36 @@ final class Server
      */
     public $name;
 
-    public ?ServerConfig $config = null;
+    /**
+     * @var ?ServerConfig
+     */
+    public $config = null;
 
     /**
      * @var array<string, Server>
      */
-    private static array $instances = [];
+    private static $instances = [];
 
     /**
      * @var array<string, true>
      */
-    private static array $snapshot_names = [];
+    private static $snapshot_names = [];
 
     /**
      * @var array<string, array<string, TableData>>
      */
-    public array $databases = [];
+    public $databases = [];
 
     /**
      * @var array<string, array<string, array<string, TableData>>>
      */
-    private array $snapshots = [];
+    private $snapshots = [];
 
     /**
      * @var array<string, array<string, Schema\TableDefinition>>
      */
-    private array $tableDefinitions = [];
-
+    private $tableDefinitions = [];
+    
     /**
      * @param ?ServerConfig|null $config
      */

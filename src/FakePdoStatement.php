@@ -3,30 +3,57 @@ namespace Vimeo\MysqlEngine;
 
 class FakePdoStatement extends \PDOStatement
 {
-    private string $sql;
+    /**
+     * @var string
+     */
+    private $sql;
 
-    private int $affectedRows = 0;
+    /**
+     * @var int
+     */
+    private $affectedRows = 0;
 
-    private ?array $result = null;
+    /**
+     * @var ?array
+     */
+    private $result = null;
 
-    private int $resultCursor = 0;
+    /**
+     * @var int
+     */
+    private $resultCursor = 0;
 
-    private int $fetchMode = \PDO::ATTR_DEFAULT_FETCH_MODE;
+    /**
+     * @var int
+     */
+    private $fetchMode = \PDO::ATTR_DEFAULT_FETCH_MODE;
 
     private $fetchArgument;
 
-    private ?array $fetchConstructorArgs = null;
+    /**
+     * @var ?array
+     */
+    private $fetchConstructorArgs = null;
 
-    private FakePdo $conn;
+    /**
+     * @var FakePdo
+     */
+    private $conn;
 
-    private ?\PDO $real;
+    /**
+     * @var ?\PDO
+     */
+    private $real;
 
-    private ?\PDOStatement $realStatement = null;
+    /**
+     * @var ?\PDOStatement 
+     */
+    private $realStatement = null;
 
     /**
      * @var array<string, scalar>
      */
-    private array $boundValues = [];
+    private $boundValues = [];
 
     public function __construct(FakePdo $conn, string $sql, ?\PDO $real)
     {
