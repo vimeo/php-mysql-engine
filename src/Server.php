@@ -37,7 +37,7 @@ final class Server
      * @var array<string, array<string, Schema\TableDefinition>>
      */
     private $tableDefinitions = [];
-    
+
     /**
      * @param ?ServerConfig|null $config
      */
@@ -224,7 +224,7 @@ final class Server
 
         do {
             ++$next;
-        } while (\array_key_exists($next, $table->autoIncrementIndexes[$column_name]));
+        } while (\array_key_exists($next, $table->autoIncrementIndexes[$column_name] ?? []));
 
         $table->autoIncrementCursors[$column_name] = $next;
 
