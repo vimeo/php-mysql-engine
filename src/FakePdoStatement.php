@@ -142,7 +142,7 @@ class FakePdoStatement extends \PDOStatement
                 break;
 
             default:
-                throw new \UnexpectedValueException('Unsupported operation type ' . $parsed_query);
+                throw new \UnexpectedValueException('Unsupported operation type ' . $sql);
         }
 
         return true;
@@ -163,11 +163,11 @@ class FakePdoStatement extends \PDOStatement
     }
 
     public function fetch(
-        ?int $fetch_style = null,
+        ?int $fetch_style = -123,
         int $cursor_orientation = \PDO::FETCH_ORI_NEXT,
         int $cursor_offset = 0
     ) {
-        if ($fetch_style === null) {
+        if ($fetch_style === -123) {
             $fetch_style = $this->fetchMode;
         }
 
@@ -208,9 +208,9 @@ class FakePdoStatement extends \PDOStatement
         throw new \Exception('not implemented');
     }
 
-    public function fetchAll(int $fetch_style = null, $fetch_argument = null, array $ctor_args = []) : array
+    public function fetchAll(int $fetch_style = -123, $fetch_argument = null, array $ctor_args = []) : array
     {
-        if ($fetch_style === null) {
+        if ($fetch_style === -123) {
             $fetch_style = $this->fetchMode;
             $fetch_argument = $this->fetchArgument;
             $ctor_args = $this->fetchConstructorArgs;
@@ -282,7 +282,7 @@ class FakePdoStatement extends \PDOStatement
 
                     return self::convertRowToObject($row, $fetch_argument, $ctor_args);
                 },
-                $this->result ?: []
+                $this->result
             );
         }
 
@@ -306,7 +306,7 @@ class FakePdoStatement extends \PDOStatement
     {
         $reflector = new \ReflectionClass($class);
 
-        $instance = $reflector->newInstanceWithoutConstructor($ctor_args);
+        $instance = $reflector->newInstanceWithoutConstructor();
 
         foreach ($row as $key => $value) {
             if ($key[0] === '`') {

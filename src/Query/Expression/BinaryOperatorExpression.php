@@ -51,7 +51,7 @@ final class BinaryOperatorExpression extends Expression
         $this->name = '';
         $this->precedence = 0;
         $this->type = TokenType::OPERATOR;
-        if (!($operator === null || $operator === '')) {
+        if ($operator !== '') {
             $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[$operator];
         }
         $this->negatedInt = $this->negated ? 1 : 0;

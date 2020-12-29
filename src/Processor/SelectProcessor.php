@@ -96,21 +96,22 @@ final class SelectProcessor extends Processor
                 $grouped_data[$hash][(string) $count] = $row;
             }
 
-            $data = (array) $grouped_data;
-        } else {
-            $found_aggregate = false;
+            return \array_values($grouped_data);
+        }
 
-            foreach ($select_expressions as $expr) {
-                if ($expr instanceof FunctionExpression && $expr->isAggregate()) {
-                    $found_aggregate = true;
-                    break;
-                }
-            }
+        $found_aggregate = false;
 
-            if ($found_aggregate) {
-                return [$data];
+        foreach ($select_expressions as $expr) {
+            if ($expr instanceof FunctionExpression && $expr->isAggregate()) {
+                $found_aggregate = true;
+                break;
             }
         }
+
+        if ($found_aggregate) {
+            return [$data];
+        }
+
         return $data;
     }
 
@@ -167,12 +168,10 @@ final class SelectProcessor extends Processor
                                 }
                             }
                         } else {
-                            $col = \end($parts);
-                            if ($col !== null) {
-                                $val = $formatted_row[$col] ?? $val;
+                            $col_name = \end($parts);
+                            $val = $formatted_row[$col_name] ?? $val;
 
-                                $formatted_row[$col] = $val;
-                            }
+                            $formatted_row[$col_name] = $val;
                         }
                     }
 
@@ -295,7 +294,7 @@ final class SelectProcessor extends Processor
         $row_encoder = fn($row) => \implode('-', \array_map(fn($col) => (string) $col, $row));
 
         foreach ($stmt->multiQueries as $sub) {
-            $subquery_results = $sub['query']->execute($conn);
+            $subquery_results = SelectProcessor::process($conn, $sub['query']);
 
             switch ($sub['type']) {
                 case MultiOperand::UNION:

@@ -5,8 +5,20 @@ use Vimeo\MysqlEngine\JoinType;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
 
-final class DeleteQuery extends Query
+final class DeleteQuery
 {
+    public ?Expression $whereClause = null;
+
+    /**
+     * @var array<int, array{expression: Expression, direction: string}>|null
+     */
+    public ?array $orderBy = null;
+
+    /**
+     * @var array{rowcount:int, offset:int}|null
+     */
+    public ?array $limitClause = null;
+
     /**
      * @var array{
      *      name:string,

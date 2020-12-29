@@ -29,10 +29,9 @@ trait IntegerColumnTrait
         return $this->integer_display_width;
     }
 
-    public function autoIncrement() : self
+    public function autoIncrement() : void
     {
         $this->auto_increment = true;
-        return $this;
     }
 
     public function isAutoIncrement() : bool

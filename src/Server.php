@@ -13,7 +13,7 @@ final class Server
     private static array $instances = [];
 
     /**
-     * @var array<string, string>
+     * @var array<string, true>
      */
     private static array $snapshot_names = [];
 

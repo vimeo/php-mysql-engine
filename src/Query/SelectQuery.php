@@ -5,8 +5,20 @@ use Vimeo\MysqlEngine\MultiOperand;
 use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 
-final class SelectQuery extends Query
+final class SelectQuery
 {
+    public ?Expression $whereClause = null;
+
+    /**
+     * @var array<int, array{expression: Expression, direction: string}>|null
+     */
+    public ?array $orderBy = null;
+
+    /**
+     * @var array{rowcount:int, offset:int}|null
+     */
+    public ?array $limitClause = null;
+
     /**
      * @var array<int, Expression>
      */

@@ -99,7 +99,6 @@ final class BinaryOperatorEvaluator
             case '+':
             case '<<':
             case '>>':
-            case '*':
             case '/':
             case 'DIV':
             case '|':

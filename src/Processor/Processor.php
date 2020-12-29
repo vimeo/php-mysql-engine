@@ -140,7 +140,7 @@ abstract class Processor
         TableDefinition $table_definition,
         ?array $values = null
     ) {
-        $valid_fields = $table_definition->columns ?? null;
+        $valid_fields = $table_definition->columns;
 
         $set_clauses = [];
 

@@ -3,10 +3,7 @@ namespace Vimeo\MysqlEngine\Schema\Column;
 
 interface Defaultable
 {
-    /**
-     * @return $this
-     */
-    public function setDefault($mysql_default);
+    public function setDefault($mysql_default) : void;
 
     public function hasDefault() : bool;
 

@@ -13,14 +13,10 @@ trait MySqlDefaultTrait
      */
     protected $has_mysql_default = false;
 
-    /**
-     * @return $this
-     */
-    public function setDefault($mysql_default)
+    public function setDefault($mysql_default) : void
     {
         $this->mysql_default = $mysql_default;
         $this->has_mysql_default = true;
-        return $this;
     }
 
     public function hasDefault() : bool

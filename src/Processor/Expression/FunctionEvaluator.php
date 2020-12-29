@@ -74,7 +74,7 @@ final class FunctionEvaluator
      */
     private static function sqlCount(FunctionExpression $expr, array $rows, \Vimeo\MysqlEngine\FakePdo $conn)
     {
-        $expr = $expr->getExpr();
+        $inner = $expr->getExpr();
 
         if ($expr->distinct) {
             $buckets = [];
@@ -83,7 +83,7 @@ final class FunctionEvaluator
                     throw new \TypeError('Failed assertion');
                 })();
 
-                $val = Evaluator::evaluate($expr, $row, $conn);
+                $val = Evaluator::evaluate($inner, $row, $conn);
                 if (\is_int($val) || \is_string($val)) {
                     $buckets[$val] = 1;
                 }
@@ -97,7 +97,7 @@ final class FunctionEvaluator
             \is_array($row) ? $row : (function () {
                 throw new \TypeError('Failed assertion');
             })();
-            if (Evaluator::evaluate($expr, $row, $conn) !== null) {
+            if (Evaluator::evaluate($inner, $row, $conn) !== null) {
                 $count++;
             }
         }

@@ -30,7 +30,7 @@ final class SetParser
     }
 
     /**
-     * @return array{0: int, 1: array<int, BinaryOperatorExpression>}
+     * @return array{int, array<int, BinaryOperatorExpression>}
      */
     public function parse(bool $skip_set = false)
     {

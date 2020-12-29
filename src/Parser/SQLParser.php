@@ -2,7 +2,13 @@
 namespace Vimeo\MysqlEngine\Parser;
 
 use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\Query;
+use Vimeo\MysqlEngine\Query\{
+    SelectQuery,
+    DeleteQuery,
+    TruncateQuery,
+    InsertQuery,
+    UpdateQuery
+};
 
 final class SQLParser
 {
@@ -129,7 +135,7 @@ final class SQLParser
     ];
 
     /**
-     * @return Query
+     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery
      */
     public static function parse(string $sql)
     {
@@ -140,7 +146,7 @@ final class SQLParser
     }
 
     /**
-     * @return Query
+     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery
      */
     private static function parseImpl(string $sql)
     {
@@ -200,7 +206,7 @@ final class SQLParser
     }
 
     /**
-     * @return Query
+     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery
      */
     private static function parseMemoized(string $sql)
     {
@@ -243,92 +249,90 @@ final class SQLParser
                 $token = \preg_replace("/\\\\0/", "\0", \preg_replace("/\\\\([^%_rntbZ0])/", '\\1', $token));
                 $out[] = ['type' => TokenType::STRING_CONSTANT, 'value' => $token, 'raw' => $raw];
                 continue;
-            } else {
-                if ($token[0] === '`') {
-                    $raw = $token;
+            }
 
-                    if (substr($token, -1) === '`') {
-                        $token = \substr($token, 1, -1);
-                    } else {
-                        if (substr($token, -2) === '`.') {
-                            $token = \substr($token, 1, -2) . '.';
-                        }
-                    }
+            if ($token[0] === '`') {
+                $raw = $token;
 
-                    $previous_key = \array_key_last($out);
-                    if ($previous_key !== null
-                        && $out[$previous_key]['type'] === TokenType::IDENTIFIER
-                        && substr($out[$previous_key]['value'], -1) === '.'
-                    ) {
-                        $out[$previous_key]['value'] .= $token;
-                        continue;
-                    }
-
-                    $out[] = ['type' => TokenType::IDENTIFIER, 'value' => $token, 'raw' => $raw];
-                    continue;
-                }
-
-                if ($token[0] === '(') {
-                    $out[] = ['type' => TokenType::PAREN, 'value' => $token, 'raw' => $token];
-                    continue;
-                }
-
-                if ($token === '*') {
-                    $k = \array_key_last($out);
-
-                    if ($k === null) {
-                        throw new SQLFakeParseException("Parse error: unexpected *");
-                    }
-
-                    $previous = $out[$k];
-                    $out[$k] = $previous;
-
-                    $previous_type = $previous['type'];
-
-                    if ($previous_type !== TokenType::NUMERIC_CONSTANT
-                        && $previous_type !== TokenType::STRING_CONSTANT
-                        && $previous_type !== TokenType::NULL_CONSTANT
-                        && $previous_type !== TokenType::IDENTIFIER
-                        && $previous_type !== ')'
-                    ) {
-                        $out[] = ['type' => TokenType::IDENTIFIER, 'value' => $token, 'raw' => $token];
-                        continue;
-                    }
-
-                    if ($previous['type'] === TokenType::IDENTIFIER && \substr($previous['value'], -1) === '.') {
-                        $previous['value'] .= $token;
-                        $previous['raw'] .= $token;
-                        $out[$k] = $previous;
-                        continue;
-                    }
+                if (substr($token, -1) === '`') {
+                    $token = \substr($token, 1, -1);
                 } else {
-                    if ($token === '-' || $token === '+') {
-                        $k = \array_key_last($out);
-
-                        if ($k === null) {
-                            throw new SQLFakeParseException("Parse error: unexpected {$token}");
-                        }
-
-                        $previous = $out[$k];
-
-                        $previous_type = $previous['type'];
-
-                        if ($previous_type !== TokenType::NUMERIC_CONSTANT
-                            && $previous_type !== TokenType::STRING_CONSTANT
-                            && $previous_type !== TokenType::NULL_CONSTANT
-                            && $previous_type !== TokenType::IDENTIFIER
-                            && $previous_type !== ')'
-                        ) {
-                            if ($token === '-') {
-                                $op = 'UNARY_MINUS';
-                            } else {
-                                $op = 'UNARY_PLUS';
-                            }
-
-                            $out[] = ['type' => TokenType::OPERATOR, 'value' => $op, 'raw' => $token];
-                            continue;
-                        }
+                    if (substr($token, -2) === '`.') {
+                        $token = \substr($token, 1, -2) . '.';
                     }
+                }
+
+                $previous_key = \array_key_last($out);
+                if ($previous_key !== null
+                    && $out[$previous_key]['type'] === TokenType::IDENTIFIER
+                    && substr($out[$previous_key]['value'], -1) === '.'
+                ) {
+                    $out[$previous_key]['value'] .= $token;
+                    continue;
+                }
+
+                $out[] = ['type' => TokenType::IDENTIFIER, 'value' => $token, 'raw' => $raw];
+                continue;
+            }
+
+            if ($token[0] === '(') {
+                $out[] = ['type' => TokenType::PAREN, 'value' => $token, 'raw' => $token];
+                continue;
+            }
+
+            if ($token === '*') {
+                $k = \array_key_last($out);
+
+                if ($k === null) {
+                    throw new SQLFakeParseException("Parse error: unexpected *");
+                }
+
+                $previous = $out[$k];
+                $out[$k] = $previous;
+
+                $previous_type = $previous['type'];
+
+                if ($previous_type !== TokenType::NUMERIC_CONSTANT
+                    && $previous_type !== TokenType::STRING_CONSTANT
+                    && $previous_type !== TokenType::NULL_CONSTANT
+                    && $previous_type !== TokenType::IDENTIFIER
+                    && $previous_type !== ')'
+                ) {
+                    $out[] = ['type' => TokenType::IDENTIFIER, 'value' => $token, 'raw' => $token];
+                    continue;
+                }
+
+                if ($previous['type'] === TokenType::IDENTIFIER && \substr($previous['value'], -1) === '.') {
+                    $previous['value'] .= $token;
+                    $previous['raw'] .= $token;
+                    $out[$k] = $previous;
+                    continue;
+                }
+            } elseif ($token === '-' || $token === '+') {
+                $k = \array_key_last($out);
+
+                if ($k === null) {
+                    throw new SQLFakeParseException("Parse error: unexpected {$token}");
+                }
+
+                $previous = $out[$k];
+
+                $previous_type = $previous['type'];
+
+                if ($previous_type !== TokenType::NUMERIC_CONSTANT
+                    && $previous_type !== TokenType::STRING_CONSTANT
+                    && $previous_type !== TokenType::NULL_CONSTANT
+                    && $previous_type !== TokenType::IDENTIFIER
+                    && $previous_type !== ')'
+                ) {
+                    if ($token === '-') {
+                        $op = 'UNARY_MINUS';
+                    } else {
+                        $op = 'UNARY_PLUS';
+                    }
+
+                    $out[] = ['type' => TokenType::OPERATOR, 'value' => $op, 'raw' => $token];
+                    continue;
                 }
             }
 

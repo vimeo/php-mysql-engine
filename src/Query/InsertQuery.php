@@ -37,7 +37,7 @@ final class InsertQuery
     public $values = [];
 
     /**
-     * @var array{0: int, 1: array<int, BinaryOperatorExpression>}
+     * @var array<int, BinaryOperatorExpression>
      */
     public ?array $setClause = null;
 

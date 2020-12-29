@@ -113,7 +113,7 @@ final class JoinProcessor
                     foreach ($right_dataset as $r) {
                         $left_row = $row;
                         $candidate_row = \array_merge($left_row, $r);
-                        if (!$filter || ExpressionEvaluator::evaluate($filter, $candidate_row, $conn)) {
+                        if (ExpressionEvaluator::evaluate($filter, $candidate_row, $conn)) {
                             $out[] = $candidate_row;
                         }
                     }

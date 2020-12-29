@@ -60,8 +60,7 @@ final class UpdateParser
         }
 
         $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
-        $table = ['name' => $token['value'], 'join_type' => JoinType::JOIN];
-        $query = new UpdateQuery($table, $this->sql);
+        $query = new UpdateQuery($token['value'], $this->sql);
         $this->pointer++;
 
         while ($this->pointer < $count) {

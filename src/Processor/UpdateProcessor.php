@@ -45,7 +45,7 @@ final class UpdateProcessor extends Processor
         \Vimeo\MysqlEngine\FakePdo $conn,
         \Vimeo\MysqlEngine\Query\UpdateQuery $stmt
     ) : array {
-        list($database, $table_name) = self::parseTableName($conn, $stmt->updateClause['name']);
+        list($database, $table_name) = self::parseTableName($conn, $stmt->tableName);
         return [$table_name, $database];
     }
 }

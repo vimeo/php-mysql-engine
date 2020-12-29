@@ -3,15 +3,9 @@ namespace Vimeo\MysqlEngine\Schema\Column;
 
 interface IntegerColumn
 {
-    /**
-     * @return $this
-     */
-    public function setDefault($mysql_default);
+    public function setDefault($mysql_default) : void;
 
-    /**
-     * @return $this
-     */
-    public function autoIncrement();
+    public function autoIncrement() : void;
 
     public function isAutoIncrement() : bool;
 }

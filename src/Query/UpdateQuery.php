@@ -6,19 +6,24 @@ use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
 
-final class UpdateQuery extends Query
+final class UpdateQuery
 {
+    public ?Expression $whereClause = null;
+
     /**
-     * @var array{
-     *      name:string,
-     *      subquery:SubqueryExpression,
-     *      join_type:JoinType::*,
-     *      join_operator:'ON'|'USING',
-     *      alias:string,
-     *      join_expression:null|Expression
-     * }
+     * @var array<int, array{expression: Expression, direction: string}>|null
      */
-    public $updateClause;
+    public ?array $orderBy = null;
+
+    /**
+     * @var array{rowcount:int, offset:int}|null
+     */
+    public ?array $limitClause = null;
+
+    /**
+     * @var string
+     */
+    public $tableName;
 
     /**
      * @var string
@@ -29,20 +34,10 @@ final class UpdateQuery extends Query
      * @var array<int, BinaryOperatorExpression>
      */
     public array $setClause = [];
-
-    /**
-     * @param array{
-     *        name:string,
-     *        subquery:SubqueryExpression,
-     *        join_type:JoinType::*,
-     *        join_operator:'ON'|'USING',
-     *        alias:string,
-     *        join_expression:null|Expression
-     * } $updateClause
-     */
-    public function __construct(array $updateClause, string $sql)
+    
+    public function __construct(string $tableName, string $sql)
     {
-        $this->updateClause = $updateClause;
+        $this->tableName = $tableName;
         $this->sql = $sql;
     }
 }

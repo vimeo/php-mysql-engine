@@ -206,7 +206,6 @@ final class SelectParser
                         case 'ALL':
                         case 'HIGH_PRIORITY':
                         case 'SQL_CALC_FOUND_ROWS':
-                        case 'HIGH_PRIORITY':
                         case 'SQL_SMALL_RESULT':
                         case 'SQL_BIG_RESULT':
                         case 'SQL_BUFFER_RESULT':

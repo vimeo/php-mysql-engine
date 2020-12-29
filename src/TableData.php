@@ -14,7 +14,7 @@ class TableData
     public $autoIncrementCursors = [];
 
     /**
-     * @var array<string, array<int, int>>
+     * @var array<string, array<int, true>>
      */
     public $autoIncrementIndexes = [];
 }
