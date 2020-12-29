@@ -1,7 +1,6 @@
 <?php
 namespace Vimeo\MysqlEngine\Query\Expression;
 
-
 use Vimeo\MysqlEngine\Parser\ExpressionParser;
 use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
@@ -91,7 +90,9 @@ final class CaseOperatorExpression extends Expression
                 break;
             case 'END':
                 if ($this->lastKeyword === 'THEN' && $this->then) {
-                    $this->else = new ConstantExpression(['type' => TokenType::NULL_CONSTANT, 'value' => 'null', 'raw' => 'null']);
+                    $this->else = new ConstantExpression(
+                        ['type' => TokenType::NULL_CONSTANT, 'value' => 'null', 'raw' => 'null']
+                    );
                 } else {
                     if ($this->lastKeyword !== 'ELSE' || !$this->else) {
                         throw new SQLFakeParseException("Unexpected END in CASE statement");
@@ -100,8 +101,8 @@ final class CaseOperatorExpression extends Expression
                 $this->lastKeyword = 'END';
                 $this->wellFormed = true;
                 break;
-        default:
-            throw new SQLFakeParseException("Unexpected keyword {$keyword} in CASE statement");
+            default:
+                throw new SQLFakeParseException("Unexpected keyword {$keyword} in CASE statement");
         }
     }
 

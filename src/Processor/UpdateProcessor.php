@@ -7,8 +7,7 @@ final class UpdateProcessor extends Processor
         \Vimeo\MysqlEngine\FakePdo $conn,
         \Vimeo\MysqlEngine\Query\UpdateQuery $stmt
     ) : int {
-        list($table_name, $database, $data) = self::processUpdateClause($conn, $stmt);
-        $database = $stmt->tables[0]->database ?: $conn->databaseName;
+        list($table_name, $database) = self::processUpdateClause($conn, $stmt);
         $data = $conn->getServer()->getTable($database, $table_name) ?: [];
 
         //Metrics::trackQuery(QueryType::UPDATE, $conn->getServer()->name, $table_name, $this->sql);
@@ -40,14 +39,13 @@ final class UpdateProcessor extends Processor
     }
 
     /**
-     * @return array{0:string, 1:string, 2:iterable<int, array<string, mixed>>}
+     * @return array{0:string, 1:string}
      */
     protected static function processUpdateClause(
         \Vimeo\MysqlEngine\FakePdo $conn,
         \Vimeo\MysqlEngine\Query\UpdateQuery $stmt
     ) : array {
         list($database, $table_name) = self::parseTableName($conn, $stmt->updateClause['name']);
-        $table = $conn->getServer()->getTable($database, $table_name) ?? [];
-        return [$table_name, $database, $table];
+        return [$table_name, $database];
     }
 }

@@ -125,7 +125,8 @@ final class SelectProcessor extends Processor
 
         if ($havingClause !== null) {
             return \array_filter(
-                $data, function ($row) use ($conn, $havingClause) {
+                $data,
+                function ($row) use ($conn, $havingClause) {
                     return (bool) Expression\Evaluator::evaluate($havingClause, $row, $conn);
                 }
             );
@@ -182,7 +183,7 @@ final class SelectProcessor extends Processor
                 $name = $expr->name;
 
                 if ($expr instanceof SubqueryExpression) {
-                    assert(\is_iterable($val), 'subquery results must be KeyedContainer');
+                    assert(\is_array($val), 'subquery results must be KeyedContainer');
                     if (\count($val) > 1) {
                         throw new SQLFakeRuntimeException("Subquery returned more than one row");
                     }
@@ -193,7 +194,7 @@ final class SelectProcessor extends Processor
                             if (\count($r) !== 1) {
                                 throw new SQLFakeRuntimeException("Subquery result should contain 1 column");
                             }
-                            $val = C\onlyx($r);
+                            $val = \reset($r);
                         }
                     }
                 }
@@ -279,7 +280,8 @@ final class SelectProcessor extends Processor
                     fn ($field) => !\array_key_exists($field, $remove_fields),
                     \ARRAY_FILTER_USE_KEY
                 );
-            }, $data
+            },
+            $data
         );
     }
 
@@ -292,12 +294,16 @@ final class SelectProcessor extends Processor
     {
         $row_encoder = fn($row) => \implode('-', \array_map(fn($col) => (string) $col, $row));
 
-        foreach ($stmt->union as $sub) {
+        foreach ($stmt->multiQueries as $sub) {
             $subquery_results = $sub['query']->execute($conn);
 
             switch ($sub['type']) {
                 case MultiOperand::UNION:
-                    $data = Vec\unique_by(\array_merge($subquery_results, $data), $row_encoder);
+                    $deduped_data = [];
+                    foreach (\array_merge($subquery_results, $data) as $row) {
+                        $deduped_data[$row_encoder($row)] = $row;
+                    }
+                    $data = array_values($deduped_data);
                     break;
 
                 case MultiOperand::UNION_ALL:
@@ -305,16 +311,23 @@ final class SelectProcessor extends Processor
                     break;
 
                 case MultiOperand::INTERSECT:
-                    $encoded_data = Keyset\map($data, $row_encoder);
+                    $encoded_data = \array_map($row_encoder, $data);
                     $data = \array_filter(
-                        $subquery_results, function ($row) use ($encoded_data, $row_encoder) {
+                        $subquery_results,
+                        function ($row) use ($encoded_data, $row_encoder) {
                             return \in_array($row_encoder($row), $encoded_data);
                         }
                     );
                     break;
 
                 case MultiOperand::EXCEPT:
-                    $data = Vec\diff_by($data, $subquery_results, $row_encoder);
+                    $encoded_subquery = \array_map($row_encoder, $subquery_results);
+                    $data = \array_filter(
+                        $data,
+                        function ($row) use ($encoded_subquery, $row_encoder) {
+                            return !\in_array($row_encoder($row), $encoded_subquery);
+                        }
+                    );
                     break;
             }
         }

@@ -1,7 +1,6 @@
 <?php
 namespace Vimeo\MysqlEngine\Query\Expression;
 
-
 use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 
@@ -45,7 +44,9 @@ final class ConstantExpression extends Expression
                 return null;
 
             default:
-                throw new SQLFakeRuntimeException("Attempted to assign invalid token type {$token['type']} to Constant Expression");
+                throw new SQLFakeRuntimeException(
+                    "Attempted to assign invalid token type {$token['type']} to Constant Expression"
+                );
         }
     }
 

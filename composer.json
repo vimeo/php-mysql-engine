@@ -24,6 +24,7 @@
     }
   },
   "require-dev": {
-    "vimeo/psalm": "^4.3"
+    "vimeo/psalm": "^4.3",
+    "squizlabs/php_codesniffer": "^3.5"
   }
 }

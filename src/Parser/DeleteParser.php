@@ -57,7 +57,9 @@ final class DeleteParser
 
             switch ($token['type']) {
                 case TokenType::CLAUSE:
-                    if (\array_key_exists($token['value'], self::CLAUSE_ORDER) && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]) {
+                    if (\array_key_exists($token['value'], self::CLAUSE_ORDER)
+                        && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
+                    ) {
                         throw new SQLFakeParseException("Unexpected clause {$token['value']}");
                     }
 
@@ -95,7 +97,9 @@ final class DeleteParser
                 case TokenType::RESERVED:
                 case TokenType::IDENTIFIER:
                     if ($this->currentClause === 'DELETE'
-                        && ($token['value'] === 'LOW_PRIORITY' || $token['value'] === 'QUICK' || $token['value'] === 'IGNORE')
+                        && ($token['value'] === 'LOW_PRIORITY'
+                            || $token['value'] === 'QUICK'
+                            || $token['value'] === 'IGNORE')
                     ) {
                         break;
                     }
@@ -129,4 +133,3 @@ final class DeleteParser
         return $query;
     }
 }
-

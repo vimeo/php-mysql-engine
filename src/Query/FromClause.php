@@ -9,7 +9,17 @@ use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
 final class FromClause
 {
     /**
-     * @var array<int, array{name:string, subquery:SubqueryExpression, join_type:JoinType::*, join_operator:'ON'|'USING', alias:string, join_expression:null|Expression}>
+     * @var array<
+     *      int,
+     *      array{
+     *          name:string,
+     *          subquery:SubqueryExpression,
+     *          join_type:JoinType::*,
+     *          join_operator:'ON'|'USING',
+     *          alias:string,
+     *          join_expression:null|Expression
+     *      }
+     *  >
      */
     public $tables = [];
     /**
@@ -18,7 +28,14 @@ final class FromClause
     public $mostRecentHasAlias = false;
 
     /**
-     * @param array{name:string, subquery:SubqueryExpression, join_type:JoinType::*, join_operator:'ON'|'USING', alias:string, join_expression:null|Expression} $table
+     * @param array{
+     *        name:string,
+     *        subquery:SubqueryExpression,
+     *        join_type:JoinType::*,
+     *        join_operator:'ON'|'USING',
+     *        alias:string,
+     *        join_expression:null|Expression
+     * } $table
      *
      * @return void
      */
@@ -41,4 +58,3 @@ final class FromClause
         $this->mostRecentHasAlias = true;
     }
 }
-

@@ -5,10 +5,7 @@ final class Server
 {
     public string $name;
 
-    /**
-     * @var array{mysql_version:string, is_vitess:bool, strict_sql_mode:bool, strict_schema_mode:bool, inherit_schema_from:string}|null
-     */
-    public ?array $config = null;
+    public ?ServerConfig $config = null;
 
     /**
      * @var array<string, Server>
@@ -36,9 +33,9 @@ final class Server
     private array $tableDefinitions = [];
 
     /**
-     * @param array{mysql_version:string, is_vitess:bool, strict_sql_mode:bool, strict_schema_mode:bool, inherit_schema_from:string}|null $config
+     * @param ?ServerConfig|null $config
      */
-    public function __construct(string $name, ?array $config = null)
+    public function __construct(string $name, ?ServerConfig $config = null)
     {
         $this->name = $name;
         $this->config = $config;
@@ -58,9 +55,9 @@ final class Server
     }
 
     /**
-     * @param array{mysql_version:string, is_vitess:bool, strict_sql_mode:bool, strict_schema_mode:bool, inherit_schema_from:string} $config
+     * @param ServerConfig $config
      */
-    public function setConfig(array $config) : void
+    public function setConfig(ServerConfig $config) : void
     {
         $this->config = $config;
     }
@@ -148,8 +145,11 @@ final class Server
         $this->databases = [];
     }
 
-    public function addTableDefinition(string $database, string $table, Schema\TableDefinition $table_definition) : void
-    {
+    public function addTableDefinition(
+        string $database,
+        string $table,
+        Schema\TableDefinition $table_definition
+    ) : void {
         $this->tableDefinitions[$database][$table] = $table_definition;
     }
 
@@ -228,7 +228,7 @@ final class Server
         string $table_name,
         string $column_name,
         int $value
-    ) : int {
+    ) : void {
         $table_definition = $this->getTableDefinition($database_name, $table_name);
         $table = $this->databases[$database_name][$table_name] ?? null;
 
@@ -240,7 +240,6 @@ final class Server
             $table = $this->databases[$database_name][$table_name] = new TableData();
         }
 
-        return $table->autoIncrementIndexes[$column_name][$value] = true;
+        $table->autoIncrementIndexes[$column_name][$value] = true;
     }
 }
-

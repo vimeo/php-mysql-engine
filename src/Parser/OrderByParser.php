@@ -25,7 +25,7 @@ final class OrderByParser
 
     /**
      * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
-     * @param array<int, Expression>|null $selectExpressions
+     * @param array<int, Expression>|null                                    $selectExpressions
      */
     public function __construct(int $pointer, array $tokens, ?array $selectExpressions = null)
     {
@@ -35,7 +35,7 @@ final class OrderByParser
     }
 
     /**
-     * @return array{0:int, 1:array<int, array{expression:Expression, direction:'ASC'|'DESC'}>}
+     * @return array{int, array<int, array{expression:Expression, direction:'ASC'|'DESC'}>}
      */
     public function parse()
     {
@@ -74,4 +74,3 @@ final class OrderByParser
         return [$this->pointer, $expressions];
     }
 }
-

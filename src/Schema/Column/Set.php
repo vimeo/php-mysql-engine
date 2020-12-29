@@ -5,7 +5,9 @@ class Set extends \Vimeo\MysqlEngine\Schema\Column implements Defaultable
 {
     use MySqlDefaultTrait;
 
-    /** @var string[] */
+    /**
+     * @var string[]
+     */
     protected $options = [];
 
     /**

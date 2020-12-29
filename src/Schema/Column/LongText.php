@@ -7,7 +7,9 @@ class LongText extends CharacterColumn implements StringColumn
 {
     use TextTrait;
 
-    /** @var string */
+    /**
+     * @var string
+     */
     protected $type = 'longtext';
 
     public function __construct(?string $character_set = null, ?string $collation = null)

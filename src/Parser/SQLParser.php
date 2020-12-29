@@ -9,22 +9,124 @@ final class SQLParser
     /**
      * @var array<string, string>
      */
-    const CLAUSES = ['SELECT' => 'SELECT', 'FROM' => 'FROM', 'WHERE' => 'WHERE', 'GROUP' => 'GROUP', 'HAVING' => 'HAVING', 'LIMIT' => 'LIMIT', 'ORDER' => 'ORDER', 'UPDATE' => 'UPDATE', 'SET' => 'SET', 'DELETE' => 'DELETE', 'UNION' => 'UNION', 'EXCEPT' => 'EXCEPT', 'INTERSECT' => 'INTERSECT', 'INSERT' => 'INSERT', 'VALUES' => 'VALUES'];
+    const CLAUSES = [
+        'SELECT' => true,
+        'FROM' => true,
+        'WHERE' => true,
+        'GROUP' => true,
+        'HAVING' => true,
+        'LIMIT' => true,
+        'ORDER' => true,
+        'UPDATE' => true,
+        'SET' => true,
+        'DELETE' => true,
+        'UNION' => true,
+        'EXCEPT' => true,
+        'INTERSECT' => true,
+        'INSERT' => true,
+        'VALUES' => true
+    ];
 
     /**
      * @var array<string, string>
      */
-    const SEPARATORS = [')' => ')', ',' => ',', ';' => ';'];
+    const SEPARATORS = [
+        ')' => true,
+        ',' => true,
+        ';' => true
+    ];
 
     /**
      * @var array<string, string>
      */
-    const OPERATORS = ['INTERVAL' => 'INTERVAL', 'COLLATE' => 'COLLATE', '!' => '!', '~' => '~', '^' => '^', '*' => '*', '/' => '/', 'DIV' => 'DIV', '%' => '%', 'MOD' => 'MOD', '-' => '-', '+' => '+', '<<' => '<<', '>>' => '>>', '&' => '&', '|' => '|', '=' => '=', '<=>' => '<=>', '>=' => '>=', '>' => '>', '<=' => '<=', '<' => '<', '<>' => '<>', '!=' => '!=', 'IS' => 'IS', 'LIKE' => 'LIKE', 'REGEXP' => 'REGEXP', 'IN' => 'IN', 'EXISTS' => 'EXISTS', 'BETWEEN' => 'BETWEEN', 'CASE' => 'CASE', 'WHEN' => 'WHEN', 'THEN' => 'THEN', 'ELSE' => 'ELSE', 'END' => 'END', 'NOT' => 'NOT', 'AND' => 'AND', '&&' => '&&', 'XOR' => 'XOR', 'OR' => 'OR', '||' => '||'];
+    const OPERATORS = [
+        'INTERVAL' => true,
+        'COLLATE' => true,
+        '!' => true,
+        '~' => true,
+        '^' => true,
+        '*' => true,
+        '/' => true,
+        'DIV' => true,
+        '%' => true,
+        'MOD' => true,
+        '-' => true,
+        '+' => true,
+        '<<' => true,
+        '>>' => true,
+        '&' => true,
+        '|' => true,
+        '=' => true,
+        '<=>' => true,
+        '>=' => true,
+        '>' => true,
+        '<=' => true,
+        '<' => true,
+        '<>' => true,
+        '!=' => true,
+        'IS' => true,
+        'LIKE' => true,
+        'REGEXP' => true,
+        'IN' => true,
+        'EXISTS' => true,
+        'BETWEEN' => true,
+        'CASE' => true,
+        'WHEN' => true,
+        'THEN' => true,
+        'ELSE' => true,
+        'END' => true,
+        'NOT' => true,
+        'AND' => true,
+        '&&' => true,
+        'XOR' => true,
+        'OR' => true,
+        '||' => true
+    ];
 
     /**
      * @var array<string, string>
      */
-    const RESERVED_WORDS = ['ASC' => 'ASC', 'DESC' => 'DESC', 'AS' => 'AS', 'WITH' => 'WITH', 'ON' => 'ON', 'OFFSET' => 'OFFSET', 'BY' => 'BY', 'INTO' => 'INTO', 'ALL' => 'ALL', 'DISTINCT' => 'DISTINCT', 'DISTINCTROW' => 'DISTINCTROW', 'SQL_CALC_FOUND_ROWS' => 'SQL_CALC_FOUND_ROWS', 'HIGH_PRIORITY' => 'HIGH_PRIORITY', 'SQL_SMALL_RESULT' => 'SQL_SMALL_RESULT', 'SQL_BIG_RESULT' => 'SQL_BIG_RESULT', 'SQL_BUFFER_RESULT' => 'SQL_BUFFER_RESULT', 'SQL_CACHE' => 'SQL_CACHE', 'SQL_NO_CACHE' => 'SQL_NO_CACHE', 'JOIN' => 'JOIN', 'INNER' => 'INNER', 'OUTER' => 'OUTER', 'LEFT' => 'LEFT', 'RIGHT' => 'RIGHT', 'STRAIGHT_JOIN' => 'STRAIGHT_JOIN', 'NATURAL' => 'NATURAL', 'USING' => 'USING', 'CROSS' => 'CROSS', 'USE' => 'USE', 'IGNORE' => 'IGNORE', 'FORCE' => 'FORCE', 'PARTITION' => 'PARTITION', 'ROLLUP' => 'ROLLUP', 'INDEX' => 'INDEX', 'KEY' => 'KEY', 'FOR' => 'FOR', 'LOCK' => 'LOCK', 'DUPLICATE' => 'DUPLICATE', 'DELAYED' => 'DELAYED', 'LOW_PRIORITY' => 'LOW_PRIORITY'];
+    const RESERVED_WORDS = [
+        'ASC' => true,
+        'DESC' => true,
+        'AS' => true,
+        'WITH' => true,
+        'ON' => true,
+        'OFFSET' => true,
+        'BY' => true,
+        'INTO' => true,
+        'ALL' => true,
+        'DISTINCT' => true,
+        'DISTINCTROW' => true,
+        'SQL_CALC_FOUND_ROWS' => true,
+        'HIGH_PRIORITY' => true,
+        'SQL_SMALL_RESULT' => true,
+        'SQL_BIG_RESULT' => true,
+        'SQL_BUFFER_RESULT' => true,
+        'SQL_CACHE' => true,
+        'SQL_NO_CACHE' => true,
+        'JOIN' => true,
+        'INNER' => true,
+        'OUTER' => true,
+        'LEFT' => true,
+        'RIGHT' => true,
+        'STRAIGHT_JOIN' => true,
+        'NATURAL' => true,
+        'USING' => true,
+        'CROSS' => true,
+        'USE' => true,
+        'IGNORE' => true,
+        'FORCE' => true,
+        'PARTITION' => true,
+        'ROLLUP' => true,
+        'INDEX' => true,
+        'KEY' => true,
+        'FOR' => true,
+        'LOCK' => true,
+        'DUPLICATE' => true,
+        'DELAYED' => true,
+        'LOW_PRIORITY' => true
+    ];
 
     /**
      * @return Query
@@ -61,7 +163,7 @@ final class SQLParser
                     $next = $tokens[$pointer] ?? null;
                     $val = $next ? $next['value'] : 'null';
                     while ($next !== null
-                        && ($next['value'] === 'UNION' || $next['value'] === 'INTERSECT' || $next['value'] === 'EXCEPT')
+                    && ($next['value'] === 'UNION' || $next['value'] === 'INTERSECT' || $next['value'] === 'EXCEPT')
                     ) {
                         $type = $next['value'];
                         if ($next['value'] === 'UNION') {
@@ -240,7 +342,9 @@ final class SQLParser
                 $out[] = ['type' => TokenType::NUMERIC_CONSTANT, 'value' => '0', 'raw' => $token];
             } elseif (\array_key_exists($token_upper, self::CLAUSES)) {
                 $out[] = ['type' => TokenType::CLAUSE, 'value' => $token_upper, 'raw' => $token];
-            } elseif (\array_key_exists($token_upper, self::OPERATORS) && !self::isFunctionVersionOfOperator($token_upper, $i, $count, $tokens)) {
+            } elseif (\array_key_exists($token_upper, self::OPERATORS)
+                && !self::isFunctionVersionOfOperator($token_upper, $i, $count, $tokens)
+            ) {
                 $out[] = ['type' => TokenType::OPERATOR, 'value' => $token_upper, 'raw' => $token];
             } elseif (\array_key_exists($token_upper, self::RESERVED_WORDS)) {
                 $out[] = ['type' => TokenType::RESERVED, 'value' => $token_upper, 'raw' => $token];
@@ -345,7 +449,9 @@ final class SQLParser
                             $pointer++;
                             $next = $tokens[$pointer] ?? null;
                         } else {
-                            throw new SQLFakeParseException("Expected JOIN, ORDER BY, or GROUP BY after FOR in index hint");
+                            throw new SQLFakeParseException(
+                                "Expected JOIN, ORDER BY, or GROUP BY after FOR in index hint"
+                            );
                         }
                     }
                 }
@@ -418,4 +524,3 @@ final class SQLParser
         return $pointer;
     }
 }
-

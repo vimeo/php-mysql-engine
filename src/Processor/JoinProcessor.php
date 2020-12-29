@@ -13,10 +13,10 @@ use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
 final class JoinProcessor
 {
     /**
-     * @param array<int, array<string, mixed>>   $left_dataset
-     * @param array<int, array<string, mixed>>  $right_dataset
-     * @param JoinType::*   $join_type
-     * @param 'USING'|'OM'|null  $_ref_type
+     * @param array<int, array<string, mixed>> $left_dataset
+     * @param array<int, array<string, mixed>> $right_dataset
+     * @param JoinType::*                      $join_type
+     * @param 'USING'|'OM'|null                $_ref_type
      *
      * @return array<int, array<string, mixed>>
      */
@@ -153,7 +153,9 @@ final class JoinProcessor
         }
 
         if ($filter === null) {
-            throw new SQLFakeParseException("NATURAL join keyword was used with tables that do not share any column names");
+            throw new SQLFakeParseException(
+                "NATURAL join keyword was used with tables that do not share any column names"
+            );
         }
 
         return $filter;
@@ -167,8 +169,12 @@ final class JoinProcessor
         string $left_column,
         string $right_column
     ) {
-        $left = new ColumnExpression(['type' => TokenType::IDENTIFIER, 'value' => $left_column, 'raw' => $left_column]);
-        $right = new ColumnExpression(['type' => TokenType::IDENTIFIER, 'value' => $right_column, 'raw' => $right_column]);
+        $left = new ColumnExpression(
+            ['type' => TokenType::IDENTIFIER, 'value' => $left_column, 'raw' => $left_column]
+        );
+        $right = new ColumnExpression(
+            ['type' => TokenType::IDENTIFIER, 'value' => $right_column, 'raw' => $right_column]
+        );
         $expr = new BinaryOperatorExpression($left, false, '=', $right);
 
         if ($filter !== null) {

@@ -2,14 +2,17 @@
 namespace Vimeo\MysqlEngine\Parser;
 
 use Vimeo\MysqlEngine\TokenType;
+use Vimeo\MysqlEngine\Query\CreateColumn;
+use Vimeo\MysqlEngine\Query\CreateIndex;
+use Vimeo\MysqlEngine\Query\CreateQuery;
 
 
 final class CreateTableParser
 {
     /**
-     * @return array<string, array{name:string, fields:array<int, array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string}>, sql:string, indexes:array<int, array{name:string, type:string, cols:array<int, array{name:string, length:int, direction:string}>, mode:string, parser:string, more:mixed, key_block_size:string}>, props:array<string, string>}>
+     * @return array<string, CreateQuery>
      */
-    public function parse(string $sql)
+    public function parse(string $sql) : array
     {
         $this->lex($sql);
         return $this->walk($this->tokens, $sql, $this->sourceMap);
@@ -44,12 +47,12 @@ final class CreateTableParser
         $len = \strlen($sql);
         $source_map = [];
         while ($pos < $len) {
-            $match = Regex\first_match($sql, "!s+!A", $pos);
-            if ($match !== null) {
-                $pos += \strlen($match[0]);
+            \preg_match("!s+!A", $sql, $matches, 0, $pos);
+            if ($matches) {
+                $pos += \strlen($matches[0]);
                 continue;
             }
-            if (Regex\matches($sql, "!--!A", $pos)) {
+            if (\preg_match("!--!A", $sql, $matches, 0, $pos)) {
                 $p2 = \strpos($sql, "\n", $pos);
                 if ($p2 === false) {
                     $pos = $len;
@@ -58,7 +61,7 @@ final class CreateTableParser
                 }
                 continue;
             }
-            if (Regex\matches($sql, "!\\*!A", $pos)) {
+            if (\preg_match("!\\*!A", $sql, $matches, 0, $pos)) {
                 $p2 = \strpos($sql, "*/", $pos);
                 if ($p2 === false) {
                     $pos = $len;
@@ -67,10 +70,10 @@ final class CreateTableParser
                 }
                 continue;
             }
-            $match = Regex\first_match($sql, "![[:alpha:]][[:alnum:]_]*!A", $pos);
-            if ($match !== null) {
-                $source_map[] = [$pos, \strlen($match[0] ?? '')];
-                $pos += \strlen($match[0]);
+            \preg_match("![[:alpha:]][[:alnum:]_]*!A", $sql, $matches, 0, $pos);
+            if ($matches) {
+                $source_map[] = [$pos, \strlen($matches[0])];
+                $pos += \strlen($matches[0]);
                 continue;
             }
             if (\substr($sql, $pos, 1) === '`') {
@@ -83,10 +86,10 @@ final class CreateTableParser
                 }
                 continue;
             }
-            $match = Regex\first_match($sql, "!(d+.?d*|.d+)!A", $pos);
-            if ($match !== null) {
-                $source_map[] = [$pos, \strlen($match[0])];
-                $pos += \strlen($match[0]);
+            $match = \preg_match("!(d+.?d*|.d+)!A", $sql, $matches, 0, $pos);
+            if ($matches) {
+                $source_map[] = [$pos, \strlen($matches[0])];
+                $pos += \strlen($matches[0]);
                 continue;
             }
             if ($sql[$pos] === "'" || $sql[$pos] === '"') {
@@ -114,10 +117,10 @@ final class CreateTableParser
     }
 
     /**
-     * @param list<string> $tokens
-     * @param array<int, array{0:int, 1:int}> $source_map
+     * @param list<string>                $tokens
+     * @param array<int, array{int, int}> $source_map
      *
-     * @return array<string, array{name:string, fields:array<int, array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string}>, sql:string, indexes:array<int, array{name:string, type:string, cols:array<int, array{name:string, length:int, direction:string}>, mode:string, parser:string, more:mixed, key_block_size:string}>, props:array<string, string>}>
+     * @return array<string, CreateQuery>
      */
     private function walk(array $tokens, string $sql, array $source_map)
     {
@@ -130,7 +133,11 @@ final class CreateTableParser
                 if (\count($temp)) {
                     $statements[] = [
                         "tuples" => $temp,
-                        "sql" => \substr($sql, $source_map[$start][0], $source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1])
+                        "sql" => \substr(
+                            $sql,
+                            $source_map[$start][0],
+                            $source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1]
+                        )
                     ];
                 }
                 $temp = [];
@@ -143,7 +150,11 @@ final class CreateTableParser
         if (\count($temp)) {
             $statements[] = [
                 "tuples" => $temp,
-                "sql" => \substr($sql, $source_map[$start][0], $source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1])
+                "sql" => \substr(
+                    $sql,
+                    $source_map[$start][0],
+                    $source_map[$i][0] - $source_map[$start][0] + $source_map[$i][1]
+                )
             ];
         }
 
@@ -153,13 +164,13 @@ final class CreateTableParser
             if (\strtoupper($s[0]) === 'CREATE TABLE') {
                 \array_shift($s);
                 $table = $this->parseCreateTable($s, $stmt['sql']);
-                $tables[$table['name']] = $table;
+                $tables[$table->name] = $table;
             }
             if (\strtoupper($s[0]) === 'CREATE TEMPORARY TABLE') {
                 \array_shift($s);
                 $table = $this->parseCreateTable($s, $stmt['sql']);
-                $table['props']['temp'] = '1';
-                $tables[$table['name']] = $table;
+                $table->props['temp'] = '1';
+                $tables[$table->name] = $table;
             }
         }
 
@@ -168,33 +179,48 @@ final class CreateTableParser
 
     /**
      * @param list<string> $tokens
-     *
-     * @return array{name:string, fields:array<int, array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string}>, sql:string, indexes:array<int, array{name:string, type:string, cols:array<int, array{name:string, length:int, direction:string}>, mode:string, parser:string, more:mixed, key_block_size:string}>, props:array<string, string>}
      */
-    private function parseCreateTable(array $tokens, string $sql)
+    private function parseCreateTable(array $tokens, string $sql) : CreateQuery
     {
         if ($tokens[0] === 'IF NOT EXISTS') {
             \array_shift($tokens);
         }
+
         $t = \array_shift($tokens);
         $name = $this->decodeIdentifier($t);
+
         if ($this->nextTokenIs($tokens, 'LIKE')) {
             \array_shift($tokens);
             $t = \array_shift($tokens);
             $old_name = $this->decodeIdentifier($t);
-            return ['name' => $name, 'sql' => $sql, 'props' => ['like' => $old_name], 'fields' => [], 'indexes' => []];
+            $q = new CreateQuery();
+            $q->name = $name;
+            $q->sql = $sql;
+            $q->props = ['like' => $old_name];
+
+            return $q;
         }
+
         $fields = [];
         $indexes = [];
+
         if ($this->nextTokenIs($tokens, '(')) {
             \array_shift($tokens);
             $ret = $this->parseCreateDefinition($tokens);
             $fields = $ret['fields'];
             $indexes = $ret['indexes'];
         }
+
         $props = $this->parseTableProps($tokens);
-        $table = ['name' => $name, 'fields' => $fields, 'indexes' => $indexes, 'props' => $props, 'sql' => $sql];
-        return $table;
+
+        $q = new CreateQuery();
+        $q->name = $name;
+        $q->sql = $sql;
+        $q->fields = $fields;
+        $q->indexes = $indexes;
+        $q->props = $props;
+
+        return $q;
     }
 
     /**
@@ -210,7 +236,7 @@ final class CreateTableParser
     /**
      * @param list<string> $tokens
      *
-     * @return array{fields:array<int, array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string}>, indexes:array<int, array{name:string, type:string, cols:array<int, array{name:string, length:int, direction:string}>, mode:string, parser:string, more:mixed, key_block_size:string}>}
+     * @return array{fields: array<int, CreateColumn>, indexes: array<int, CreateIndex>}
      */
     private function parseCreateDefinition(array &$tokens)
     {
@@ -228,8 +254,8 @@ final class CreateTableParser
 
     /**
      * @param list<string> $tokens
-     * @param array<int, array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string}> $fields
-     * @param array<int, array{name:string, type:string, cols:array<int, array{name:string, length:int, direction:string}>, mode:string, parser:string, more:mixed, key_block_size:string}> $indexes
+     * @param array<int, CreateColumn> $fields
+     * @param array<int, CreateIndex> $indexes
      *
      * @return void
      */
@@ -260,32 +286,34 @@ final class CreateTableParser
             case 'UNIQUE':
             case 'UNIQUE INDEX':
             case 'UNIQUE KEY':
-                $index = ['type' => 'INDEX', 'cols' => []];
+                $index = new CreateIndex();
+                $index->type = 'INDEX';
                 if ($tokens[0] === 'UNIQUE' || $tokens[0] === 'UNIQUE INDEX' || $tokens[0] === 'UNIQUE KEY') {
-                    $index['type'] = 'UNIQUE';
+                    $index->type = 'UNIQUE';
                 }
                 \array_shift($tokens);
                 if ($tokens[0] !== '(' && $tokens[0] !== 'USING BTREE' && $tokens[0] !== 'USING HASH') {
                     $t = \array_shift($tokens);
-                    $index['name'] = $this->decodeIdentifier($t);
+                    $index->name = $this->decodeIdentifier($t);
                 }
                 $this->parseIndexType($tokens, $index);
                 $this->parseIndexColumns($tokens, $index);
                 $this->parseIndexOptions($tokens, $index);
                 if (\count($tokens)) {
-                    $index['more'] = $tokens;
+                    $index->more = $tokens;
                 }
                 $indexes[] = $index;
                 return;
 
             case 'PRIMARY KEY':
-                $index = ['type' => 'PRIMARY', 'cols' => []];
+                $index = new CreateIndex();
+                $index->type = 'PRIMARY';
                 \array_shift($tokens);
                 $this->parseIndexType($tokens, $index);
                 $this->parseIndexColumns($tokens, $index);
                 $this->parseIndexOptions($tokens, $index);
                 if (\count($tokens)) {
-                    $index['more'] = $tokens;
+                    $index->more = $tokens;
                 }
                 $indexes[] = $index;
                 return;
@@ -296,22 +324,23 @@ final class CreateTableParser
             case 'SPATIAL':
             case 'SPATIAL INDEX':
             case 'SPATIAL KEY':
-                $index = ['type' => 'FULLTEXT', 'cols' => []];
+                $index = new CreateIndex();
+                $index->type = 'FULLTEXT';
 
                 if ($tokens[0] === 'SPATIAL' || $tokens[0] === 'SPATIAL INDEX' || $tokens[0] === 'SPATIAL KEY') {
-                    $index['type'] = 'SPATIAL';
+                    $index->type = 'SPATIAL';
                 }
 
                 \array_shift($tokens);
                 if ($tokens[0] !== '(') {
                     $t = \array_shift($tokens);
-                    $index['name'] = $this->decodeIdentifier($t);
+                    $index->name = $this->decodeIdentifier($t);
                 }
                 $this->parseIndexType($tokens, $index);
                 $this->parseIndexColumns($tokens, $index);
                 $this->parseIndexOptions($tokens, $index);
                 if (\count($tokens)) {
-                    $index['more'] = $tokens;
+                    $index->more = $tokens;
                 }
                 $indexes[] = $index;
                 return;
@@ -367,15 +396,15 @@ final class CreateTableParser
 
     /**
      * @param list<string> $tokens
-     *
-     * @return array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string}
      */
-    private function parseField(array &$tokens)
+    private function parseField(array &$tokens) : CreateColumn
     {
         $t = \array_shift($tokens);
         $t2 = \array_shift($tokens);
-        $f = ['name' => $this->decodeIdentifier($t), 'type' => \strtoupper($t2)];
-        switch ($f['type']) {
+        $f = new CreateColumn();
+        $f->name = $this->decodeIdentifier($t);
+        $f->type = \strtoupper($t2);
+        switch ($f->type) {
             case 'DATE':
             case 'TIME':
             case 'TIMESTAMP':
@@ -436,35 +465,35 @@ final class CreateTableParser
                 break;
             case 'ENUM':
             case 'SET':
-                $f['values'] = $this->parseValueList($tokens);
+                $f->values = $this->parseValueList($tokens);
                 $this->parseFieldCharset($tokens, $f);
                 $this->parseFieldCollate($tokens, $f);
                 break;
             default:
-                die("Unsupported field type: {$f['type']}");
+                die("Unsupported field type: {$f->type}");
         }
         if ($tokens && \strtoupper($tokens[0]) === 'NOT NULL') {
-            $f['null'] = false;
+            $f->null = false;
             \array_shift($tokens);
         }
         if (($tokens) && \strtoupper($tokens[0]) === 'NULL') {
-            $f['null'] = true;
+            $f->null = true;
             \array_shift($tokens);
         }
         if (($tokens) && \strtoupper($tokens[0]) === 'DEFAULT') {
-            $f['default'] = $this->decodeValue($tokens[1]);
-            if ($f['default'] === 'NULL') {
-                $f['null'] = true;
+            $f->default = $this->decodeValue($tokens[1]);
+            if ($f->default === 'NULL') {
+                $f->null = true;
             }
             \array_shift($tokens);
             \array_shift($tokens);
         }
         if ($tokens && \strtoupper($tokens[0]) === 'AUTO_INCREMENT') {
-            $f['auto_increment'] = true;
+            $f->auto_increment = true;
             \array_shift($tokens);
         }
         if (\count($tokens)) {
-            $f['more'] = $tokens;
+            $f->more = $tokens;
         }
         return $f;
     }
@@ -476,7 +505,13 @@ final class CreateTableParser
      */
     private function parseTableProps(array &$tokens)
     {
-        $alt_names = ['CHARACTER SET' => 'CHARSET', 'DEFAULT CHARACTER SET' => 'CHARSET', 'DEFAULT CHARSET' => 'CHARSET', 'DEFAULT COLLATE' => 'COLLATE'];
+        $alt_names = [
+            'CHARACTER SET' => 'CHARSET',
+            'DEFAULT CHARACTER SET' => 'CHARSET',
+            'DEFAULT CHARSET' => 'CHARSET',
+            'DEFAULT COLLATE' => 'COLLATE'
+        ];
+
         $props = [];
         $stop = false;
         while (\count($tokens)) {
@@ -542,8 +577,30 @@ final class CreateTableParser
      */
     private function extractTokens(string $sql, array $source_map)
     {
-        $lists = ['FULLTEXT INDEX' => 'FULLTEXT INDEX', 'FULLTEXT KEY' => 'FULLTEXT KEY', 'SPATIAL INDEX' => 'SPATIAL INDEX', 'SPATIAL KEY' => 'SPATIAL KEY', 'FOREIGN KEY' => 'FOREIGN KEY', 'USING BTREE' => 'USING BTREE', 'USING HASH' => 'USING HASH', 'PRIMARY KEY' => 'PRIMARY KEY', 'UNIQUE INDEX' => 'UNIQUE INDEX', 'UNIQUE KEY' => 'UNIQUE KEY', 'CREATE TABLE' => 'CREATE TABLE', 'CREATE TEMPORARY TABLE' => 'CREATE TEMPORARY TABLE', 'DATA DIRECTORY' => 'DATA DIRECTORY', 'INDEX DIRECTORY' => 'INDEX DIRECTORY', 'DEFAULT CHARACTER SET' => 'DEFAULT CHARACTER SET', 'CHARACTER SET' => 'CHARACTER SET', 'DEFAULT CHARSET' => 'DEFAULT CHARSET', 'DEFAULT COLLATE' => 'DEFAULT COLLATE', 'IF NOT EXISTS' => 'IF NOT EXISTS', 'NOT NULL' => 'NOT NULL', 'WITH PARSER' => 'WITH PARSER'];
-        $singles = ['NULL' => 'NULL', 'CONSTRAINT' => 'CONSTRAINT', 'INDEX' => 'INDEX', 'KEY' => 'KEY', 'UNIQUE' => 'UNIQUE'];
+        $lists = [
+            'FULLTEXT INDEX',
+            'FULLTEXT KEY',
+            'SPATIAL INDEX',
+            'SPATIAL KEY',
+            'FOREIGN KEY',
+            'USING BTREE',
+            'USING HASH',
+            'PRIMARY KEY',
+            'UNIQUE INDEX',
+            'UNIQUE KEY',
+            'CREATE TABLE',
+            'CREATE TEMPORARY TABLE',
+            'DATA DIRECTORY',
+            'INDEX DIRECTORY',
+            'DEFAULT CHARACTER SET',
+            'CHARACTER SET',
+            'DEFAULT CHARSET',
+            'DEFAULT COLLATE',
+            'IF NOT EXISTS',
+            'NOT NULL',
+            'WITH PARSER'
+        ];
+        
         $maps = [];
         foreach ($lists as $l) {
             $a = \explode(' ', $l);
@@ -552,10 +609,7 @@ final class CreateTableParser
             }
             $maps[$a[0]][] = $a;
         }
-        $smap = [];
-        foreach ($singles as $s) {
-            $smap[$s] = 1;
-        }
+        
         $out = [];
         $out_map = [];
         $i = 0;
@@ -577,7 +631,10 @@ final class CreateTableParser
                     if (!$fail) {
                         $out[] = \implode(' ', $list);
                         $j = $i + \count($list) - 1;
-                        $out_map[] = [$source_map[$i][0], $source_map[$j][0] - $source_map[$i][0] + $source_map[$j][1]];
+                        $out_map[] = [
+                            $source_map[$i][0],
+                            $source_map[$j][0] - $source_map[$i][0] + $source_map[$j][1]
+                        ];
                         $i = $j + 1;
                         $found = true;
                         break;
@@ -587,7 +644,12 @@ final class CreateTableParser
                     continue;
                 }
             }
-            if (\array_key_exists($tokenUpper, $smap)) {
+            if ($tokenUpper === 'NULL'
+                || $tokenUpper === 'CONSTRAINT'
+                || $tokenUpper === 'INDEX'
+                || $tokenUpper === 'KEY'
+                || $tokenUpper === 'UNIQUE'
+            ) {
                 $out[] = $tokenUpper;
                 $out_map[] = $source_map[$i];
                 $i++;
@@ -603,37 +665,39 @@ final class CreateTableParser
 
     /**
      * @param list<string> $tokens
-     * @param array{name:string, type:string, cols:array<int, array{name:string, length:int, direction:string}>, mode:string, parser:string, more:mixed, key_block_size:string} $index
+     * @param CreateIndex $index
      *
      * @return void
      */
-    private function parseIndexType(array &$tokens, array &$index)
+    private function parseIndexType(array &$tokens, CreateIndex $index)
     {
         if (($tokens) && $tokens[0] === 'USING BTREE') {
-            $index['mode'] = 'btree';
+            $index->mode = 'btree';
             \array_shift($tokens);
         }
+
         if (($tokens) && $tokens[0] === 'USING HASH') {
-            $index['mode'] = 'hash';
+            $index->mode = 'hash';
             \array_shift($tokens);
         }
     }
 
     /**
      * @param list<string> $tokens
-     * @param array{name:string, type:string, cols:array<int, array{name:string, length:int, direction:string}>, mode:string, parser:string, more:mixed, key_block_size:string} $index
      *
      * @return void
      */
-    private function parseIndexColumns(array &$tokens, array &$index)
+    private function parseIndexColumns(array &$tokens, CreateIndex $index)
     {
         if ($tokens[0] !== '(') {
             return;
         }
+
         \array_shift($tokens);
+
         while (true) {
             $t = \array_shift($tokens);
-            $col = ['name' => $this->decodeIdentifier($t)];
+            $col = ['name' => $this->decodeIdentifier($t), 'cols' => []];
             if ($tokens[0] === '(' && $tokens[2] === ')') {
                 $col['length'] = (int) $tokens[1];
                 $tokens = \array_slice($tokens, 3);
@@ -647,7 +711,7 @@ final class CreateTableParser
                     \array_shift($tokens);
                 }
             }
-            $index['cols'][] = $col;
+            $index->cols[] = $col;
             if ($tokens[0] === ')') {
                 \array_shift($tokens);
                 return;
@@ -662,94 +726,92 @@ final class CreateTableParser
 
     /**
      * @param list<string> $tokens
-     * @param array{name:string, type:string, cols:array<int, array{name:string, length:int, direction:string}>, mode:string, parser:string, more:mixed, key_block_size:string} $index
+     * @param CreateIndex $index
      *
      * @return void
      */
-    private function parseIndexOptions(array $tokens, array $index)
+    private function parseIndexOptions(array $tokens, CreateIndex $index)
     {
         if (($tokens) && $tokens[0] === 'KEY_BLOCK_SIZE') {
             \array_shift($tokens);
             if ($tokens[0] === '=') {
                 \array_shift($tokens);
             }
-            $index['key_block_size'] = $tokens[0];
+            $index->key_block_size = $tokens[0];
             \array_shift($tokens);
         }
+
         $this->parseIndexType($tokens, $index);
+
         if (($tokens) && $tokens[0] === 'WITH PARSER') {
-            $index['parser'] = $tokens[1];
-            \array_shift($tokens); \array_shift($tokens);
+            $index->parser = $tokens[1];
+            \array_shift($tokens);
+            \array_shift($tokens);
         }
     }
 
     /**
      * @param list<string> $tokens
-     * @param array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string} $f
      *
      * @return void
      */
-    private function parseFieldLength(array $tokens, array $f)
+    private function parseFieldLength(array $tokens, CreateColumn $f)
     {
         if (($tokens) && $tokens[0] === '(' && $tokens[2] === ')') {
-            $f['length'] = $tokens[1];
+            $f->length = (int) $tokens[1];
             $tokens = \array_slice($tokens, 3);
         }
     }
 
     /**
      * @param list<string> $tokens
-     * @param array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string} $f
      *
      * @return void
      */
-    private function parseFieldLengthDecimals(array $tokens, array $f)
+    private function parseFieldLengthDecimals(array $tokens, CreateColumn $f)
     {
         if (($tokens) && $tokens[0] === '(' && $tokens[2] === ',' && $tokens[4] === ')') {
-            $f['length'] = $tokens[1];
-            $f['decimals'] = $tokens[3];
+            $f->length = (int) $tokens[1];
+            $f->decimals = (int) $tokens[3];
             $tokens = \array_slice($tokens, 5);
         }
     }
 
     /**
      * @param list<string> $tokens
-     * @param array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string} $f
      *
      * @return void
      */
-    private function parseFieldUnsigned(array $tokens, array $f)
+    private function parseFieldUnsigned(array $tokens, CreateColumn $f)
     {
         if (($tokens) && \strtoupper($tokens[0]) === 'UNSIGNED') {
-            $f['unsigned'] = true;
+            $f->unsigned = true;
             \array_shift($tokens);
         }
     }
 
     /**
      * @param list<string> $tokens
-     * @param array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string} $f
      *
      * @return void
      */
-    private function parseFieldZerofill(array &$tokens, array $f)
+    private function parseFieldZerofill(array &$tokens, CreateColumn $f)
     {
         if (($tokens) && \strtoupper($tokens[0]) === 'ZEROFILL') {
-            $f['zerofill'] = true;
+            $f->zerofill = true;
             \array_shift($tokens);
         }
     }
 
     /**
      * @param list<string> $tokens
-     * @param array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string} $f
      *
      * @return void
      */
-    private function parseFieldCharset(array &$tokens, array $f)
+    private function parseFieldCharset(array &$tokens, CreateColumn $f)
     {
         if (($tokens) && \strtoupper($tokens[0]) === 'CHARACTER SET') {
-            $f['character_set'] = $tokens[1];
+            $f->character_set = $tokens[1];
             \array_shift($tokens);
             \array_shift($tokens);
         }
@@ -757,14 +819,13 @@ final class CreateTableParser
 
     /**
      * @param list<string> $tokens
-     * @param array{name:string, type:string, length:string, unsigned:bool, null:bool, default:string} $f
      *
      * @return void
      */
-    private function parseFieldCollate(array &$tokens, array $f)
+    private function parseFieldCollate(array &$tokens, CreateColumn $f)
     {
         if (($tokens) && \strtoupper($tokens[0]) === 'COLLATE') {
-            $f['collation'] = $tokens[1];
+            $f->collation = $tokens[1];
             \array_shift($tokens);
             \array_shift($tokens);
         }
@@ -808,7 +869,7 @@ final class CreateTableParser
     private function decodeIdentifier(string $token)
     {
         if ($token[0] === '`') {
-            return Str\strip_suffix(Str\strip_prefix($token, '`'), '`');
+            return \substr($token, 1, -1);
         }
         return $token;
     }
@@ -838,4 +899,3 @@ final class CreateTableParser
         return $token;
     }
 }
-

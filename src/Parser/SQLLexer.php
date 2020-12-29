@@ -2,19 +2,27 @@
 namespace Vimeo\MysqlEngine\Parser;
 
 use function preg_split, preg_match;
+
 final class SQLLexer
 {
-    /**
-     * @var string
-     */
-    private const TOKEN_SPLIT_REGEX = '/(\\<\\=\\>|\\r\\n|\\!\\=|\\>\\=|\\<\\=|\\<\\>|\\<\\<|\\>\\>|\\:\\=|&&|\\|\\||\\:\\=|\\/\\*|\\*\\/|\\-\\-|\\>|\\<|\\||\\=|\\^|\\(|\\)|\\t|\\n|\'|"|`|,|@|\\s|\\+|\\-|\\*|\\/|;|\\\\)/';
+    private const TOKEN_SPLIT_REGEX = '/('
+        . '\\<\\=\\>|\\r\\n|\\!\\=|\\>\\=|\\<\\=|\\<\\>'
+        . '|\\<\\<|\\>\\>|\\:\\=|&&|\\|\\||\\:\\=|\\/\\*'
+        . '|\\*\\/|\\-\\-|\\>|\\<|\\||\\=|\\^|\\(|\\)|\\t'
+        . '|\\n|\'|"|`|,|@|\\s|\\+|\\-|\\*|\\/|;|\\\\'
+        . ')/';
 
     /**
      * @return list<string>
      */
     public function lex(string $sql)
     {
-        $tokens = (array) preg_split(self::TOKEN_SPLIT_REGEX, $sql, null, \PREG_SPLIT_DELIM_CAPTURE | \PREG_SPLIT_NO_EMPTY);
+        $tokens = (array) preg_split(
+            self::TOKEN_SPLIT_REGEX,
+            $sql,
+            -1,
+            \PREG_SPLIT_DELIM_CAPTURE | \PREG_SPLIT_NO_EMPTY
+        );
 
         if (preg_match('![/#-]!', $sql)) {
             $tokens = $this->groupComments($tokens);
@@ -162,4 +170,3 @@ final class SQLLexer
         return array_values($tokens);
     }
 }
-

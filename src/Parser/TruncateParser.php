@@ -41,4 +41,3 @@ final class TruncateParser
         return new TruncateQuery($token['value'], $this->sql);
     }
 }
-

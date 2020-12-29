@@ -9,7 +9,14 @@ use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
 final class UpdateQuery extends Query
 {
     /**
-     * @var array{name:string, subquery:SubqueryExpression, join_type:JoinType::*, join_operator:'ON'|'USING', alias:string, join_expression:null|Expression}
+     * @var array{
+     *      name:string,
+     *      subquery:SubqueryExpression,
+     *      join_type:JoinType::*,
+     *      join_operator:'ON'|'USING',
+     *      alias:string,
+     *      join_expression:null|Expression
+     * }
      */
     public $updateClause;
 
@@ -24,7 +31,14 @@ final class UpdateQuery extends Query
     public array $setClause = [];
 
     /**
-     * @param array{name:string, subquery:SubqueryExpression, join_type:JoinType::*, join_operator:'ON'|'USING', alias:string, join_expression:null|Expression} $updateClause
+     * @param array{
+     *        name:string,
+     *        subquery:SubqueryExpression,
+     *        join_type:JoinType::*,
+     *        join_operator:'ON'|'USING',
+     *        alias:string,
+     *        join_expression:null|Expression
+     * } $updateClause
      */
     public function __construct(array $updateClause, string $sql)
     {
@@ -32,4 +46,3 @@ final class UpdateQuery extends Query
         $this->sql = $sql;
     }
 }
-

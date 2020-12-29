@@ -60,7 +60,6 @@ final class InsertProcessor extends Processor
                     );
                     $rows_affected += $affected * 2;
                     continue;
-
                 }
 
                 if ($stmt->ignoreDupes) {

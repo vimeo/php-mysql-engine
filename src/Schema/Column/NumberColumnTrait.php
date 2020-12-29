@@ -3,7 +3,9 @@ namespace Vimeo\MysqlEngine\Schema\Column;
 
 trait NumberColumnTrait
 {
-    /** @var bool */
+    /**
+     * @var bool
+     */
     protected $unsigned = false;
 
     public function isUnsigned() : bool

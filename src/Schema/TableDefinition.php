@@ -11,7 +11,9 @@ class TableDefinition
 
     public string $defaultCollation;
 
-    /** @var array<string, Column> */
+    /**
+     * @var array<string, Column>
+     */
     public array $columns;
 
     public array $primaryKeyColumns;

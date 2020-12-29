@@ -72,7 +72,7 @@ final class ExpressionParser
     private ?array $selectExpressions = null;
 
     /**
-     * @var array<int, array{type:TokenType:*, value:string, raw:string}>
+     * @var array<int, array{type:TokenType::*, value:string, raw:string}>
      */
     private array $tokens;
 
@@ -87,8 +87,13 @@ final class ExpressionParser
     /**
      * @param array<int, array{type:TokenType::*, value:string, raw:string}> $tokens
      */
-    public function __construct(array $tokens, int $pointer = -1, ?Expression $expression = null, int $min_precedence = 0, bool $is_child = false)
-    {
+    public function __construct(
+        array $tokens,
+        int $pointer = -1,
+        ?Expression $expression = null,
+        int $min_precedence = 0,
+        bool $is_child = false
+    ) {
         $this->tokens = $tokens;
         $this->pointer = $pointer;
         $this->expression = $expression ?: new PlaceholderExpression();
@@ -179,7 +184,11 @@ final class ExpressionParser
 
                 \assert($next['type'] === TokenType::PAREN, 'function is be followed by parentheses');
                 $closing_paren_pointer = SQLParser::findMatchingParen($this->pointer, $this->tokens);
-                $arg_tokens = \array_slice($this->tokens, $this->pointer + 1, $closing_paren_pointer - $this->pointer - 1);
+                $arg_tokens = \array_slice(
+                    $this->tokens,
+                    $this->pointer + 1,
+                    $closing_paren_pointer - $this->pointer - 1
+                );
                 list($distinct, $args) = $this->getListExpression($arg_tokens);
                 $this->pointer = $closing_paren_pointer;
                 $fn = new FunctionExpression($token, $args, $distinct);
@@ -284,8 +293,8 @@ final class ExpressionParser
                         $this->expression = new BinaryOperatorExpression($expr);
                     } else {
                         if (($this->expression->operator === null || $this->expression->operator === '')
-                            && $this->expression instanceof BinaryOperatorExpression
-                            && $token['type'] === TokenType::IDENTIFIER
+                        && $this->expression instanceof BinaryOperatorExpression
+                        && $token['type'] === TokenType::IDENTIFIER
                         ) {
                             $this->pointer--;
                             return $this->expression->left;
@@ -300,7 +309,10 @@ final class ExpressionParser
 
                     if ($operator === 'CASE') {
                         if (!$this->expression instanceof PlaceholderExpression) {
-                            $this->pointer = $this->expression->addRecursiveExpression($this->tokens, $this->pointer - 1);
+                            $this->pointer = $this->expression->addRecursiveExpression(
+                                $this->tokens,
+                                $this->pointer - 1
+                            );
                             break;
                         }
 
@@ -320,7 +332,10 @@ final class ExpressionParser
 
                         $this->expression->setKeyword($operator);
                         if ($operator !== 'END') {
-                            $this->pointer = $this->expression->addRecursiveExpression($this->tokens, $this->pointer);
+                            $this->pointer = $this->expression->addRecursiveExpression(
+                                $this->tokens,
+                                $this->pointer
+                            );
                         }
 
                         break;
@@ -331,20 +346,25 @@ final class ExpressionParser
                             && $this->expression->operator === 'BETWEEN'
                             && !$this->expression->isWellFormed()
                         ) {
-                            ($__tmp3__ = $this->expression) instanceof BetweenOperatorExpression ? $__tmp3__ : (function () {
+                            if (!$this->expression instanceof BetweenOperatorExpression) {
                                 throw new \TypeError('Failed assertion');
-                            })();
+                            }
+                        
                             $this->expression->foundAnd();
                         } else {
                             if ($operator === 'NOT') {
                                 if ($this->expression->operator !== 'IS') {
                                     $next = $this->peekNext();
                                     if ($next !== null
-                                        && ($next['type'] === TokenType::OPERATOR
-                                            && \strtoupper($next['value']) === 'IN'
-                                            || $next['type'] === TokenType::PAREN)
+                                    && ($next['type'] === TokenType::OPERATOR
+                                    && \strtoupper($next['value']) === 'IN'
+                                    || $next['type'] === TokenType::PAREN)
                                     ) {
-                                        $this->pointer = $this->expression->addRecursiveExpression($this->tokens, $this->pointer, true);
+                                        $this->pointer = $this->expression->addRecursiveExpression(
+                                            $this->tokens,
+                                            $this->pointer,
+                                            true
+                                        );
                                         break;
                                     }
 
@@ -357,15 +377,27 @@ final class ExpressionParser
                                 $new_op_precedence = $this->getPrecedence($operator);
 
                                 if ($current_op_precedence < $new_op_precedence) {
-                                    $this->pointer = $this->expression->addRecursiveExpression($this->tokens, $this->pointer - 1);
+                                    $this->pointer = $this->expression->addRecursiveExpression(
+                                        $this->tokens,
+                                        $this->pointer - 1
+                                    );
                                 } else {
                                     if ($operator === 'BETWEEN') {
-                                        $this->expression = new BetweenOperatorExpression($this->expression);
+                                        $this->expression = new BetweenOperatorExpression(
+                                            $this->expression
+                                        );
                                     } else {
                                         if ($operator === 'IN') {
-                                            $this->expression = new InOperatorExpression($this->expression, $this->expression->negated);
+                                            $this->expression = new InOperatorExpression(
+                                                $this->expression,
+                                                $this->expression->negated
+                                            );
                                         } else {
-                                            $this->expression = new BinaryOperatorExpression($this->expression, false, $operator);
+                                            $this->expression = new BinaryOperatorExpression(
+                                                $this->expression,
+                                                false,
+                                                $operator
+                                            );
                                         }
                                     }
                                 }
@@ -394,8 +426,8 @@ final class ExpressionParser
                                 $this->expression->negated
                             );
                         } elseif ($operator === 'UNARY_MINUS'
-                            || $operator === 'UNARY_PLUS'
-                            || $operator === '~'
+                        || $operator === 'UNARY_PLUS'
+                        || $operator === '~'
                         ) {
                             if (!$this->expression instanceof PlaceholderExpression) {
                                 throw new \TypeError('Failed assertion');
@@ -437,7 +469,10 @@ final class ExpressionParser
                 if ($nextToken['type'] === TokenType::IDENTIFIER) {
                     break;
                 }
-                if ($nextToken['value'] === 'ELSE' || $nextToken['value'] === 'THEN' || $nextToken['value'] === 'END') {
+                if ($nextToken['value'] === 'ELSE'
+                    || $nextToken['value'] === 'THEN'
+                    || $nextToken['value'] === 'END'
+                ) {
                     break;
                 }
                 if ($nextToken['type'] !== TokenType::OPERATOR) {
@@ -508,4 +543,3 @@ final class ExpressionParser
         $this->selectExpressions = $expressions;
     }
 }
-

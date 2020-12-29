@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<ruleset name="PHP_CodeSniffer">
+    <rule ref="PSR2" />
+
+    <file>src/</file>
+
+    <rule ref="Generic.Files.LineLength">
+        <exclude-pattern>tests</exclude-pattern>
+    </rule>
+
+    <rule ref="PSR2.Namespaces.UseDeclaration">
+        <exclude-pattern>*</exclude-pattern>
+    </rule>
+</ruleset>

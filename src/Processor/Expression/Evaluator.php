@@ -7,11 +7,14 @@ use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 class Evaluator
 {
     /**
-     * @param array<string, mixed> $row
+     * @param  array<string, mixed> $row
      * @return mixed
      */
-    public static function evaluate(\Vimeo\MysqlEngine\Query\Expression\Expression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
-    {
+    public static function evaluate(
+        \Vimeo\MysqlEngine\Query\Expression\Expression $expr,
+        array $row,
+        \Vimeo\MysqlEngine\FakePdo $conn
+    ) {
         switch (get_class($expr)) {
             case \Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression::class:
                 return BetweenOperatorEvaluator::evaluate($expr, $row, $conn);

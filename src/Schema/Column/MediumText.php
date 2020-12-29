@@ -7,7 +7,9 @@ class MediumText extends CharacterColumn
 {
     use TextTrait;
 
-    /** @var string */
+    /**
+     * @var string
+     */
     protected $type = 'mediumtext';
 
     public function __construct(?string $character_set = null, ?string $collation = null)

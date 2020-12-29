@@ -3,7 +3,7 @@ namespace Vimeo\MysqlEngine\Schema\Column;
 
 interface NumberColumn
 {
-	/**
+    /**
      * @return numeric
      */
     public function getMaxValue();

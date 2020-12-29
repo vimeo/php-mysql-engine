@@ -3,10 +3,14 @@ namespace Vimeo\MysqlEngine\Schema\Column;
 
 trait MySqlDefaultTrait
 {
-    /** @var mixed */
+    /**
+     * @var mixed
+     */
     protected $mysql_default = null;
 
-    /** @var bool */
+    /**
+     * @var bool
+     */
     protected $has_mysql_default = false;
 
     /**

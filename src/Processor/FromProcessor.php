@@ -27,7 +27,9 @@ final class FromProcessor
                 $table_definition = $conn->getServer()->getTableDefinition($database, $table_name);
 
                 if ($table_definition === null) {
-                    throw new SQLFakeRuntimeException("Table {$table_name} not found in schema and strict mode is enabled");
+                    throw new SQLFakeRuntimeException(
+                        "Table {$table_name} not found in schema and strict mode is enabled"
+                    );
                 }
 
                 $res = $conn->getServer()->getTable($database, $table_name);

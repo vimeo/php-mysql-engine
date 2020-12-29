@@ -97,4 +97,3 @@ final class SetParser
         return [$this->pointer - 1, $expressions];
     }
 }
-

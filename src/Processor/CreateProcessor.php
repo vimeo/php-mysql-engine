@@ -87,7 +87,11 @@ final class CreateProcessor
             $indexes
         );
 
-        $conn->getServer()->addTableDefinition($stmt->name->database ?: $conn->databaseName, $stmt->name->table, $definition);
+        $conn->getServer()->addTableDefinition(
+            $stmt->name->database ?: $conn->databaseName,
+            $stmt->name->table,
+            $definition
+        );
     }
 
     private static function getDefinitionColumn(SqlParser\Components\DataType $stmt) : Column

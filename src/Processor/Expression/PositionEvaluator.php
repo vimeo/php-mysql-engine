@@ -21,7 +21,9 @@ final class PositionEvaluator
 
         $row = (array) $row;
         if (!\array_key_exists($expr->position - 1, $row)) {
-            throw new SQLFakeRuntimeException("Undefined positional reference {$expr->position} IN GROUP BY or ORDER BY");
+            throw new SQLFakeRuntimeException(
+                "Undefined positional reference {$expr->position} IN GROUP BY or ORDER BY"
+            );
         }
 
         return $row[$expr->position - 1];

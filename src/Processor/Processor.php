@@ -30,7 +30,7 @@ abstract class Processor
     }
 
     /**
-     * @param array<int, array<string, mixed>> $data
+     * @param array<int, array<string, mixed>>                                                                  $data
      * @param ?array<int, array{expression: \Vimeo\MysqlEngine\Query\Expression\Expression, direction: string}> $orders
      *
      * @return array<int, array<string, mixed>>
@@ -45,7 +45,7 @@ abstract class Processor
         }
 
         foreach ($orders as $rule) {
-            $expr = $rule->expr;
+            $expr = $rule['expression'];
             if ($expr instanceof \PhpMyAdmin\SqlParser\Components\Reference) {
                 $expr->allowFallthrough();
             }
@@ -57,9 +57,11 @@ abstract class Processor
 
                 if ($value_a != $value_b) {
                     if ((\is_int($value_a) || \is_float($value_a)) && (\is_int($value_b) || \is_float($value_b))) {
-                        return ((double) $value_a < (double) $value_b ? 1 : 0) ^ ($rule['direction'] === 'DESC' ? 1 : 0) ? -1 : 1;
+                        return ((double) $value_a < (double) $value_b ? 1 : 0)
+                            ^ ($rule['direction'] === 'DESC' ? 1 : 0) ? -1 : 1;
                     } else {
-                        return ((string) $value_a < (string) $value_b ? 1 : 0) ^ ($rule['direction'] === 'DESC' ? 1 : 0) ? -1 : 1;
+                        return ((string) $value_a < (string) $value_b ? 1 : 0)
+                            ^ ($rule['direction'] === 'DESC' ? 1 : 0) ? -1 : 1;
                     }
                 }
             }
@@ -89,7 +91,7 @@ abstract class Processor
 
     /**
      * @param array{rowcount:int, offset:int}|null $limit
-     * @param array<int, array<string, mixed>> $data
+     * @param array<int, array<string, mixed>>     $data
      *
      * @return array<int, array<string, mixed>>
      */
@@ -121,10 +123,10 @@ abstract class Processor
     }
 
     /**
-     * @param array<int, array<string, mixed>> $filtered_rows
-     * @param array<int, array<string, mixed>> $original_table
+     * @param array<int, array<string, mixed>>                                   $filtered_rows
+     * @param array<int, array<string, mixed>>                                   $original_table
      * @param list<\Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression> $set_clause
-     * @param array<string, mixed>|null $values
+     * @param array<string, mixed>|null                                          $values
      *
      * @return array{0:int, 1:array<int, array<string, mixed>>}
      */

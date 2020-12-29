@@ -3,16 +3,24 @@ namespace Vimeo\MysqlEngine\Schema\Column;
 
 abstract class CharacterColumn extends \Vimeo\MysqlEngine\Schema\Column
 {
-    /** @var int */
+    /**
+     * @var int
+     */
     protected $max_string_length;
 
-    /** @var ?int */
+    /**
+     * @var ?int
+     */
     protected $max_truncated_length; // used for in-memory columns
 
-    /** @var string */
+    /**
+     * @var string
+     */
     protected $character_set;
 
-    /** @var string */
+    /**
+     * @var string
+     */
     protected $collation;
 
     public function __construct(int $max_string_length, ?string $character_set = null, ?string $collation = null)

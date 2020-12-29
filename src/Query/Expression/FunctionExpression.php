@@ -33,7 +33,7 @@ final class FunctionExpression extends Expression
 
     /**
      * @param array{type: TokenType::*, value: string, raw: string} $token
-     * @param array<int, Expression>                                                                                                                                                                                                                                             $args
+     * @param array<int, Expression>                                $args
      */
     public function __construct(array $token, array $args, bool $distinct)
     {

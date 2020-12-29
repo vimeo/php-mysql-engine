@@ -63,4 +63,3 @@ final class LimitParser
         return [$this->pointer, ['rowcount' => $limit, 'offset' => $offset]];
     }
 }
-

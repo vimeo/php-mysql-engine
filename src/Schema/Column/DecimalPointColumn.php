@@ -6,10 +6,14 @@ abstract class DecimalPointColumn extends \Vimeo\MysqlEngine\Schema\Column imple
     use NumberColumnTrait;
     use MySqlDefaultTrait;
 
-    /** @var int */
+    /**
+     * @var int
+     */
     protected $precision;
 
-    /** @var int */
+    /**
+     * @var int
+     */
     protected $scale;
 
     public function __construct(int $precision, int $scale)

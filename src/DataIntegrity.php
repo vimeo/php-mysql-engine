@@ -53,7 +53,6 @@ final class DataIntegrity
 
     /**
      * @param array<string, mixed> $row
-     * @param array{name:string, fields:array<array{name:string, type:DataType::*, length:int, null:bool, hack_type:string, default:string}>, indexes:array<array{name:string, type:string, fields:array<string>}>, vitess_sharding:array{keyspace:string, sharding_key:string}} $schema
      *
      * @return array<string, mixed>
      */
@@ -102,7 +101,8 @@ final class DataIntegrity
                                     if (false) {
                                         $field_str = \var_export($row[$column_name], true);
                                         throw new Processor\SQLFakeRuntimeException(
-                                            "Invalid value {$field_str} for column '{$column_name}' on '{$table_definition->name}', expected int"
+                                            "Invalid value {$field_str} for column '{$column_name}'"
+                                                . " on '{$table_definition->name}', expected int"
                                         );
                                     } else {
                                         $row[$column_name] = (int) $row[$column_name];
@@ -115,7 +115,8 @@ final class DataIntegrity
                                 if (false) {
                                     $field_str = \var_export($row[$column_name], true);
                                     throw new Processor\SQLFakeRuntimeException(
-                                        "Invalid value '{$field_str}' for column '{$column_name}' on '{$table_definition->name}', expected float"
+                                        "Invalid value '{$field_str}' for column '{$column_name}'"
+                                            . " on '{$table_definition->name}', expected float"
                                     );
                                 } else {
                                     $row[$column_name] = (double) $row[$column_name];
@@ -127,7 +128,8 @@ final class DataIntegrity
                                 if (false) {
                                     $field_str = \var_export($row[$column_name], true);
                                     throw new Processor\SQLFakeRuntimeException(
-                                        "Invalid value '{$field_str}' for column '{$column_name}' on '{$table_definition->name}', expected string"
+                                        "Invalid value '{$field_str}' for column '{$column_name}'"
+                                            . " on '{$table_definition->name}', expected string"
                                     );
                                 } else {
                                     $row[$column_name] = (string) $row[$column_name];
@@ -184,7 +186,7 @@ final class DataIntegrity
                 $value = (string) $value;
 
                 if (($column instanceof Schema\Column\DateTime || $column instanceof Schema\Column\Timestamp)
-                    && \strlen($value) === 10
+                && \strlen($value) === 10
                 ) {
                     $value .= ' 00:00:00';
                 }
@@ -195,18 +197,24 @@ final class DataIntegrity
                 return (float) $value;
 
             default:
-                throw new \Exception("DataIntegrity::coerceValueToSchema found unknown type for field: '{$php_type}'");
+                throw new \Exception(
+                    "DataIntegrity::coerceValueToSchema found unknown type for field: '{$php_type}'"
+                );
         }
     }
 
     /**
      * @param array<int, array<string, mixed>> $table
-     * @param array<string, mixed> $new_row
+     * @param array<string, mixed>             $new_row
      *
      * @return array{0:string, 1:int}|null
      */
-    public static function checkUniqueConstraints(array $table, array $new_row, Schema\TableDefinition $table_definition, ?int $update_row_id = null)
-    {
+    public static function checkUniqueConstraints(
+        array $table,
+        array $new_row,
+        Schema\TableDefinition $table_definition,
+        ?int $update_row_id = null
+    ) {
         $unique_keys = [];
 
         foreach ($table_definition->indexes as $name => $index) {
@@ -244,7 +252,11 @@ final class DataIntegrity
                         ', ',
                         \array_map(fn($field) => (string) $existing_row[$field], $unique_key)
                     );
-                    return ["Duplicate entry '{$dupe_unique_key_value}' for key '{$name}' in table '{$table_definition->name}'", $row_id];
+                    return [
+                        "Duplicate entry '{$dupe_unique_key_value}' for key"
+                            . " '{$name}' in table '{$table_definition->name}'",
+                        $row_id
+                    ];
                 }
             }
         }
@@ -252,4 +264,3 @@ final class DataIntegrity
         return null;
     }
 }
-

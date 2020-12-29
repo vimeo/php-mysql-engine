@@ -3,13 +3,19 @@ namespace Vimeo\MysqlEngine\Schema\Column;
 
 trait IntegerColumnTrait
 {
-    /** @var bool */
+    /**
+     * @var bool
+     */
     protected $auto_increment = false;
 
-    /** @var int */
+    /**
+     * @var int
+     */
     protected $integer_display_width;
 
-    /** @var bool */
+    /**
+     * @var bool
+     */
     protected $unsigned = false;
 
     public function __construct(bool $unsigned, int $integer_display_width)

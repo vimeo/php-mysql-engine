@@ -24,9 +24,11 @@ final class InOperatorEvaluator
         if (\count($inList) === 1 && Evaluator::evaluate($inList[0], $row, $conn) === null) {
             if (!$expr->negated) {
                 return false;
-            } else {
-                throw new SQLFakeRuntimeException("You're probably trying to use NOT IN with an empty array, but MySQL would evaluate this to false.");
             }
+
+            throw new SQLFakeRuntimeException(
+                "You're probably trying to use NOT IN with an empty array, but MySQL would evaluate this to false."
+            );
         }
 
         $value = Evaluator::evaluate($expr->left, $row, $conn);

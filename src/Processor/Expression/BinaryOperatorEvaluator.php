@@ -14,8 +14,10 @@ final class BinaryOperatorEvaluator
      * @param array<string, mixed> $row
      */
     public static function evaluate(
-        BinaryOperatorExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
-    {
+        BinaryOperatorExpression $expr,
+        array $row,
+        \Vimeo\MysqlEngine\FakePdo $conn
+    ) {
         $right = $expr->right;
         $left = $expr->left;
 
@@ -38,54 +40,58 @@ final class BinaryOperatorEvaluator
         switch ($expr->operator) {
             case '':
                 throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
+
             case 'AND':
                 if ((bool) $l_value && (bool) $r_value) {
                     return (int) (!$expr->negated);
                 }
                 return (int) $expr->negated;
+
             case 'OR':
                 if ((bool) $l_value || (bool) $r_value) {
                     return (int) (!$expr->negated);
                 }
                 return (int) $expr->negated;
+
             case '=':
                 return $l_value == $r_value ? 1 : 0 ^ $expr->negatedInt;
+
             case '<>':
             case '!=':
                 if ($as_string) {
                     return (string) $l_value != (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
-                } else {
-                    return (int) $l_value != (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
-                // no break
+
+                return (int) $l_value != (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
+
             case '>':
                 if ($as_string) {
                     return (string) $l_value > (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
-                } else {
-                    return (int) $l_value > (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
+
+                return (int) $l_value > (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 // no break
             case '>=':
                 if ($as_string) {
                     return (string) $l_value >= (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
-                } else {
-                    return (int) $l_value >= (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
-                // no break
+
+                return (int) $l_value >= (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
+             
             case '<':
                 if ($as_string) {
                     return (string) $l_value < (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
-                } else {
-                    return (int) $l_value < (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
-                // no break
+
+                return (int) $l_value < (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
+            
             case '<=':
                 if ($as_string) {
                     return (string) $l_value <= (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
-                } else {
-                    return (int) $l_value <= (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
-                // no break
+
+                return (int) $l_value <= (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                
             case '*':
             case '%':
             case 'MOD':
@@ -100,6 +106,7 @@ final class BinaryOperatorEvaluator
             case '&':
                 $left_number = self::extractNumericValue($l_value);
                 $right_number = self::extractNumericValue($r_value);
+                
                 switch ($expr->operator) {
                     case '*':
                         return $left_number * $right_number;
@@ -122,30 +129,38 @@ final class BinaryOperatorEvaluator
                         return (int) $left_number | (int) $right_number;
                     case '&':
                         return (int) $left_number & (int) $right_number;
-                    default:
-                        throw new SQLFakeRuntimeException("Operator recognized but not implemented");
                 }
-                // no break
-                case 'LIKE':
-                    $left_string = (string) Evaluator::evaluate($left, $row, $conn);
-                    if (!$right instanceof ConstantExpression) {
-                        throw new SQLFakeRuntimeException("LIKE pattern should be a constant string");
-                    }
-                    $pattern = (string) $r_value;
-                    $start_pattern = '^';
-                    $end_pattern = '$';
-                    if ($pattern[0] === '%') {
-                        $start_pattern = '';
-                        $pattern = \substr($pattern, 1);
-                    }
-                    if (\substr($pattern, -1) === '%') {
-                        $end_pattern = '';
-                        $pattern = \substr($pattern, 0, -1);
-                    }
-                    $pattern = \preg_replace('/(?<!\\\\)%/', '.*?', $pattern);
-                    $pattern = \preg_replace('/(?<!\\\\)_/', '.', $pattern);
-                    $regex = '/' . $start_pattern . $pattern . $end_pattern . '/s';
-                    return ((bool) \preg_match($regex, $left_string) ? 1 : 0) ^ $expr->negatedInt;
+
+                throw new SQLFakeRuntimeException("Operator recognized but not implemented");
+
+            case 'LIKE':
+                $left_string = (string) Evaluator::evaluate($left, $row, $conn);
+                
+                if (!$right instanceof ConstantExpression) {
+                    throw new SQLFakeRuntimeException("LIKE pattern should be a constant string");
+                }
+                
+                $pattern = (string) $r_value;
+                $start_pattern = '^';
+                $end_pattern = '$';
+                
+                if ($pattern[0] === '%') {
+                    $start_pattern = '';
+                    $pattern = \substr($pattern, 1);
+                }
+                
+                if (\substr($pattern, -1) === '%') {
+                    $end_pattern = '';
+                    $pattern = \substr($pattern, 0, -1);
+                }
+                
+                // escape all + characters
+                $pattern = \preg_quote($pattern, '/');
+                $pattern = \preg_replace('/(?<!\\\\)%/', '.*?', $pattern);
+                $pattern = \preg_replace('/(?<!\\\\)_/', '.', $pattern);
+                $regex = '/' . $start_pattern . $pattern . $end_pattern . '/s';
+                
+                return ((bool) \preg_match($regex, $left_string) ? 1 : 0) ^ $expr->negatedInt;
 
             case 'IS':
                 if (!$right instanceof ConstantExpression) {
@@ -190,8 +205,12 @@ final class BinaryOperatorEvaluator
      * @return bool
      */
     private static function evaluateRowComparison(
-        BinaryOperatorExpression $expr, RowExpression $left, RowExpression $right, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
-    {
+        BinaryOperatorExpression $expr,
+        RowExpression $left,
+        RowExpression $right,
+        array $row,
+        \Vimeo\MysqlEngine\FakePdo $conn
+    ) {
         $left_elems = Evaluator::evaluate($left, $row, $conn);
         assert(\is_array($left_elems), "RowExpression must return vec");
         $right_elems = Evaluator::evaluate($right, $row, $conn);
@@ -207,21 +226,21 @@ final class BinaryOperatorEvaluator
                 continue;
             }
             switch ($expr->operator) {
-            case '=':
-                return $le == $re;
-            case '<>':
-            case '!=':
-                return $le != $re;
-            case '>':
-                return $le > $re;
-            case '>=':
-                return $le >= $re;
-            case '<':
-                return $le < $re;
-            case '<=':
-                return $le <= $re;
-            default:
-                throw new SQLFakeRuntimeException("Operand {$expr->operator} should contain 1 column(s)");
+                case '=':
+                    return $le == $re;
+                case '<>':
+                case '!=':
+                    return $le != $re;
+                case '>':
+                    return $le > $re;
+                case '>=':
+                    return $le >= $re;
+                case '<':
+                    return $le < $re;
+                case '<=':
+                    return $le <= $re;
+                default:
+                    throw new SQLFakeRuntimeException("Operand {$expr->operator} should contain 1 column(s)");
             }
         }
         return false;

@@ -80,7 +80,7 @@ final class InsertParser
             switch ($token['type']) {
                 case TokenType::CLAUSE:
                     if (\array_key_exists($token['value'], self::CLAUSE_ORDER)
-                        && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
+                    && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
                     ) {
                         throw new SQLFakeParseException("Unexpected clause {$token['value']}");
                     }
@@ -96,19 +96,25 @@ final class InsertParser
                                 }
 
                                 $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
-                                $values_tokens = \array_slice($this->tokens, $this->pointer + 1, $close - $this->pointer - 1);
+                                $values_tokens = \array_slice(
+                                    $this->tokens,
+                                    $this->pointer + 1,
+                                    $close - $this->pointer - 1
+                                );
                                 $values = $this->parseValues($values_tokens);
                                 if (\count($values) !== \count($query->insertColumns)) {
                                     throw new SQLFakeParseException(
                                         "Insert list contains "
-                                            . \count($query->insertColumns)
-                                            . ' fields, but values clause contains '
-                                            . \count($values)
+                                        . \count($query->insertColumns)
+                                        . ' fields, but values clause contains '
+                                        . \count($values)
                                     );
                                 }
                                 $query->values[] = $values;
                                 $this->pointer = $close;
-                            } while (($this->tokens[$this->pointer + 1]['value'] ?? null) === ',' && $this->pointer++);
+                            } while (($this->tokens[$this->pointer + 1]['value'] ?? null) === ','
+                                && $this->pointer++
+                            );
 
                             break;
                         case 'SET':
@@ -218,7 +224,9 @@ final class InsertParser
                 case TokenType::SQLFUNCTION:
                 case TokenType::PAREN:
                     if ($needs_comma) {
-                        throw new SQLFakeParseException("Expected , between expressions in SET clause near {$token['value']}");
+                        throw new SQLFakeParseException(
+                            "Expected , between expressions in SET clause near {$token['value']}"
+                        );
                     }
                     $expression_parser = new ExpressionParser($tokens, $pointer - 1);
                     $start = $pointer;
@@ -245,4 +253,3 @@ final class InsertParser
         return $expressions;
     }
 }
-

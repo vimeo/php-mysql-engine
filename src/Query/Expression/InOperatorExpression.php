@@ -1,7 +1,6 @@
 <?php
 namespace Vimeo\MysqlEngine\Query\Expression;
 
-
 use Vimeo\MysqlEngine\Parser\ExpressionParser;
 use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;

@@ -36,8 +36,8 @@ class FakePdoStatement extends \PDOStatement
     }
 
     /**
-     * @param  string $key
-     * @param  scalar $value
+     * @param string $key
+     * @param scalar $value
      */
     public function bindValue(string $key, $value) : void
     {
@@ -162,8 +162,11 @@ class FakePdoStatement extends \PDOStatement
         return $this->affectedRows;
     }
 
-    public function fetch(?int $fetch_style = null, int $cursor_orientation = \PDO::FETCH_ORI_NEXT, int $cursor_offset = 0)
-    {
+    public function fetch(
+        ?int $fetch_style = null,
+        int $cursor_orientation = \PDO::FETCH_ORI_NEXT,
+        int $cursor_offset = 0
+    ) {
         if ($fetch_style === null) {
             $fetch_style = $this->fetchMode;
         }
@@ -226,7 +229,7 @@ class FakePdoStatement extends \PDOStatement
 
         if ($fetch_style === \PDO::FETCH_NUM) {
             return array_map(
-                function($row) {
+                function ($row) {
                     if ($this->conn->stringifyResult) {
                         $row = self::stringify($row);
                     }
@@ -239,7 +242,7 @@ class FakePdoStatement extends \PDOStatement
 
         if ($fetch_style === \PDO::FETCH_BOTH) {
             return array_map(
-                function($row) {
+                function ($row) {
                     if ($this->conn->stringifyResult) {
                         $row = self::stringify($row);
                     }
@@ -253,7 +256,7 @@ class FakePdoStatement extends \PDOStatement
         if ($fetch_style === \PDO::FETCH_COLUMN && $fetch_argument !== null) {
             return \array_column(
                 array_map(
-                    function($row) {
+                    function ($row) {
                         if ($this->conn->stringifyResult) {
                             $row = self::stringify($row);
                         }
@@ -272,7 +275,7 @@ class FakePdoStatement extends \PDOStatement
             }
 
             return array_map(
-                function($row) use ($fetch_argument, $ctor_args) {
+                function ($row) use ($fetch_argument, $ctor_args) {
                     if ($this->conn->stringifyResult) {
                         $row = self::stringify($row);
                     }
@@ -330,8 +333,8 @@ class FakePdoStatement extends \PDOStatement
      * @psalm-taint-sink callable $class
      *
      * @template T
-     * @param class-string<T> $class
-     * @return false|T
+     * @param    class-string<T> $class
+     * @return   false|T
      */
     public function fetchObject(string $class = \stdClass::class)
     {

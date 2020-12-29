@@ -211,16 +211,19 @@ final class FunctionEvaluator
             \is_array($row) ? $row : (function () {
                 throw new \TypeError('Failed assertion');
             })();
-            $values[] = \is_int($__tmp1__ = Evaluator::evaluate($expr, $row, $conn)) || \is_float($__tmp1__) ? $__tmp1__ : (function () {
+
+            $value = Evaluator::evaluate($expr, $row, $conn);
+            
+            if (!\is_int($value) && !\is_float($value)) {
                 throw new \TypeError('Failed assertion');
-            })();
+            }
         }
 
-        if (0 === \count($values)) {
+        if (\count($values) === 0) {
             return null;
         }
 
-        return Math\mean($values);
+        return \array_sum($values) / \count($values);
     }
 
     /**
@@ -459,8 +462,11 @@ final class FunctionEvaluator
     /**
      * @param array<string, mixed> $row
      */
-    private static function sqlFromUnixtime(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : string
-    {
+    private static function sqlFromUnixtime(
+        FunctionExpression $expr,
+        array $row,
+        \Vimeo\MysqlEngine\FakePdo $conn
+    ) : string {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
 

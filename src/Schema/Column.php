@@ -8,5 +8,5 @@ abstract class Column
     /**
      * @return 'int'|'string'|'float'
      */
-    public abstract function getPhpType() : string;
+    abstract public function getPhpType() : string;
 }

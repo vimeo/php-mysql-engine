@@ -69,7 +69,7 @@ final class UpdateParser
             switch ($token['type']) {
                 case TokenType::CLAUSE:
                     if (\array_key_exists($token['value'], self::CLAUSE_ORDER)
-                        && self::CLAUSE_ORDER[$this->current_clause] >= self::CLAUSE_ORDER[$token['value']]
+                    && self::CLAUSE_ORDER[$this->current_clause] >= self::CLAUSE_ORDER[$token['value']]
                     ) {
                         throw new SQLFakeParseException("Unexpected clause {$token['value']}");
                     }
@@ -111,4 +111,3 @@ final class UpdateParser
         return $query;
     }
 }
-

@@ -38,8 +38,12 @@ final class BinaryOperatorExpression extends Expression
      */
     public $right = null;
 
-    public function __construct(Expression $left, bool $negated = false, string $operator = '', ?Expression $right = null)
-    {
+    public function __construct(
+        Expression $left,
+        bool $negated = false,
+        string $operator = '',
+        ?Expression $right = null
+    ) {
         $this->left = $left;
         $this->negated = $negated;
         $this->operator = $operator;

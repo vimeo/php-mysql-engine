@@ -10,8 +10,10 @@ final class BetweenOperatorEvaluator
      * @param array<string, mixed> $row
      */
     public static function evaluate(
-        BetweenOperatorExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : bool
-    {
+        BetweenOperatorExpression $expr,
+        array $row,
+        \Vimeo\MysqlEngine\FakePdo $conn
+    ) : bool {
         $start = $expr->start;
         $end = $expr->end;
 

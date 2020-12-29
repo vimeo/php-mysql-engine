@@ -83,4 +83,3 @@ final class SelectQuery extends Query
         $this->multiQueries[] = ['type' => $type, 'query' => $query];
     }
 }
-

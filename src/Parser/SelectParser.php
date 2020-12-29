@@ -8,7 +8,15 @@ use Vimeo\MysqlEngine\TokenType;
 
 final class SelectParser
 {
-    const CLAUSE_ORDER = ['SELECT' => 1, 'FROM' => 2, 'WHERE' => 3, 'GROUP' => 4, 'HAVING' => 5, 'ORDER' => 6, 'LIMIT' => 7];
+    const CLAUSE_ORDER = [
+        'SELECT' => 1,
+        'FROM' => 2,
+        'WHERE' => 3,
+        'GROUP' => 4,
+        'HAVING' => 5,
+        'ORDER' => 6,
+        'LIMIT' => 7
+    ];
 
     /**
      * @var string
@@ -70,7 +78,7 @@ final class SelectParser
 
                     if ($query->needsSeparator) {
                         if (($token['type'] === TokenType::IDENTIFIER || $token['type'] === TokenType::STRING_CONSTANT)
-                            && !$query->mostRecentHasAlias
+                        && !$query->mostRecentHasAlias
                         ) {
                             $query->aliasRecentExpression($token['value']);
                             break;
@@ -111,7 +119,7 @@ final class SelectParser
                     break;
                 case TokenType::CLAUSE:
                     if (\array_key_exists($token['value'], self::CLAUSE_ORDER)
-                        && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
+                    && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token['value']]
                     ) {
                         throw new SQLFakeParseException("Unexpected {$token['value']}");
                     }
@@ -143,7 +151,9 @@ final class SelectParser
                                     $position = (int) $expression->value - 1;
                                     $expression = $query->selectExpressions[$position] ?? null;
                                     if ($expression === null) {
-                                        throw new SQLFakeParseException("Invalid positional reference {$position} in GROUP BY");
+                                        throw new SQLFakeParseException(
+                                            "Invalid positional reference {$position} in GROUP BY"
+                                        );
                                     }
                                 }
                                 $expressions[] = $expression;
@@ -173,7 +183,7 @@ final class SelectParser
                         case 'EXCEPT':
                         case 'INTERSECT':
                             return [$this->pointer, $query];
-                            break;
+                        break;
                         default:
                             throw new SQLFakeParseException("Unexpected {$token['value']}");
                     }
@@ -185,7 +195,7 @@ final class SelectParser
                             $this->pointer++;
                             $next = $this->tokens[$this->pointer] ?? null;
                             if ($next === null
-                                || ($next['type'] !== TokenType::IDENTIFIER && $next['type'] !== TokenType::STRING_CONSTANT)
+                            || ($next['type'] !== TokenType::IDENTIFIER && $next['type'] !== TokenType::STRING_CONSTANT)
                             ) {
                                 throw new SQLFakeParseException("Expected alias name after AS");
                             }
@@ -217,4 +227,3 @@ final class SelectParser
         return [$this->pointer, $query];
     }
 }
-
