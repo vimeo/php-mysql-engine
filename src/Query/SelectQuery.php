@@ -39,7 +39,7 @@ final class SelectQuery
 
     /**
      * @var ?Expression
-     */  
+     */
     public $havingClause = null;
 
     /**

@@ -46,7 +46,7 @@ class FakePdoStatement extends \PDOStatement
     private $real;
 
     /**
-     * @var ?\PDOStatement 
+     * @var ?\PDOStatement
      */
     private $realStatement = null;
 

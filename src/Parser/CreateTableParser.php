@@ -5,6 +5,7 @@ use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Query\CreateColumn;
 use Vimeo\MysqlEngine\Query\CreateIndex;
 use Vimeo\MysqlEngine\Query\CreateQuery;
+use Vimeo\MysqlEngine\Query\MysqlColumnType;
 
 
 final class CreateTableParser
@@ -15,7 +16,7 @@ final class CreateTableParser
     public function parse(string $sql) : array
     {
         $this->lex($sql);
-        return $this->walk($this->tokens, $sql, $this->sourceMap);
+        return self::walk($this->tokens, $sql, $this->sourceMap);
     }
 
     /**
@@ -122,7 +123,7 @@ final class CreateTableParser
      *
      * @return array<string, CreateQuery>
      */
-    private function walk(array $tokens, string $sql, array $source_map)
+    private static function walk(array $tokens, string $sql, array $source_map)
     {
         $statements = [];
         $temp = [];
@@ -163,12 +164,12 @@ final class CreateTableParser
             $s = $stmt['tuples'];
             if (\strtoupper($s[0]) === 'CREATE TABLE') {
                 \array_shift($s);
-                $table = $this->parseCreateTable($s, $stmt['sql']);
+                $table = self::parseCreateTable($s, $stmt['sql']);
                 $tables[$table->name] = $table;
             }
             if (\strtoupper($s[0]) === 'CREATE TEMPORARY TABLE') {
                 \array_shift($s);
-                $table = $this->parseCreateTable($s, $stmt['sql']);
+                $table = self::parseCreateTable($s, $stmt['sql']);
                 $table->props['temp'] = '1';
                 $tables[$table->name] = $table;
             }
@@ -180,19 +181,19 @@ final class CreateTableParser
     /**
      * @param list<string> $tokens
      */
-    private function parseCreateTable(array $tokens, string $sql) : CreateQuery
+    private static function parseCreateTable(array $tokens, string $sql) : CreateQuery
     {
         if ($tokens[0] === 'IF NOT EXISTS') {
             \array_shift($tokens);
         }
 
         $t = \array_shift($tokens);
-        $name = $this->decodeIdentifier($t);
+        $name = static::decodeIdentifier($t);
 
-        if ($this->nextTokenIs($tokens, 'LIKE')) {
+        if (static::nextTokenIs($tokens, 'LIKE')) {
             \array_shift($tokens);
             $t = \array_shift($tokens);
-            $old_name = $this->decodeIdentifier($t);
+            $old_name = static::decodeIdentifier($t);
             $q = new CreateQuery();
             $q->name = $name;
             $q->sql = $sql;
@@ -204,14 +205,14 @@ final class CreateTableParser
         $fields = [];
         $indexes = [];
 
-        if ($this->nextTokenIs($tokens, '(')) {
+        if (static::nextTokenIs($tokens, '(')) {
             \array_shift($tokens);
-            $ret = $this->parseCreateDefinition($tokens);
+            $ret = static::parseCreateDefinition($tokens);
             $fields = $ret['fields'];
             $indexes = $ret['indexes'];
         }
 
-        $props = $this->parseTableProps($tokens);
+        $props = static::parseTableProps($tokens);
 
         $q = new CreateQuery();
         $q->name = $name;
@@ -228,7 +229,7 @@ final class CreateTableParser
      *
      * @return bool
      */
-    private function nextTokenIs(array $tokens, string $val)
+    private static function nextTokenIs(array $tokens, string $val)
     {
         return \strtoupper($tokens[0]) === $val;
     }
@@ -238,14 +239,14 @@ final class CreateTableParser
      *
      * @return array{fields: array<int, CreateColumn>, indexes: array<int, CreateIndex>}
      */
-    private function parseCreateDefinition(array &$tokens)
+    private static function parseCreateDefinition(array &$tokens)
     {
         $fields = [];
         $indexes = [];
 
         while ($tokens[0] !== ')') {
-            $these_tokens = $this->sliceUntilNextField($tokens);
-            $this->parseFieldOrKey($these_tokens, $fields, $indexes);
+            $these_tokens = static::sliceUntilNextField($tokens);
+            static::parseFieldOrKey($these_tokens, $fields, $indexes);
         }
 
         \array_shift($tokens);
@@ -259,7 +260,7 @@ final class CreateTableParser
      *
      * @return void
      */
-    private function parseFieldOrKey(array &$tokens, array &$fields, array &$indexes)
+    private static function parseFieldOrKey(array &$tokens, array &$fields, array &$indexes)
     {
         $has_constraint = false;
         $constraint = null;
@@ -294,11 +295,11 @@ final class CreateTableParser
                 \array_shift($tokens);
                 if ($tokens[0] !== '(' && $tokens[0] !== 'USING BTREE' && $tokens[0] !== 'USING HASH') {
                     $t = \array_shift($tokens);
-                    $index->name = $this->decodeIdentifier($t);
+                    $index->name = static::decodeIdentifier($t);
                 }
-                $this->parseIndexType($tokens, $index);
-                $this->parseIndexColumns($tokens, $index);
-                $this->parseIndexOptions($tokens, $index);
+                static::parseIndexType($tokens, $index);
+                static::parseIndexColumns($tokens, $index);
+                static::parseIndexOptions($tokens, $index);
                 if (\count($tokens)) {
                     $index->more = $tokens;
                 }
@@ -309,9 +310,9 @@ final class CreateTableParser
                 $index = new CreateIndex();
                 $index->type = 'PRIMARY';
                 \array_shift($tokens);
-                $this->parseIndexType($tokens, $index);
-                $this->parseIndexColumns($tokens, $index);
-                $this->parseIndexOptions($tokens, $index);
+                static::parseIndexType($tokens, $index);
+                static::parseIndexColumns($tokens, $index);
+                static::parseIndexOptions($tokens, $index);
                 if (\count($tokens)) {
                     $index->more = $tokens;
                 }
@@ -334,11 +335,11 @@ final class CreateTableParser
                 \array_shift($tokens);
                 if ($tokens[0] !== '(') {
                     $t = \array_shift($tokens);
-                    $index->name = $this->decodeIdentifier($t);
+                    $index->name = static::decodeIdentifier($t);
                 }
-                $this->parseIndexType($tokens, $index);
-                $this->parseIndexColumns($tokens, $index);
-                $this->parseIndexOptions($tokens, $index);
+                static::parseIndexType($tokens, $index);
+                static::parseIndexColumns($tokens, $index);
+                static::parseIndexOptions($tokens, $index);
                 if (\count($tokens)) {
                     $index->more = $tokens;
                 }
@@ -348,7 +349,7 @@ final class CreateTableParser
                 return;
         }
 
-        $fields[] = $this->parseField($tokens);
+        $fields[] = static::parseField($tokens);
     }
 
     /**
@@ -356,7 +357,7 @@ final class CreateTableParser
      *
      * @return array<int, string>
      */
-    private function sliceUntilNextField(array &$tokens)
+    private static function sliceUntilNextField(array &$tokens)
     {
         $out = [];
         $stack = 0;
@@ -397,14 +398,50 @@ final class CreateTableParser
     /**
      * @param list<string> $tokens
      */
-    private function parseField(array &$tokens) : CreateColumn
+    public static function parseField(array &$tokens) : CreateColumn
     {
         $t = \array_shift($tokens);
-        $t2 = \array_shift($tokens);
+
         $f = new CreateColumn();
-        $f->name = $this->decodeIdentifier($t);
-        $f->type = \strtoupper($t2);
-        switch ($f->type) {
+        $f->name = static::decodeIdentifier($t);
+
+        if (!$tokens) {
+            throw new SQLFakeParseException("Expecting more create type tokens");
+        }
+
+        $f->type = self::parseFieldType($tokens);
+
+        if (($tokens) && \strtoupper($tokens[0]) === 'DEFAULT') {
+            $f->default = self::decodeValue($tokens[1]);
+            if ($f->default === 'NULL') {
+                $f->type->null = true;
+            }
+            \array_shift($tokens);
+            \array_shift($tokens);
+        }
+        if ($tokens && \strtoupper($tokens[0]) === 'AUTO_INCREMENT') {
+            $f->auto_increment = true;
+            \array_shift($tokens);
+        }
+        if (\count($tokens)) {
+            $f->more = $tokens;
+        }
+        
+        return $f;
+    }
+
+    /**
+     * @param  non-empty-list<string> &$tokens
+     * @psalm-param-out list<string> $tokens
+     */
+    public static function parseFieldType(array &$tokens, bool $allowArbitaryType = false) : MysqlColumnType
+    {
+        $first_token = \array_shift($tokens);
+
+        $t = new MysqlColumnType();
+
+        $first_token = \strtoupper($first_token);
+        switch ($first_token) {
             case 'DATE':
             case 'TIME':
             case 'TIMESTAMP':
@@ -421,81 +458,71 @@ final class CreateTableParser
             case 'INT':
             case 'INTEGER':
             case 'BIGINT':
-                $this->parseFieldLength($tokens, $f);
-                $this->parseFieldUnsigned($tokens, $f);
-                $this->parseFieldZerofill($tokens, $f);
+                static::parseFieldLength($tokens, $t);
+                static::parseFieldUnsigned($tokens, $t);
+                static::parseFieldZerofill($tokens, $t);
                 break;
             case 'REAL':
             case 'DOUBLE':
             case 'FLOAT':
-                $this->parseFieldLengthDecimals($tokens, $f);
-                $this->parseFieldUnsigned($tokens, $f);
-                $this->parseFieldZerofill($tokens, $f);
+                static::parseFieldLengthDecimals($tokens, $t);
+                static::parseFieldUnsigned($tokens, $t);
+                static::parseFieldZerofill($tokens, $t);
                 break;
             case 'DECIMAL':
             case 'NUMERIC':
-                $this->parseFieldLengthDecimals($tokens, $f);
-                $this->parseFieldLength($tokens, $f);
-                $this->parseFieldUnsigned($tokens, $f);
-                $this->parseFieldZerofill($tokens, $f);
+                static::parseFieldLengthDecimals($tokens, $t);
+                static::parseFieldLength($tokens, $t);
+                static::parseFieldUnsigned($tokens, $t);
+                static::parseFieldZerofill($tokens, $t);
                 break;
             case 'BIT':
             case 'BINARY':
-                $this->parseFieldLength($tokens, $f);
+                static::parseFieldLength($tokens, $t);
                 break;
             case 'VARBINARY':
-                $this->parseFieldLength($tokens, $f);
+                static::parseFieldLength($tokens, $t);
                 break;
             case 'CHAR':
-                $this->parseFieldLength($tokens, $f);
-                $this->parseFieldCharset($tokens, $f);
-                $this->parseFieldCollate($tokens, $f);
+                static::parseFieldLength($tokens, $t);
+                static::parseFieldCharset($tokens, $t);
+                static::parseFieldCollate($tokens, $t);
                 break;
             case 'VARCHAR':
-                $this->parseFieldLength($tokens, $f);
-                $this->parseFieldCharset($tokens, $f);
-                $this->parseFieldCollate($tokens, $f);
+                static::parseFieldLength($tokens, $t);
+                static::parseFieldCharset($tokens, $t);
+                static::parseFieldCollate($tokens, $t);
                 break;
             case 'TINYTEXT':
             case 'TEXT':
             case 'MEDIUMTEXT':
             case 'LONGTEXT':
-                $this->parseFieldCharset($tokens, $f);
-                $this->parseFieldCollate($tokens, $f);
+                static::parseFieldCharset($tokens, $t);
+                static::parseFieldCollate($tokens, $t);
                 break;
             case 'ENUM':
             case 'SET':
-                $f->values = $this->parseValueList($tokens);
-                $this->parseFieldCharset($tokens, $f);
-                $this->parseFieldCollate($tokens, $f);
+                $t->values = static::parseValueList($tokens);
+                static::parseFieldCharset($tokens, $t);
+                static::parseFieldCollate($tokens, $t);
                 break;
             default:
-                die("Unsupported field type: {$f->type}");
+                if (!$allowArbitaryType) {
+                    throw new SQLFakeParseException("Unsupported field type: {$first_token}");
+                }
         }
+
+        $t->type = $first_token;
         if ($tokens && \strtoupper($tokens[0]) === 'NOT NULL') {
-            $f->null = false;
+            $t->null = false;
             \array_shift($tokens);
         }
         if (($tokens) && \strtoupper($tokens[0]) === 'NULL') {
-            $f->null = true;
+            $t->null = true;
             \array_shift($tokens);
         }
-        if (($tokens) && \strtoupper($tokens[0]) === 'DEFAULT') {
-            $f->default = $this->decodeValue($tokens[1]);
-            if ($f->default === 'NULL') {
-                $f->null = true;
-            }
-            \array_shift($tokens);
-            \array_shift($tokens);
-        }
-        if ($tokens && \strtoupper($tokens[0]) === 'AUTO_INCREMENT') {
-            $f->auto_increment = true;
-            \array_shift($tokens);
-        }
-        if (\count($tokens)) {
-            $f->more = $tokens;
-        }
-        return $f;
+
+        return $t;
     }
 
     /**
@@ -503,7 +530,7 @@ final class CreateTableParser
      *
      * @return array<string, string>
      */
-    private function parseTableProps(array &$tokens)
+    private static function parseTableProps(array &$tokens)
     {
         $alt_names = [
             'CHARACTER SET' => 'CHARSET',
@@ -669,7 +696,7 @@ final class CreateTableParser
      *
      * @return void
      */
-    private function parseIndexType(array &$tokens, CreateIndex $index)
+    private static function parseIndexType(array &$tokens, CreateIndex $index)
     {
         if (($tokens) && $tokens[0] === 'USING BTREE') {
             $index->mode = 'btree';
@@ -687,7 +714,7 @@ final class CreateTableParser
      *
      * @return void
      */
-    private function parseIndexColumns(array &$tokens, CreateIndex $index)
+    private static function parseIndexColumns(array &$tokens, CreateIndex $index)
     {
         if ($tokens[0] !== '(') {
             return;
@@ -697,7 +724,7 @@ final class CreateTableParser
 
         while (true) {
             $t = \array_shift($tokens);
-            $col = ['name' => $this->decodeIdentifier($t), 'cols' => []];
+            $col = ['name' => static::decodeIdentifier($t), 'cols' => []];
             if ($tokens[0] === '(' && $tokens[2] === ')') {
                 $col['length'] = (int) $tokens[1];
                 $tokens = \array_slice($tokens, 3);
@@ -730,7 +757,7 @@ final class CreateTableParser
      *
      * @return void
      */
-    private function parseIndexOptions(array $tokens, CreateIndex $index)
+    private static function parseIndexOptions(array $tokens, CreateIndex $index)
     {
         if (($tokens) && $tokens[0] === 'KEY_BLOCK_SIZE') {
             \array_shift($tokens);
@@ -741,7 +768,7 @@ final class CreateTableParser
             \array_shift($tokens);
         }
 
-        $this->parseIndexType($tokens, $index);
+        static::parseIndexType($tokens, $index);
 
         if (($tokens) && $tokens[0] === 'WITH PARSER') {
             $index->parser = $tokens[1];
@@ -755,10 +782,10 @@ final class CreateTableParser
      *
      * @return void
      */
-    private function parseFieldLength(array $tokens, CreateColumn $f)
+    private static function parseFieldLength(array $tokens, MysqlColumnType $t)
     {
         if (($tokens) && $tokens[0] === '(' && $tokens[2] === ')') {
-            $f->length = (int) $tokens[1];
+            $t->length = (int) $tokens[1];
             $tokens = \array_slice($tokens, 3);
         }
     }
@@ -768,11 +795,11 @@ final class CreateTableParser
      *
      * @return void
      */
-    private function parseFieldLengthDecimals(array $tokens, CreateColumn $f)
+    private static function parseFieldLengthDecimals(array $tokens, MysqlColumnType $t)
     {
         if (($tokens) && $tokens[0] === '(' && $tokens[2] === ',' && $tokens[4] === ')') {
-            $f->length = (int) $tokens[1];
-            $f->decimals = (int) $tokens[3];
+            $t->length = (int) $tokens[1];
+            $t->decimals = (int) $tokens[3];
             $tokens = \array_slice($tokens, 5);
         }
     }
@@ -782,10 +809,10 @@ final class CreateTableParser
      *
      * @return void
      */
-    private function parseFieldUnsigned(array $tokens, CreateColumn $f)
+    private static function parseFieldUnsigned(array $tokens, MysqlColumnType $t)
     {
         if (($tokens) && \strtoupper($tokens[0]) === 'UNSIGNED') {
-            $f->unsigned = true;
+            $t->unsigned = true;
             \array_shift($tokens);
         }
     }
@@ -795,10 +822,10 @@ final class CreateTableParser
      *
      * @return void
      */
-    private function parseFieldZerofill(array &$tokens, CreateColumn $f)
+    private static function parseFieldZerofill(array &$tokens, MysqlColumnType $t)
     {
         if (($tokens) && \strtoupper($tokens[0]) === 'ZEROFILL') {
-            $f->zerofill = true;
+            $t->zerofill = true;
             \array_shift($tokens);
         }
     }
@@ -808,10 +835,10 @@ final class CreateTableParser
      *
      * @return void
      */
-    private function parseFieldCharset(array &$tokens, CreateColumn $f)
+    private static function parseFieldCharset(array &$tokens, MysqlColumnType $t)
     {
         if (($tokens) && \strtoupper($tokens[0]) === 'CHARACTER SET') {
-            $f->character_set = $tokens[1];
+            $t->character_set = $tokens[1];
             \array_shift($tokens);
             \array_shift($tokens);
         }
@@ -822,10 +849,10 @@ final class CreateTableParser
      *
      * @return void
      */
-    private function parseFieldCollate(array &$tokens, CreateColumn $f)
+    private static function parseFieldCollate(array &$tokens, MysqlColumnType $t)
     {
         if (($tokens) && \strtoupper($tokens[0]) === 'COLLATE') {
-            $f->collation = $tokens[1];
+            $t->collation = $tokens[1];
             \array_shift($tokens);
             \array_shift($tokens);
         }
@@ -836,7 +863,7 @@ final class CreateTableParser
      *
      * @return array<int, string>|null
      */
-    private function parseValueList(array $tokens)
+    private static function parseValueList(array $tokens)
     {
         if (!($tokens) || $tokens[0] !== '(') {
             return null;
@@ -849,7 +876,7 @@ final class CreateTableParser
                 return $values;
             }
             $t = \array_shift($tokens);
-            $values[] = $this->decodeValue($t);
+            $values[] = self::decodeValue($t);
             if ($tokens[0] === ')') {
                 \array_shift($tokens);
                 return $values;
@@ -866,7 +893,7 @@ final class CreateTableParser
     /**
      * @return string
      */
-    private function decodeIdentifier(string $token)
+    private static function decodeIdentifier(string $token)
     {
         if ($token[0] === '`') {
             return \substr($token, 1, -1);
@@ -877,7 +904,7 @@ final class CreateTableParser
     /**
      * @return string
      */
-    private function decodeValue(string $token)
+    private static function decodeValue(string $token)
     {
         if ($token[0] === "'" || $token[0] === '"') {
             $map = ['n' => "\n", 'r' => "\r", 't' => "\t"];

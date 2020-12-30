@@ -1,9 +1,11 @@
 <?php
 namespace Vimeo\MysqlEngine\Parser;
 
+use Vimeo\MysqlEngine\Query\CreateColumn;
 use Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression;
+use Vimeo\MysqlEngine\Query\Expression\CastExpression;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
 use Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression;
@@ -128,23 +130,7 @@ final class ExpressionParser
 
         while ($pos < $token_count) {
             $arg = $tokens[$pos];
-            if ($arg->value === 'DISTINCT' || $arg->value === 'DISTINCTROW') {
-                $distinct = true;
-                $pos++;
-                if ($tokens[$pos]->type === TokenType::PAREN) {
-                    $close = SQLParser::findMatchingParen($pos, $tokens);
-                    $pos++;
-                    $t = $tokens[$pos];
-                    if ($close - $pos !== 1) {
-                        throw new SQLFakeParseException("Parse error near DISTINCT");
-                    }
-                    $p = new ExpressionParser([$t], -1);
-                    $expr = $p->build();
-                    $args[] = $expr;
-                    $pos += 2;
-                }
-                continue;
-            }
+            
 
             if ($arg->value === ',') {
                 if ($needs_comma) {
@@ -164,6 +150,50 @@ final class ExpressionParser
         }
 
         return [$distinct, $args];
+    }
+
+    /**
+     * @param array<int, Token> $tokens
+     *
+     * @return array{Expression, non-empty-list<Token>}
+     */
+    private function getCastAsExpression(array $tokens)
+    {
+        $pos = 0;
+        $token_count = \count($tokens);
+        $needs_as = 0;
+        $expr = null;
+        $as_type_tokens = [];
+
+        while ($pos < $token_count) {
+            $arg = $tokens[$pos];
+
+            if ($arg->value === 'AS') {
+                if ($needs_as === 1) {
+                    $needs_as = 2;
+                    $pos++;
+                    continue;
+                } else {
+                    throw new SQLFakeParseException("Unexpected AS in SQL query");
+                }
+            }
+
+            if ($needs_as === 0) {
+                $p = new ExpressionParser($tokens, $pos - 1);
+                list($pos, $expr) = $p->buildWithPointer();
+                $pos++;
+                $needs_as = 1;
+            } elseif ($needs_as === 2) {
+                $as_type_tokens[] = $arg;
+                $pos++;
+            }
+        }
+
+        if (!$expr || !$as_type_tokens) {
+            throw new SQLFakeParseException("Expecting two parts to CAST query");
+        }
+
+        return [$expr, $as_type_tokens];
     }
 
     /**
@@ -201,9 +231,29 @@ final class ExpressionParser
                     $this->pointer + 1,
                     $closing_paren_pointer - $this->pointer - 1
                 );
-                list($distinct, $args) = $this->getListExpression($arg_tokens);
+                
+                if ($token->value === 'CAST') {
+                    [$expr, $as_type_tokens] = $this->getCastAsExpression($arg_tokens);
+
+                    $as_type_token_values = array_map(
+                        function ($token) {
+                            return $token->value;
+                        },
+                        $as_type_tokens
+                    );
+
+                    $create_column = new CreateColumn();
+
+                    $type = CreateTableParser::parseFieldType($as_type_token_values, true);
+
+                    $fn = new CastExpression($token, $expr, $type);
+                } else {
+                    list($distinct, $args) = $this->getListExpression($arg_tokens);
+                    $fn = new FunctionExpression($token, $args, $distinct);
+                }
+
                 $this->pointer = $closing_paren_pointer;
-                $fn = new FunctionExpression($token, $args, $distinct);
+                
                 return $fn;
 
             default:
@@ -247,6 +297,33 @@ final class ExpressionParser
                         $expr = new SubqueryExpression($select, '');
                     } else {
                         if ($this->expression instanceof InOperatorExpression) {
+                            $pointer = -1;
+                            $in_list = [];
+                            $token_count = \count($arg_tokens);
+
+                            while ($pointer < $token_count) {
+                                $p = new ExpressionParser($arg_tokens, $pointer);
+                                list($pointer, $expr) = $p->buildWithPointer();
+                                $in_list[] = $expr;
+                                if ($pointer + 1 >= $token_count) {
+                                    break;
+                                }
+                                $pointer++;
+                                $next = $arg_tokens[$pointer];
+                                if ($next->value !== ',') {
+                                    throw new SQLFakeParseException("Expected , in IN () list");
+                                }
+                            }
+
+                            ($__tmp2__ = $this->expression) instanceof InOperatorExpression ? $__tmp2__ : (function () {
+                                throw new \TypeError('Failed assertion');
+                            })();
+
+                            $this->expression->setInList($in_list);
+                            break;
+                        }
+
+                        if ($this->expression instanceof CastExpression) {
                             $pointer = -1;
                             $in_list = [];
                             $token_count = \count($arg_tokens);
@@ -353,7 +430,7 @@ final class ExpressionParser
                         break;
                     }
 
-                    if (!($this->expression->operator === null || $this->expression->operator === '')) {
+                    if ($this->expression->operator !== null && $this->expression->operator !== '') {
                         if ($operator === 'AND'
                             && $this->expression->operator === 'BETWEEN'
                             && !$this->expression->isWellFormed()

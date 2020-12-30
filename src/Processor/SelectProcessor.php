@@ -15,7 +15,7 @@ final class SelectProcessor extends Processor
      *
      * @return array<int, array<string, mixed>>
      */
-    public static function process(FakePdo $conn, SelectQuery $stmt, ?array $_1 = null) : array
+    public static function process(FakePdo $conn, SelectQuery $stmt) : array
     {
         return self::processMultiQuery(
             $conn,
@@ -143,9 +143,27 @@ final class SelectProcessor extends Processor
      */
     protected static function applySelect(FakePdo $conn, SelectQuery $stmt, array $data) : array
     {
-        $order_by_expressions = $stmt->orderBy ?? [];
         $out = [];
 
+        if (!$data) {
+            if ($stmt->fromClause) {
+                return [];
+            }
+
+            $formatted_row = [];
+
+            foreach ($stmt->selectExpressions as $expr) {
+                $val = Expression\Evaluator::evaluate($expr, [], $conn);
+                $name = $expr->name;
+
+                $formatted_row[$name] = $val;
+            }
+
+            return [$formatted_row];
+        }
+
+        $order_by_expressions = $stmt->orderBy ?? [];
+        
         foreach ($data as $row) {
             $formatted_row = [];
 

@@ -9,29 +9,9 @@ class CreateColumn
     public $name;
 
     /**
-     * @var string
+     * @var MysqlColumnType
      */
     public $type;
-
-    /**
-     * @var int
-     */
-    public $length;
-
-    /**
-     * @var int
-     */
-    public $decimals;
-
-    /**
-     * @var bool
-     */
-    public $unsigned;
-
-    /**
-     * @var bool
-     */
-    public $null;
 
     /**
      * @var string
@@ -39,29 +19,9 @@ class CreateColumn
     public $default;
 
     /**
-     * @var array
-     */
-    public $values;
-
-    /**
      * @var bool
      */
     public $auto_increment;
-
-    /**
-     * @var bool
-     */
-    public $zerofill = false;
-
-    /**
-     * @var string
-     */
-    public $character_set;
-
-    /**
-     * @var string
-     */
-    public $collation;
 
     public $more;
 }

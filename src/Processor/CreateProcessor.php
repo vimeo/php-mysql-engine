@@ -133,7 +133,7 @@ final class CreateProcessor
             case DataType::SET:
                 return new Column\Set(
                     array_map(
-                        function ($param){
+                        function ($param) {
                             return substr($param, 1, -1);
                         },
                         $stmt->parameters

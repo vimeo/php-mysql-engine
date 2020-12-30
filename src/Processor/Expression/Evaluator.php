@@ -55,8 +55,11 @@ class Evaluator
             case \Vimeo\MysqlEngine\Query\Expression\UnaryExpression::class:
                 return UnaryEvaluator::evaluate($expr, $row, $conn);
 
+            case \Vimeo\MysqlEngine\Query\Expression\CastExpression::class:
+                return CastEvaluator::evaluate($expr, $row, $conn);
+
             default:
-                throw new SQLFakeRuntimeException('Unsupported expression ' . $expr);
+                throw new SQLFakeRuntimeException('Unsupported expression ' . get_class($expr));
         }
     }
 }

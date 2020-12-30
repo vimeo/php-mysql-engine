@@ -59,12 +59,15 @@ class FakePdo extends \PDO
         return $this->server;
     }
 
-    public function prepare(string $sql)
+    /**
+     * @param  string $statement
+     */
+    public function prepare($statement, $options = null)
     {
-        return new FakePdoStatement($this, $sql, $this->real);
+        return new FakePdoStatement($this, $statement, $this->real);
     }
 
-    public function lastInsertId()
+    public function lastInsertId($seqname = NULL)
     {
         return $this->lastInsertId;
     }
