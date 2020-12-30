@@ -402,7 +402,7 @@ class FakePdoStatement extends \PDOStatement
                         : ($value === true
                             ? 'TRUE'
                             : ($value === false
-                                : 'FALSE'
+                                ? 'FALSE'
                                 : $value
                             )
                         )
