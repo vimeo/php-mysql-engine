@@ -47,10 +47,10 @@ class TableDefinition
         string $name,
         string $databaseName,
         array $columns,
-        string $characterSet,
-        string $collation,
-        array $primaryKeyColumns,
-        array $indexes
+        string $characterSet = '',
+        string $collation = '',
+        array $primaryKeyColumns = [],
+        array $indexes = []
     ) {
         $this->name = $name;
         $this->databaseName = $databaseName;

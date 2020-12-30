@@ -16,10 +16,18 @@ final class FromProcessor
         $left_column_list = [];
 
         foreach ($stmt->tables as $table) {
-            $table_definition = null;
             if (\array_key_exists('subquery', $table)) {
                 $res = Expression\Evaluator::evaluate($table['subquery'], [], $conn);
+
+                $columns = [];
+
+                foreach ($table['subquery']->query->selectExpressions as $expr) {
+                    // the varchar here is irrelevant – we just want the column to exist
+                    $columns[$expr->name] = new \Vimeo\MysqlEngine\Schema\Column\Varchar(10);
+                }
+
                 $name = $table['name'];
+                $table_definition = new \Vimeo\MysqlEngine\Schema\TableDefinition($name, '', $columns);
             } else {
                 $table_name = $table['name'];
                 list($database, $table_name) = Processor::parseTableName($conn, $table_name);
@@ -41,26 +49,17 @@ final class FromProcessor
 
             $new_dataset = [];
 
-            if ($table_definition !== null) {
-                $ordered_fields = array_keys($table_definition->columns);
-                foreach ($res as $row) {
-                    $m = [];
-                    foreach ($ordered_fields as $field) {
-                        if (!\array_key_exists($field, $row)) {
-                            continue;
-                        }
-                        $m["{$name}.{$field}"] = $row[$field];
+            $ordered_fields = array_keys($table_definition->columns);
+
+            foreach ($res as $row) {
+                $m = [];
+                foreach ($ordered_fields as $field) {
+                    if (!\array_key_exists($field, $row)) {
+                        continue;
                     }
-                    $new_dataset[] = $m;
+                    $m["{$name}.{$field}"] = $row[$field];
                 }
-            } else {
-                foreach ($res as $row) {
-                    $m = [];
-                    foreach ($row as $key => $val) {
-                        $m["{$name}.{$key}"] = $val;
-                    }
-                    $new_dataset[] = $m;
-                }
+                $new_dataset[] = $m;
             }
 
             if ($data || !$is_first_table) {

@@ -29,7 +29,7 @@ final class JoinProcessor
         $join_type,
         $_ref_type,
         ?Expression $filter,
-        ?\Vimeo\MysqlEngine\Schema\TableDefinition $right_table_definition
+        \Vimeo\MysqlEngine\Schema\TableDefinition $right_table_definition
     ) {
         $out = [];
 
@@ -49,10 +49,8 @@ final class JoinProcessor
 
             case JoinType::LEFT:
                 $null_placeholder = [];
-                if ($right_table_definition !== null) {
-                    foreach ($right_table_definition->columns as $name => $_) {
-                        $null_placeholder["{$right_table_name}.{$name}"] = null;
-                    }
+                foreach ($right_table_definition->columns as $name => $_) {
+                    $null_placeholder["{$right_table_name}.{$name}"] = null;
                 }
 
                 foreach ($left_dataset as $row) {
@@ -66,11 +64,7 @@ final class JoinProcessor
                         }
                     }
                     if (!$any_match) {
-                        if ($right_table_definition !== null) {
-                            $out[] = \array_merge($row, $null_placeholder);
-                        } else {
-                            $out[] = $row;
-                        }
+                        $out[] = \array_merge($row, $null_placeholder);
                     }
                 }
 
@@ -78,21 +72,24 @@ final class JoinProcessor
 
             case JoinType::RIGHT:
                 $null_placeholder = [];
-                if ($right_table_definition !== null) {
-                    foreach ($right_table_definition->columns as $name => $_) {
-                        $null_placeholder["{$right_table_name}.{$name}"] = null;
-                    }
+                
+                foreach ($right_table_definition->columns as $name => $_) {
+                    $null_placeholder["{$right_table_name}.{$name}"] = null;
                 }
+
                 foreach ($right_dataset as $raw) {
                     $any_match = false;
+
                     foreach ($left_dataset as $row) {
                         $left_row = $row;
                         $candidate_row = \array_merge($left_row, $raw);
+                        
                         if (!$filter || ExpressionEvaluator::evaluate($filter, $candidate_row, $conn)) {
                             $out[] = $candidate_row;
                             $any_match = true;
                         }
                     }
+
                     if (!$any_match) {
                         $out[] = $raw;
                     }
