@@ -72,4 +72,9 @@ abstract class Expression
     {
         throw new SQLFakeParseException("Parse error: unexpected recursive expression");
     }
+
+    public function hasAggregate() : bool
+    {
+        return false;
+    }
 }

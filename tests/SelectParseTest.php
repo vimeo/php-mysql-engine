@@ -28,7 +28,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testComplex()
+    public function testAddFunctionResults()
     {
         $query = 'SELECT IFNULL(`a`.`b`, 0) + ISNULL(`a`.`c`)';
 

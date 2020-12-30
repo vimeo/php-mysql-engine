@@ -140,4 +140,9 @@ final class BinaryOperatorExpression extends Expression
         $this->setNextChild($new_expression, true);
         return $pointer;
     }
+
+    public function hasAggregate() : bool
+    {
+        return $this->left->hasAggregate() || $this->right->hasAggregate();
+    }
 }

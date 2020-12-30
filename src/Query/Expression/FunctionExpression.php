@@ -56,12 +56,24 @@ final class FunctionExpression extends Expression
         return $this->functionName;
     }
 
-    /**
-     * @return bool
-     */
-    public function isAggregate()
+    public function hasAggregate() : bool
     {
-        return \in_array($this->functionName, ['COUNT', 'SUM', 'MIN', 'MAX', 'AVG'], true);
+        if ($this->functionName === 'COUNT'
+            || $this->functionName === 'SUM'
+            || $this->functionName === 'MIN'
+            || $this->functionName === 'MAX'
+            || $this->functionName === 'AVG'
+        ) {
+            return true;
+        }
+
+        foreach ($this->args as $arg) {
+            if ($arg->hasAggregate()) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -102,7 +102,7 @@ final class SelectProcessor extends Processor
         $found_aggregate = false;
 
         foreach ($select_expressions as $expr) {
-            if ($expr instanceof FunctionExpression && $expr->isAggregate()) {
+            if ($expr->hasAggregate()) {
                 $found_aggregate = true;
                 break;
             }
