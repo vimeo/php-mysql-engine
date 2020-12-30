@@ -67,7 +67,7 @@ class FakePdo extends \PDO
         return new FakePdoStatement($this, $statement, $this->real);
     }
 
-    public function lastInsertId($seqname = NULL)
+    public function lastInsertId($seqname = null)
     {
         return $this->lastInsertId;
     }

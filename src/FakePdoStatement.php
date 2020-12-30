@@ -397,7 +397,16 @@ class FakePdoStatement extends \PDOStatement
                 '/:' . $key . '(?![a-z_A-Z0-9])/',
                 \is_string($value) || \is_object($value)
                     ? "'" . str_replace("'", "\\'", (string) $value) . "'"
-                    : ($value === null ? 'NULL' : $value),
+                    : ($value === null
+                        ? 'NULL'
+                        : ($value === true
+                            ? 'TRUE'
+                            : ($value === false
+                                : 'FALSE'
+                                : $value
+                            )
+                        )
+                    ),
                 $sql
             );
         }

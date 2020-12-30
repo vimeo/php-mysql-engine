@@ -43,6 +43,8 @@ final class FunctionEvaluator
                 return self::sqlLength($expr, $row, $conn);
             case 'LOWER':
                 return self::sqlLower($expr, $row, $conn);
+            case 'UPPER':
+                return self::sqlUpper($expr, $row, $conn);
             case 'CHAR_LENGTH':
             case 'CHARACTER_LENGTH':
                 return self::sqlCharLength($expr, $row, $conn);
@@ -62,6 +64,8 @@ final class FunctionEvaluator
                 return self::sqlValues($expr, $row, $conn);
             case 'NOW':
                 return \date('Y-m-d H:i:s', time() + 5*60*60);
+            case 'ISNULL':
+                return self::sqlIsNull($expr, $row, $conn);
         }
 
         throw new SQLFakeRuntimeException("Function " . $expr->functionName . " not implemented yet");
@@ -340,6 +344,25 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
+    private static function sqlUpper(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    {
+        $row = self::maybeUnrollGroupedDataset($row);
+        $args = $expr->args;
+
+        if (\count($args) !== 1) {
+            throw new SQLFakeRuntimeException("MySQL UPPER() function must be called with one argument");
+        }
+
+        $subject = $args[0];
+        $string = (string) Evaluator::evaluate($subject, $row, $conn);
+        return \strtoupper($string);
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     *
+     * @return mixed
+     */
     private static function sqlLength(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
     {
         $row = self::maybeUnrollGroupedDataset($row);
@@ -457,6 +480,21 @@ final class FunctionEvaluator
         $right = Evaluator::evaluate($args[1], $row, $conn);
 
         return $left === $right ? null : $left;
+    }
+
+     /**
+     * @param array<string, mixed> $row
+     */
+    private static function sqlIsNull(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : int
+    {
+        $row = self::maybeUnrollGroupedDataset($row);
+        $args = $expr->args;
+
+        if (\count($args) !== 1) {
+            throw new SQLFakeRuntimeException("MySQL ISNULL() function must be called with one arguments");
+        }
+
+        return Evaluator::evaluate($args[0], $row, $conn) === null ? 1 : 0;
     }
 
     /**

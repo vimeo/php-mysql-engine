@@ -50,7 +50,7 @@ class Evaluator
                 return RowEvaluator::evaluate($expr, $row, $conn);
 
             case \Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class:
-                return \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $expr->query, $row);
+                return \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $expr->query);
 
             case \Vimeo\MysqlEngine\Query\Expression\UnaryExpression::class:
                 return UnaryEvaluator::evaluate($expr, $row, $conn);

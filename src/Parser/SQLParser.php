@@ -268,6 +268,7 @@ final class SQLParser
                     && substr($out[$previous_key]->value, -1) === '.'
                 ) {
                     $out[$previous_key]->value .= $token;
+                    $out[$previous_key]->raw .= $raw;
                     continue;
                 }
 

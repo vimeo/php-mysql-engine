@@ -43,13 +43,4 @@ final class CastExpression extends Expression
     {
         return true;
     }
-
-    /**
-     * @return Expression
-     */
-    public function getExpr()
-    {
-        \assert(\count($this->args) === 1, 'expression must have one argument');
-        return \reset($this->args);
-    }
 }

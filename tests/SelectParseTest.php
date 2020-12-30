@@ -27,4 +27,24 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
             \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $select_query)
         );
     }
+
+    public function testComplex()
+    {
+        $query = 'SELECT IFNULL(`a`.`b`, 0) + ISNULL(`a`.`c`)';
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($query);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+
+        $this->assertCount(1, $select_query->selectExpressions);
+
+        $this->assertInstanceOf(
+            \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class,
+            $select_query->selectExpressions[0]
+        );
+
+        $this->assertTrue($select_query->selectExpressions[0]->isWellFormed());
+
+        $this->assertSame('IFNULL(`a`.`b`, 0) + ISNULL(`a`.`c`)', $select_query->selectExpressions[0]->name);
+    }
 }

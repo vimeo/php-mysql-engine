@@ -72,12 +72,12 @@ final class BinaryOperatorExpression extends Expression
      */
     public function isWellFormed()
     {
-        return $this->right && !($this->operator === null || $this->operator === '');
+        return $this->right && $this->operator;
     }
 
     public function setNextChild(Expression $expr, bool $overwrite = false) : void
     {
-        if (($this->operator === null || $this->operator === '') || $this->right && !$overwrite) {
+        if (!$this->operator || ($this->right && !$overwrite)) {
             throw new SQLFakeParseException("Parse error");
         }
         $this->right = $expr;

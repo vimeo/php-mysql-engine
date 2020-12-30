@@ -323,33 +323,6 @@ final class ExpressionParser
                             break;
                         }
 
-                        if ($this->expression instanceof CastExpression) {
-                            $pointer = -1;
-                            $in_list = [];
-                            $token_count = \count($arg_tokens);
-
-                            while ($pointer < $token_count) {
-                                $p = new ExpressionParser($arg_tokens, $pointer);
-                                list($pointer, $expr) = $p->buildWithPointer();
-                                $in_list[] = $expr;
-                                if ($pointer + 1 >= $token_count) {
-                                    break;
-                                }
-                                $pointer++;
-                                $next = $arg_tokens[$pointer];
-                                if ($next->value !== ',') {
-                                    throw new SQLFakeParseException("Expected , in IN () list");
-                                }
-                            }
-
-                            ($__tmp2__ = $this->expression) instanceof InOperatorExpression ? $__tmp2__ : (function () {
-                                throw new \TypeError('Failed assertion');
-                            })();
-
-                            $this->expression->setInList($in_list);
-                            break;
-                        }
-
                         $second_token = $arg_tokens[1] ?? null;
                         if ($second_token !== null && $second_token->type === TokenType::SEPARATOR) {
                             list($distinct, $elements) = $this->getListExpression($arg_tokens);
@@ -515,14 +488,20 @@ final class ExpressionParser
                                 $this->expression->negated
                             );
                         } elseif ($operator === 'UNARY_MINUS'
-                        || $operator === 'UNARY_PLUS'
-                        || $operator === '~'
+                            || $operator === 'UNARY_PLUS'
+                            || $operator === '~'
                         ) {
-                            if (!$this->expression instanceof PlaceholderExpression) {
-                                throw new \TypeError('Failed assertion');
-                            }
+                            if ($this->expression instanceof BinaryOperatorExpression
+                                && $operator !== '~'
+                            ) {
+                                $this->expression->setOperator($operator === 'UNARY_MINUS' ? '-' : '+');
+                            } else {
+                                if (!$this->expression instanceof PlaceholderExpression) {
+                                    throw new \TypeError('Failed assertion');
+                                }
 
-                            $this->expression = new UnaryExpression($operator);
+                                $this->expression = new UnaryExpression($operator);
+                            }
                         } else {
                             if (!$this->expression instanceof BinaryOperatorExpression) {
                                 throw new \TypeError('Failed assertion');
