@@ -4,6 +4,10 @@ This is a PHP port of Slack's [Hack SQL Fake](https://github.com/slackhq/hack-sq
 
 PHP MySQL Engine is a unit testing library for PHP. It enables testing database-driven applications with an in-memory simulation of MySQL. It supports a wide variety of queries, transactions, and more. This project extends the `PDO` class and allows you to call common PDO MySQL methods.
 
+## Caveat Emptor
+
+Unlike [Psalm](https://github.com/vimeo/psalm), this package is not designed with a wide audience in mind. For a project to really benefit from this library it should already have a large number of unit tests that require a database connection to complete, and the project maintainers must understand the tradeoffs associated with using an unofficial MySQL implementation in their test suite.
+
 ## Motivation
 
 In most unit testing libraries, SQL queries are traditionally replaced with Mock or Stub implementations. Mocks require an explicit list of queries that are expected to run and results to return, while stubs may not even check the queries being run and simply return a hard coded result. This leads to significant manual work setting up expectations, and tests which are fragile and must be updated even on benign changes to the code or queries. It also means the data access layer is not unit tested.
@@ -39,7 +43,7 @@ The rest of your code can operate as normal, using the database in the same way 
 
 ## Why doesn't it support `X`?
 
-This library aims to support everything its users use in MySQL, rather than every possibly feature MySQL offers. We welcome pull requests to add support for new syntax, sql functions, data types, bug fixes, and other features. See our #issues page for a wishlist.
+This library aims to support everything its users use in MySQL, rather than every possibly feature MySQL offers. We welcome pull requests to add support for new syntax, sql functions, data types, bug fixes, and other features.
 
 ## Contributing
 
