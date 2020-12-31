@@ -217,7 +217,7 @@ final class FunctionEvaluator
             })();
 
             $value = Evaluator::evaluate($expr, $row, $conn);
-            
+
             if (!\is_int($value) && !\is_float($value)) {
                 throw new \TypeError('Failed assertion');
             }
@@ -237,7 +237,10 @@ final class FunctionEvaluator
      */
     private static function sqlIf(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
     {
-        $row = self::maybeUnrollGroupedDataset($row);
+        if (!$expr->hasAggregate()) {
+            $row = self::maybeUnrollGroupedDataset($row);
+        }
+
         $args = $expr->args;
 
         if (\count($args) !== 3) {
@@ -422,14 +425,18 @@ final class FunctionEvaluator
      */
     private static function sqlCoalesce(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
     {
-        $row = self::maybeUnrollGroupedDataset($row);
-
         if (!\count($expr->args)) {
             throw new SQLFakeRuntimeException("MySQL COALESCE() function must be called with at least one argument");
         }
 
         foreach ($expr->args as $arg) {
-            $val = Evaluator::evaluate($arg, $row, $conn);
+            $eval_row = $row;
+
+            if (!$arg->hasAggregate()) {
+                $eval_row = self::maybeUnrollGroupedDataset($row);
+            }
+
+            $val = Evaluator::evaluate($arg, $eval_row, $conn);
 
             if ($val !== null) {
                 return $val;
@@ -446,7 +453,6 @@ final class FunctionEvaluator
      */
     private static function sqlGreatest(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
     {
-        $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
 
         if (\count($args) < 2) {
@@ -455,7 +461,13 @@ final class FunctionEvaluator
 
         $values = [];
         foreach ($expr->args as $arg) {
-            $val = Evaluator::evaluate($arg, $row, $conn);
+            $eval_row = $row;
+
+            if (!$arg->hasAggregate()) {
+                $eval_row = self::maybeUnrollGroupedDataset($row);
+            }
+
+            $val = Evaluator::evaluate($arg, $eval_row, $conn);
             $values[] = $val;
         }
 
@@ -469,7 +481,10 @@ final class FunctionEvaluator
      */
     private static function sqlNullif(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
     {
-        $row = self::maybeUnrollGroupedDataset($row);
+        if (!$expr->hasAggregate()) {
+            $row = self::maybeUnrollGroupedDataset($row);
+        }
+
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -487,7 +502,10 @@ final class FunctionEvaluator
      */
     private static function sqlIsNull(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : int
     {
-        $row = self::maybeUnrollGroupedDataset($row);
+        if (!$expr->hasAggregate()) {
+            $row = self::maybeUnrollGroupedDataset($row);
+        }
+
         $args = $expr->args;
 
         if (\count($args) !== 1) {
