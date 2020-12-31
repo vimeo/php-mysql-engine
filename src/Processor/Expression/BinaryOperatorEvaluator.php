@@ -256,7 +256,7 @@ final class BinaryOperatorEvaluator
             if (0 === \count($val)) {
                 $val = 0;
             } else {
-                $val = reset($val);
+                $val = self::extractNumericValue(reset($val));
             }
         }
 

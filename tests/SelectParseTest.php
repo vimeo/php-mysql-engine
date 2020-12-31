@@ -47,4 +47,20 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame('IFNULL(`a`.`b`, 0) + ISNULL(`a`.`c`)', $select_query->selectExpressions[0]->name);
     }
+
+    public function testSubqueryCalculation()
+    {
+        $query = 'SELECT (SELECT 2) + (SELECT 3) as `a`';
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($query);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+
+        $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
+
+        $this->assertSame(
+            [['a' => 5]],
+            \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $select_query)
+        );
+    }
 }
