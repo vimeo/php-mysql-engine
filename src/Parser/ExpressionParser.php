@@ -491,17 +491,11 @@ final class ExpressionParser
                             || $operator === 'UNARY_PLUS'
                             || $operator === '~'
                         ) {
-                            if ($this->expression instanceof BinaryOperatorExpression
-                                && $operator !== '~'
-                            ) {
-                                $this->expression->setOperator($operator === 'UNARY_MINUS' ? '-' : '+');
-                            } else {
-                                if (!$this->expression instanceof PlaceholderExpression) {
-                                    throw new \TypeError('Failed assertion');
-                                }
-
-                                $this->expression = new UnaryExpression($operator);
+                            if (!$this->expression instanceof PlaceholderExpression) {
+                                throw new \TypeError('Failed assertion');
                             }
+
+                            $this->expression = new UnaryExpression($operator);
                         } else {
                             if (!$this->expression instanceof BinaryOperatorExpression) {
                                 throw new \TypeError('Failed assertion');

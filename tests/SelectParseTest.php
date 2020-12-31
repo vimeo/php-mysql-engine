@@ -63,4 +63,32 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
             \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $select_query)
         );
     }
+
+    public function testFunctionOperatorPrecedence()
+    {
+        $sql = 'SELECT SUM(`a`.`foo` - IFNULL(`b`.`bar`, 0) - `c`.`baz`) as `a`';
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+
+        $this->assertInstanceOf(
+            \Vimeo\MysqlEngine\Query\Expression\FunctionExpression::class,
+            $select_query->selectExpressions[0]
+        );
+
+        $sum_function = $select_query->selectExpressions[0];
+
+        $this->assertTrue(isset($sum_function->args[0]));
+
+        $this->assertInstanceOf(
+            \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class,
+            $sum_function->args[0]
+        );
+
+        $this->assertInstanceOf(
+            \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class,
+            $sum_function->args[0]->left
+        );
+    }
 }
