@@ -91,4 +91,21 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
             $sum_function->args[0]->left
         );
     }
+
+    public function testWrappedSubquery()
+    {
+        $sql = 'SELECT * FROM ((SELECT 5)) AS all_parts';
+        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
+
+    public function testCaseWhenNotExists()
+    {
+        $sql = "SELECT CASE WHEN NOT EXISTS (SELECT * FROM `bar`) THEN 'BAZ' ELSE NULL END FROM `bam`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
 }

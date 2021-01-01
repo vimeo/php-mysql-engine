@@ -20,4 +20,9 @@ final class PlaceholderExpression extends Expression
     {
         return false;
     }
+
+    public function negate()
+    {
+        $this->negated = true;
+    }
 }

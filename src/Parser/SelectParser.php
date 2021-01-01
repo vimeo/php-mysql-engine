@@ -53,13 +53,22 @@ final class SelectParser
      */
     public function parse()
     {
+        $count = \count($this->tokens);
+
+        while ($this->tokens[$this->pointer]->value === '(') {
+            $this->pointer++;
+
+            if ($this->tokens[$count - 1]->value === ')') {
+                $count--;
+            }
+        }
+
         if ($this->tokens[$this->pointer]->value !== 'SELECT') {
             throw new SQLFakeParseException("Parser error: expected SELECT");
         }
 
         $query = new SelectQuery($this->sql);
         $this->pointer++;
-        $count = \count($this->tokens);
 
         while ($this->pointer < $count) {
             $token = $this->tokens[$this->pointer];
