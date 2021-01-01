@@ -216,8 +216,11 @@ final class Server
         }
 
         if (!isset($table->autoIncrementCursors[$column_name])) {
-            // todo use table default
-            $table->autoIncrementCursors[$column_name] = 0;
+            if (isset($table_definition->autoIncrementOffsets[$column_name])) {
+                $table->autoIncrementCursors[$column_name] = $table_definition->autoIncrementOffsets[$column_name] - 1;
+            } else {
+                $table->autoIncrementCursors[$column_name] = 0;
+            }
         }
 
         $next = $table->autoIncrementCursors[$column_name];
@@ -227,8 +230,6 @@ final class Server
         } while (\array_key_exists($next, $table->autoIncrementIndexes[$column_name] ?? []));
 
         $table->autoIncrementCursors[$column_name] = $next;
-
-        //var_dump('`' . $table_name . '`.`' . $column_name . '` next ' . $next);
 
         return $next;
     }
