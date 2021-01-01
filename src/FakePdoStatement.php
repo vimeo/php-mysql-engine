@@ -137,18 +137,29 @@ class FakePdoStatement extends \PDOStatement
                     $fake_result = $this->result;
                     $real_result = $this->realStatement->fetchAll(\PDO::FETCH_ASSOC);
 
-                    if ($this->conn->stringifyResult && $fake_result) {
-                        $fake_result = array_map(
-                            function ($row) {
-                                return self::stringify($row);
-                            },
-                            $fake_result
-                        );
+                    if ($fake_result) {
+                        if ($this->conn->stringifyResult) {
+                            $fake_result = array_map(
+                                function ($row) {
+                                    return self::stringify($row);
+                                },
+                                $fake_result
+                            );
+                        }
+
+                        if ($this->conn->lowercaseResultKeys) {
+                            $fake_result = array_map(
+                                function ($row) {
+                                    return self::lowercaseKeys($row);
+                                },
+                                $fake_result
+                            );
+                        }
                     }
 
                     if ($real_result !== $fake_result) {
-                        //var_dump($real_result, $fake_result);
-                        //throw new \UnexpectedValueException('different');
+                        var_dump($real_result, $fake_result);
+                        throw new \UnexpectedValueException('different');
                     }
                 }
 
@@ -213,6 +224,10 @@ class FakePdoStatement extends \PDOStatement
             $row = self::stringify($row);
         }
 
+        if ($this->conn->lowercaseResultKeys) {
+            $row = self::lowercaseKeys($row);
+        }
+
         if ($fetch_style === \PDO::FETCH_ASSOC) {
             $this->resultCursor++;
 
@@ -249,14 +264,20 @@ class FakePdoStatement extends \PDOStatement
         }
 
         if ($fetch_style === \PDO::FETCH_ASSOC) {
-            if ($this->conn->stringifyResult) {
-                return array_map(
-                    function ($row) {
-                        return self::stringify($row);
-                    },
-                    $this->result ?: []
-                );
-            }
+            return array_map(
+                function ($row) {
+                    if ($this->conn->stringifyResult) {
+                        $row = self::stringify($row);
+                    }
+
+                    if ($this->conn->lowercaseResultKeys) {
+                        $row = self::lowercaseKeys($row);
+                    }
+
+                    return self::stringify($row);
+                },
+                $this->result ?: []
+            );
 
             return $this->result ?: [];
         }
@@ -279,6 +300,10 @@ class FakePdoStatement extends \PDOStatement
                 function ($row) {
                     if ($this->conn->stringifyResult) {
                         $row = self::stringify($row);
+                    }
+
+                    if ($this->conn->lowercaseResultKeys) {
+                        $row = self::lowercaseKeys($row);
                     }
 
                     return array_merge($row, \array_values($row));
@@ -312,6 +337,10 @@ class FakePdoStatement extends \PDOStatement
                 function ($row) use ($fetch_argument, $ctor_args) {
                     if ($this->conn->stringifyResult) {
                         $row = self::stringify($row);
+                    }
+
+                    if ($this->conn->lowercaseResultKeys) {
+                        $row = self::lowercaseKeys($row);
                     }
 
                     return self::convertRowToObject($row, $fetch_argument, $ctor_args);
@@ -366,6 +395,17 @@ class FakePdoStatement extends \PDOStatement
             },
             $row
         );
+    }
+
+    private static function lowercaseKeys(array $row)
+    {
+        $lowercased_row = [];
+
+        foreach ($row as $col => $value) {
+            $lowercased_row[\strtolower($col)] = $value;
+        }
+
+        return $lowercased_row;
     }
 
     /**

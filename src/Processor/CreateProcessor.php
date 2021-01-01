@@ -64,14 +64,23 @@ final class CreateProcessor
             }
         }
 
+
         $default_character_set = null;
         $default_collation = null;
+
+        $auto_increment_offsets = [];
 
         foreach ($stmt->entityOptions->options as $option) {
             if ($option['name'] === 'DEFAULT CHARSET') {
                 $default_character_set = $option['value'];
             } elseif ($option['name'] === 'COLLATE') {
                 $default_collation = $option['value'];
+            } elseif ($option['name'] === 'AUTO_INCREMENT') {
+                foreach ($definition_columns as $name => $column) {
+                    if ($column instanceof Column\IntegerColumn && $column->isAutoIncrement()) {
+                        $auto_increment_offsets[$name] = $option['value'];
+                    }
+                }
             }
         }
 
@@ -86,7 +95,8 @@ final class CreateProcessor
             $default_character_set,
             $default_collation,
             $primary_key_columns,
-            $indexes
+            $indexes,
+            $auto_increment_offsets
         );
 
         $conn->getServer()->addTableDefinition(

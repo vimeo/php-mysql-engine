@@ -41,7 +41,7 @@ class TableDefinition
     /**
      * @var array<string, int>
      */
-    public array $autoIncrementOffsets = [];
+    public $autoIncrementOffsets = [];
 
     public function __construct(
         string $name,
@@ -50,7 +50,8 @@ class TableDefinition
         string $characterSet = '',
         string $collation = '',
         array $primaryKeyColumns = [],
-        array $indexes = []
+        array $indexes = [],
+        array $autoIncrementOffsets = []
     ) {
         $this->name = $name;
         $this->databaseName = $databaseName;
@@ -59,5 +60,6 @@ class TableDefinition
         $this->defaultCollation = $collation;
         $this->primaryKeyColumns = $primaryKeyColumns;
         $this->indexes = $indexes;
+        $this->autoIncrementOffsets = $autoIncrementOffsets;
     }
 }

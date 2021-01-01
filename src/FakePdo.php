@@ -24,6 +24,11 @@ class FakePdo extends \PDO
     public $stringifyResult = true;
 
     /**
+     * @var bool
+     */
+    public $lowercaseResultKeys = false;
+
+    /**
      * @var ?string
      * @readonly
      */
@@ -49,6 +54,10 @@ class FakePdo extends \PDO
             $this->stringifyResult = (bool) $value;
         }
 
+        if ($key === \PDO::ATTR_CASE && $value === \PDO::CASE_LOWER) {
+            $this->lowercaseResultKeys = true;
+        }
+
         if ($this->real && $key !== \PDO::ATTR_STATEMENT_CLASS) {
             $this->real->setAttribute($key, $value);
         }
@@ -69,6 +78,13 @@ class FakePdo extends \PDO
 
     public function lastInsertId($seqname = null)
     {
+        if ($this->real) {
+            if ($this->lastInsertId != $this->real->lastInsertId($seqname)) {
+                var_dump($this->real->lastInsertId($seqname), $this->lastInsertId);
+                throw new \UnexpectedValueException('different last insert id');
+            }
+        }
+
         return $this->lastInsertId;
     }
 

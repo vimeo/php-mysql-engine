@@ -156,14 +156,14 @@ final class SelectProcessor extends Processor
                 $val = Expression\Evaluator::evaluate($expr, [], $conn);
                 $name = $expr->name;
 
-                $formatted_row[$name] = $val;
+                $formatted_row[\substr($name, 0, 255)] = $val;
             }
 
             return [$formatted_row];
         }
 
         $order_by_expressions = $stmt->orderBy ?? [];
-        
+
         foreach ($data as $row) {
             $formatted_row = [];
 
@@ -189,7 +189,7 @@ final class SelectProcessor extends Processor
                             $col_name = \end($parts);
                             $val = $formatted_row[$col_name] ?? $val;
 
-                            $formatted_row[$col_name] = $val;
+                            $formatted_row[\substr($col_name, 0, 255)] = $val;
                         }
                     }
 
@@ -216,7 +216,7 @@ final class SelectProcessor extends Processor
                     }
                 }
 
-                $formatted_row[$name] = $val;
+                $formatted_row[\substr($name, 0, 255)] = $val;
             }
 
             foreach ($order_by_expressions as $order_by) {
@@ -225,7 +225,7 @@ final class SelectProcessor extends Processor
                 })();
                 $val = Expression\Evaluator::evaluate($order_by['expression'], $row, $conn);
                 $name = $order_by['expression']->name;
-                $formatted_row[$name] = $formatted_row[$name] ?? $val;
+                $formatted_row[\substr($name, 0, 255)] = $formatted_row[$name] ?? $val;
             }
 
             $out[] = $formatted_row;
@@ -246,7 +246,7 @@ final class SelectProcessor extends Processor
                 );
 
                 if (!array_key_exists($key, $new_out)) {
-                    $new_out[$key] = $row;
+                    $new_out[\substr($key, 0, 255)] = $row;
                 }
             }
 

@@ -20,9 +20,9 @@ final class ExistsOperatorEvaluator
         $ret = Evaluator::evaluate($expr->exists, $row, $conn);
 
         if ($expr->negated) {
-            return !$ret;
+            return $ret ? 0 : 1;
         }
 
-        return (bool) $ret;
+        return $ret ? 1 : 0;
     }
 }
