@@ -12,6 +12,7 @@ use Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
 use Vimeo\MysqlEngine\Query\Expression\InOperatorExpression;
+use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression;
 use Vimeo\MysqlEngine\Query\Expression\PositionExpression;
 use Vimeo\MysqlEngine\Query\Expression\RowExpression;
@@ -217,6 +218,7 @@ final class ExpressionParser
                         }
                     }
                 }
+
                 return new ColumnExpression($token);
 
             case TokenType::SQLFUNCTION:
@@ -353,10 +355,15 @@ final class ExpressionParser
 
                     if ($this->expression instanceof PlaceholderExpression) {
                         $this->expression = new BinaryOperatorExpression($expr);
+                    } elseif ($this->expression instanceof IntervalOperatorExpression
+                        && $token->type === TokenType::IDENTIFIER
+                        && $this->expression->number
+                    ) {
+                        $this->expression->setUnit($token->value);
                     } else {
                         if (($this->expression->operator === null || $this->expression->operator === '')
-                        && $this->expression instanceof BinaryOperatorExpression
-                        && $token->type === TokenType::IDENTIFIER
+                            && $this->expression instanceof BinaryOperatorExpression
+                            && $token->type === TokenType::IDENTIFIER
                         ) {
                             $this->pointer--;
                             return $this->expression->left;
@@ -379,6 +386,19 @@ final class ExpressionParser
                         }
 
                         $this->expression = new CaseOperatorExpression();
+                        break;
+                    }
+
+                    if ($operator === 'INTERVAL') {
+                        if (!$this->expression instanceof PlaceholderExpression) {
+                            $this->pointer = $this->expression->addRecursiveExpression(
+                                $this->tokens,
+                                $this->pointer - 1
+                            );
+                            break;
+                        }
+
+                        $this->expression = new IntervalOperatorExpression();
                         break;
                     }
 

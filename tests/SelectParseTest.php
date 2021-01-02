@@ -108,4 +108,13 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
+
+    public function testInterval()
+    {
+        $sql = 'SELECT DATE_ADD(\'2008-01-02\', INTERVAL 31 DAY)';
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
 }
