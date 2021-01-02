@@ -438,8 +438,9 @@ final class ExpressionParser
                                 if ($this->expression->operator !== 'IS') {
                                     $next = $this->peekNext();
                                     if ($next !== null
-                                        && ($next->type === TokenType::OPERATOR
-                                        && \strtoupper($next->value) === 'IN'
+                                        && (($next->type === TokenType::OPERATOR
+                                            && (\strtoupper($next->value) === 'IN'
+                                                || \strtoupper($next->value) === 'EXISTS'))
                                         || $next->type === TokenType::PAREN)
                                     ) {
                                         $this->pointer = $this->expression->addRecursiveExpression(

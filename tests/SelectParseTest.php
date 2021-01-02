@@ -127,4 +127,16 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
+
+    public function testAndNotExists()
+    {
+        $sql = "SELECT *
+                FROM `foo`
+                WHERE `a` > 0
+                AND NOT EXISTS (SELECT * FROM `bar`)";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
 }
