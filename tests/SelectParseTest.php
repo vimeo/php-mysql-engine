@@ -94,7 +94,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
     public function testWrappedSubquery()
     {
-        $sql = 'SELECT * FROM ((SELECT 5)) AS all_parts';
+        $sql = 'SELECT * FROM (((SELECT 5))) AS all_parts';
         $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
@@ -112,6 +112,16 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
     public function testInterval()
     {
         $sql = 'SELECT DATE_ADD(\'2008-01-02\', INTERVAL 31 DAY)';
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
+
+    public function testUnionInSubquery()
+    {
+        $sql = "SELECT *
+                FROM  ((SELECT * FROM `c`) UNION ALL (SELECT * FROM `d`)) AS `bar`";
 
         $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
 

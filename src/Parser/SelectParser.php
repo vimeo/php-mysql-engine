@@ -53,14 +53,17 @@ final class SelectParser
      */
     public function parse()
     {
-        $count = \count($this->tokens);
-
+        // if the first part of this query is nested, we should be able to unwrap it safely
         while ($this->tokens[$this->pointer]->value === '(') {
-            $this->pointer++;
+            $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
 
-            if ($this->tokens[$count - 1]->value === ')') {
-                $count--;
-            }
+            $subquery_tokens = \array_slice(
+                $this->tokens,
+                $this->pointer + 1,
+                $close - $this->pointer - 1
+            );
+
+            array_splice($this->tokens, $this->pointer, $close - $this->pointer + 1, $subquery_tokens);
         }
 
         if ($this->tokens[$this->pointer]->value !== 'SELECT') {
@@ -69,6 +72,8 @@ final class SelectParser
 
         $query = new SelectQuery($this->sql);
         $this->pointer++;
+
+        $count = \count($this->tokens);
 
         while ($this->pointer < $count) {
             $token = $this->tokens[$this->pointer];

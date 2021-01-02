@@ -147,62 +147,73 @@ final class FromParser
      *
      * @return array{
      *         name: string,
-     *         subquery: SubqueryExpression,
+     *         subquery?: SubqueryExpression,
      *         join_type: JoinType::*,
-     *         join_operator: string,
-     *         alias: string,
-     *         join_expression: Expression|null
+     *         alias?: string
      *  }
      */
     private function getTableOrSubquery(Token $token)
     {
         switch ($token->type) {
             case TokenType::IDENTIFIER:
-                return $table = ['name' => $token->value, 'join_type' => JoinType::JOIN];
+                return ['name' => $token->value, 'join_type' => JoinType::JOIN];
             case TokenType::PAREN:
-                $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
-                $subquery_tokens = \array_slice(
-                    $this->tokens,
-                    $this->pointer + 1,
-                    $close - $this->pointer - 1
-                );
-                if (!\count($subquery_tokens)) {
-                    throw new SQLFakeParseException("Empty parentheses found");
-                }
-                $this->pointer = $close;
-                $expr = new PlaceholderExpression();
-                $subquery_sql = \implode(
-                    ' ',
-                    \array_map(
-                        function ($token) {
-                            return $token->value;
-                        },
-                        $subquery_tokens
-                    )
-                );
-                $parser = new SelectParser(0, $subquery_tokens, $subquery_sql);
-                list($p, $select) = $parser->parse();
-                $expr = new SubqueryExpression($select, '');
-                $this->pointer++;
-                $next = $this->tokens[$this->pointer] ?? null;
-                if ($next !== null && $next->value === 'AS') {
-                    $this->pointer++;
-                    $next = $this->tokens[$this->pointer];
-                }
-                if ($next === null || $next->type !== TokenType::IDENTIFIER) {
-                    throw new SQLFakeParseException("Every subquery must have an alias");
-                }
-                $name = $next->value;
-                $table = [
-                    'name' => $name,
-                    'subquery' => $expr,
-                    'join_type' => JoinType::JOIN,
-                    'alias' => $name
-                ];
-                return $table;
+                return $this->getSubquery();
             default:
                 throw new SQLFakeParseException("Expected table name or subquery");
         }
+    }
+
+    /**
+     * @return array{
+     *         name: string,
+     *         subquery: SubqueryExpression,
+     *         join_type: JoinType::*,
+     *         alias: string
+     *  }
+     */
+    private function getSubquery()
+    {
+        $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
+
+        $subquery_tokens = \array_slice(
+            $this->tokens,
+            $this->pointer + 1,
+            $close - $this->pointer - 1
+        );
+        if (!\count($subquery_tokens)) {
+            throw new SQLFakeParseException("Empty parentheses found");
+        }
+        $this->pointer = $close;
+        $expr = new PlaceholderExpression();
+        $subquery_sql = \implode(
+            ' ',
+            \array_map(
+                function ($token) {
+                    return $token->value;
+                },
+                $subquery_tokens
+            )
+        );
+        $parser = new SelectParser(0, $subquery_tokens, $subquery_sql);
+        list($p, $select) = $parser->parse();
+        $expr = new SubqueryExpression($select, '');
+        $this->pointer++;
+        $next = $this->tokens[$this->pointer] ?? null;
+        if ($next !== null && $next->value === 'AS') {
+            $this->pointer++;
+            $next = $this->tokens[$this->pointer];
+        }
+        if ($next === null || $next->type !== TokenType::IDENTIFIER) {
+            throw new SQLFakeParseException("Every subquery must have an alias");
+        }
+        $name = $next->value;
+        return [
+            'name' => $name,
+            'subquery' => $expr,
+            'join_type' => JoinType::JOIN,
+            'alias' => $name
+        ];
     }
 
     /**
