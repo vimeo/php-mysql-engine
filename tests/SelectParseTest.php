@@ -139,4 +139,14 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
+
+    public function testSumCaseMultiplied()
+    {
+        $sql = "SELECT SUM((CASE WHEN `a`.`b` THEN 1 ELSE 0 END) * (CASE WHEN `a`.`c` THEN 1 ELSE 0 END))
+                 FROM `foo`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
 }

@@ -297,7 +297,7 @@ final class SQLParser
                     && $previous_type !== TokenType::STRING_CONSTANT
                     && $previous_type !== TokenType::NULL_CONSTANT
                     && $previous_type !== TokenType::IDENTIFIER
-                    && $previous_type !== ')'
+                    && $previous->value !== ')'
                 ) {
                     $out[] = new Token(TokenType::IDENTIFIER, $token, $token);
                     continue;
