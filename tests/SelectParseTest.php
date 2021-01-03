@@ -149,4 +149,13 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
+
+    public function testBadAs()
+    {
+        $sql = "SELECT (@refund_date := `ordered_transactions`.`refund_date`) as refund_date FROM `foo`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
 }

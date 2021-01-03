@@ -274,7 +274,7 @@ class FakePdoStatement extends \PDOStatement
                         $row = self::lowercaseKeys($row);
                     }
 
-                    return self::stringify($row);
+                    return $row;
                 },
                 $this->result ?: []
             );

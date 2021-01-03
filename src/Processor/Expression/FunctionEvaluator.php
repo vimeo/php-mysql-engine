@@ -18,11 +18,11 @@ final class FunctionEvaluator
             case 'COUNT':
                 return self::sqlCount($expr, $row, $conn);
             case 'SUM':
-                return self::sqlSum($expr, $row, $conn);
+                return (string) self::sqlSum($expr, $row, $conn);
             case 'MAX':
-                return self::sqlMax($expr, $row, $conn);
+                return (string) self::sqlMax($expr, $row, $conn);
             case 'MIN':
-                return self::sqlMin($expr, $row, $conn);
+                return (string) self::sqlMin($expr, $row, $conn);
             case 'MOD':
                 return self::sqlMod($expr, $row, $conn);
             case 'AVG':
