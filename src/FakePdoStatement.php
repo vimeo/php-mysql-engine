@@ -91,7 +91,10 @@ class FakePdoStatement extends \PDOStatement
 
         //echo "\n" . $sql . "\n";
 
-        if (stripos($sql, 'CREATE TABLE') !== false || stripos($sql, 'DROP TABLE') !== false) {
+        if (stripos($sql, 'CREATE TABLE') !== false
+            || stripos($sql, 'DROP TABLE') !== false
+            || stripos($sql, 'SHOW TABLES') !== false
+        ) {
             $parsed_query = new \PhpMyAdmin\SqlParser\Parser($sql);
 
             if ($parsed_query->errors) {
@@ -115,6 +118,21 @@ class FakePdoStatement extends \PDOStatement
                         $statement->fields[0]->table
                     );
                     break;
+                case \PhpMyAdmin\SqlParser\Statements\ShowStatement::class:
+                    if (count($statement->unknown) === 7
+                        && $statement->unknown[4]->value === 'LIKE'
+                    ) {
+                        if ($this->conn->getServer()->getTable(
+                            $this->conn->databaseName,
+                            $statement->unknown[4]->value
+                        )) {
+                            $this->result = [[$statement->unknown[4]->value]];
+                        }
+
+                        $this->result = [];
+
+                        return true;
+                    }
             }
 
             return true;
