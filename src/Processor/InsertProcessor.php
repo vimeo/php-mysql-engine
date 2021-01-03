@@ -31,7 +31,7 @@ final class InsertProcessor extends Processor
 
         $last_insert_id = null;
 
-        $conn->lastInsertId = 0;
+        $conn->lastInsertId = "0";
 
         foreach ($stmt->values as $value_list) {
             $row = [];
@@ -82,7 +82,7 @@ final class InsertProcessor extends Processor
                 }
             }
 
-            if (\count($table_definition->primaryKeyColumns) === 1) {
+            if (\count($table_definition->primaryKeyColumns) === 1 && $conn->lastInsertId === "0") {
                 $conn->lastInsertId = $row[$table_definition->primaryKeyColumns[0]];
             }
 

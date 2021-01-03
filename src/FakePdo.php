@@ -14,9 +14,9 @@ class FakePdo extends \PDO
     private $real = null;
 
     /**
-     * @var scalar
+     * @var string
      */
-    public $lastInsertId;
+    public $lastInsertId = "0";
 
     /**
      * @var bool
@@ -76,11 +76,12 @@ class FakePdo extends \PDO
         return new FakePdoStatement($this, $statement, $this->real);
     }
 
-    public function lastInsertId($seqname = null)
+    public function lastInsertId($seqname = null) : string
     {
         if ($this->real) {
-            if ($this->lastInsertId != $this->real->lastInsertId($seqname)) {
-                var_dump($this->real->lastInsertId($seqname), $this->lastInsertId);
+            $real_last_insert_id = $this->real->lastInsertId($seqname);
+            if ($this->lastInsertId !== $real_last_insert_id) {
+                var_dump($real_last_insert_id, $this->lastInsertId);
                 throw new \UnexpectedValueException('different last insert id');
             }
         }
