@@ -8,11 +8,17 @@ PHP MySQL Engine is a unit testing library for PHP. It enables testing database-
 
 Unlike [Psalm](https://github.com/vimeo/psalm), this package is not designed with a wide audience in mind. For a project to really benefit from this library it should already have a large number of unit tests that require a database connection to complete, and the project maintainers must understand the tradeoffs associated with using an unofficial MySQL implementation in their test suite.
 
+Pull requests are welcome, but this project doesn’t have an issue tracker as it won’t be actively maintained. If you want to fork the project, feel free!
+
 ## Motivation
 
-In most unit testing libraries, SQL queries are traditionally replaced with Mock or Stub implementations. Mocks require an explicit list of queries that are expected to run and results to return, while stubs may not even check the queries being run and simply return a hard coded result. This leads to significant manual work setting up expectations, and tests which are fragile and must be updated even on benign changes to the code or queries. It also means the data access layer is not unit tested.
+Currently there are two ways to test code that reads and writes to a database:
 
-Another common strategy is to test using an actual database, such as SQLite. This creates a situation in which the database in tests may not match the behavior of the production database, and any code using specialized features of the production database may be untestable. It also means that different test cases are not isolated from each other, which can make tests difficult to debug. This can be resolved by truncating tables between each test case, but that can create a performance problem.
+- Mock SQL query execution<br/>
+  Mocks require an explicit list of queries that are expected to run and results to return. This leads to significant manual work setting up expectations, and tests which are fragile and must be updated even on benign changes to the code or queries. It also means the data access layer is not unit tested.
+  
+- Use an actual database<br />
+  It might make sense to test with a separate database instance – this is we have done at Vimeo. But databases like MySQL are designed to be filled with lots of long-lasting data, whereas unit tests write small amounts of very short-lived data. This means that extra care has to be taken to make sure that test databases are truncated between tests, which creates a performance issue.
 
 PHP MySQL Engine takes a different approach - it parses and executes `SELECT`, `INSERT`, `UPDATE`, and `DELETE` queries against an in-memory "database" stored in PHP arrays. As long as the amount of data used for testing is small, this solves the problems mentioned above.
 
@@ -44,6 +50,11 @@ The rest of your code can operate as normal, using the database in the same way 
 ## Why doesn't it support `X`?
 
 This library aims to support everything its users use in MySQL, rather than every possibly feature MySQL offers. We welcome pull requests to add support for new syntax, sql functions, data types, bug fixes, and other features.
+
+### Currently unsupported
+
+- MySQL temporary variables (these will likely never be supported)
+- MySQL date functions
 
 ## Contributing
 
