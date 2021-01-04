@@ -35,8 +35,6 @@ This library supports a wide variety of query syntax, including:
 - Strict SQL mode can be enabled or disabled to throw exceptions for invalid data types and missing not-null fields
 - Validating parser: the query parser will throw exceptions on most invalid SQL Queries, helping protect your production environment from accidental SQL syntax errors
 
-For an overview of everything that's supported, see the `tests/` for this library, which document nearly all of the SQL features it supports.
-
 ## Usage
 
 PHP MySQL Engine works by providing a subclass of [PDO](https://www.php.net/manual/en/class.pdo.php).
