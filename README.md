@@ -35,11 +35,29 @@ This library supports a wide variety of query syntax, including:
 - Strict SQL mode can be enabled or disabled to throw exceptions for invalid data types and missing not-null fields
 - Validating parser: the query parser will throw exceptions on most invalid SQL Queries, helping protect your production environment from accidental SQL syntax errors
 
+### Currently unsupported
+
+- MySQL temporary variables (these will likely never be supported)
+- MySQL date functions
+
+## Installation
+
+```
+composer require-dev vimeo/php-mysql-engine
+```
+
 ## Usage
 
 PHP MySQL Engine works by providing a subclass of [PDO](https://www.php.net/manual/en/class.pdo.php).
 
-This library assumes you currently have some form of establishing a database connection using `PDO`. The best way to use PHP MySQL Engine will depend on your code, but you can use dependency injection to instantiate a `Vimeo\MysqlEngine\FakePdo` object when testing. This will behave like a database for the rest of your test run.
+You can instantiate the subclass as you would `PDO`, and use dependency injection or similar to provide that instance to your application code.
+
+```php
+$pdo = new \Vimeo\MysqlEngine\FakePdo($dsn, $user, $password);
+// currently supported attributes
+$pdo->setAttribute(\PDO::ATTR_CASE, \PDO::CASE_LOWER);
+$pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+```
 
 The rest of your code can operate as normal, using the database in the same way it is used in production.
 
@@ -47,16 +65,11 @@ The rest of your code can operate as normal, using the database in the same way 
 
 This library aims to support everything its users use in MySQL, rather than every possibly feature MySQL offers. We welcome pull requests to add support for new syntax, sql functions, data types, bug fixes, and other features.
 
-## Why doesn’t it have an issue tracker?
+## Why doesn’t this project have an issue tracker?
 
 Maintaining open-source projects is hard work, and I don't want to make more work for me or my colleagues.
 
 If you want to fork the project with an issue tracker, feel free!
-
-### Currently unsupported
-
-- MySQL temporary variables (these will likely never be supported)
-- MySQL date functions
 
 ## Contributing
 
