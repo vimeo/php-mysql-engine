@@ -61,7 +61,7 @@ $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
 The rest of your code can operate as normal, using the database in the same way it is used in production.
 
-## Why doesn't it support `X`?
+## Why doesn't it support X?
 
 This library aims to support everything its users use in MySQL, rather than every possibly feature MySQL offers. We welcome pull requests to add support for new syntax, sql functions, data types, bug fixes, and other features.
 
