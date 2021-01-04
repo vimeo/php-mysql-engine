@@ -20,8 +20,6 @@ PHP MySQL Engine takes a different approach - it parses and executes `SELECT`, `
 
 Unlike [Psalm](https://github.com/vimeo/psalm), this package is not designed with a wide audience in mind. For a project to really benefit from this library it should already have a large number of unit tests that require a database connection to complete, and the project maintainers must understand the tradeoffs associated with using an unofficial MySQL implementation in their test suite.
 
-Pull requests are welcome, but this project doesn’t have an issue tracker as it won’t be actively maintained. If you want to fork the project, feel free!
-
 ## SQL Syntax Supported
 
 This library supports a wide variety of query syntax, including:
@@ -50,6 +48,12 @@ The rest of your code can operate as normal, using the database in the same way 
 ## Why doesn't it support `X`?
 
 This library aims to support everything its users use in MySQL, rather than every possibly feature MySQL offers. We welcome pull requests to add support for new syntax, sql functions, data types, bug fixes, and other features.
+
+## Why doesn’t it have an issue tracker?
+
+Maintaining open-source projects is hard work, and I don't want to make more work for me or my colleagues.
+
+If you want to fork the project with an issue tracker, feel free!
 
 ### Currently unsupported
 
