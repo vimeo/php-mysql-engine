@@ -383,7 +383,10 @@ class FakePdoStatement extends \PDOStatement
         return true;
     }
 
-    private static function convertRowToObject(array $row, string $class, array $ctor_args) : object
+    /**
+     * @return object
+     */
+    private static function convertRowToObject(array $row, string $class, array $ctor_args)
     {
         $reflector = new \ReflectionClass($class);
 

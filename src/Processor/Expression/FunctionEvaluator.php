@@ -64,6 +64,8 @@ final class FunctionEvaluator
                 return self::sqlValues($expr, $row, $conn);
             case 'NOW':
                 return \date('Y-m-d H:i:s', time() + 5*60*60);
+            case 'DATE':
+                return self::sqlDate($expr, $row, $conn);
             case 'ISNULL':
                 return self::sqlIsNull($expr, $row, $conn);
         }
@@ -651,6 +653,25 @@ final class FunctionEvaluator
         }
 
         return Evaluator::evaluate($arg, $row, $conn);
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     *
+     * @return mixed
+     */
+    private static function sqlDate(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    {
+        $row = self::maybeUnrollGroupedDataset($row);
+        $args = $expr->args;
+
+        if (\count($args) !== 1) {
+            throw new SQLFakeRuntimeException("MySQL DATE() function must be called with one argument");
+        }
+
+        $subject = $args[0];
+
+        return (new \DateTimeImmutable(Evaluator::evaluate($subject, $row, $conn)))->format('Y-m-d');
     }
 
     /**
