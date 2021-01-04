@@ -185,10 +185,18 @@ final class DataIntegrity
             case 'string':
                 $value = (string) $value;
 
-                if (($column instanceof Schema\Column\DateTime || $column instanceof Schema\Column\Timestamp)
-                && \strlen($value) === 10
-                ) {
-                    $value .= ' 00:00:00';
+                if ($column instanceof Schema\Column\DateTime || $column instanceof Schema\Column\Timestamp) {
+                    if (\strlen($value) === 10) {
+                        $value .= ' 00:00:00';
+                    }
+
+                    if ($value[0] === '-') {
+                        $value = '0000-00-00 00:00:00';
+                    }
+                }
+
+                if ($column instanceof Schema\Column\Decimal) {
+                    return \number_format($value, $column->getDecimalScale(), '.', '');
                 }
 
                 return $value;

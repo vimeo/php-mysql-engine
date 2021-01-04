@@ -18,4 +18,9 @@ class Decimal extends DecimalPointColumn implements NumberColumn, Defaultable
     {
         return $this->unsigned ? 0 : -$this->getMaxValue();
     }
+
+    public function getPhpType() : string
+    {
+        return 'string';
+    }
 }
