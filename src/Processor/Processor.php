@@ -241,7 +241,7 @@ abstract class Processor
 
         $conn->getServer()->saveTable($database, $table_name, $original_table);
 
-        $conn->lastInsertId = $last_insert_id;
+        $conn->lastInsertId = (string) $last_insert_id;
 
         return [$update_count, $original_table, ];
     }
