@@ -63,9 +63,11 @@ final class FunctionEvaluator
             case 'VALUES':
                 return self::sqlValues($expr, $row, $conn);
             case 'NOW':
-                return \date('Y-m-d H:i:s', time() + 5*60*60);
+                return \date('Y-m-d H:i:s', time());
             case 'DATE':
                 return self::sqlDate($expr, $row, $conn);
+            case 'DATE_FORMAT':
+                return self::sqlDateFormat($expr, $row, $conn);
             case 'ISNULL':
                 return self::sqlIsNull($expr, $row, $conn);
         }
@@ -672,6 +674,26 @@ final class FunctionEvaluator
         $subject = $args[0];
 
         return (new \DateTimeImmutable(Evaluator::evaluate($subject, $row, $conn)))->format('Y-m-d');
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     *
+     * @return mixed
+     */
+    private static function sqlDateFormat(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    {
+        $row = self::maybeUnrollGroupedDataset($row);
+        $args = $expr->args;
+
+        if (\count($args) !== 2) {
+            throw new SQLFakeRuntimeException("MySQL DATE_FORMAT() function must be called with one argument");
+        }
+
+        $subject = Evaluator::evaluate($args[0], $row, $conn);
+        $format = \str_replace('%', '', Evaluator::evaluate($args[1], $row, $conn));
+
+        return (new \DateTimeImmutable($subject))->format($format);
     }
 
     /**
