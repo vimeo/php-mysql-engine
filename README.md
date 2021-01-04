@@ -4,12 +4,6 @@ This is a PHP port of Slack's [Hack SQL Fake](https://github.com/slackhq/hack-sq
 
 PHP MySQL Engine is a unit testing library for PHP. It enables testing database-driven applications with an in-memory simulation of MySQL. It supports a wide variety of queries, transactions, and more. This project extends the `PDO` class and allows you to call common PDO MySQL methods.
 
-## Caveat Emptor
-
-Unlike [Psalm](https://github.com/vimeo/psalm), this package is not designed with a wide audience in mind. For a project to really benefit from this library it should already have a large number of unit tests that require a database connection to complete, and the project maintainers must understand the tradeoffs associated with using an unofficial MySQL implementation in their test suite.
-
-Pull requests are welcome, but this project doesn’t have an issue tracker as it won’t be actively maintained. If you want to fork the project, feel free!
-
 ## Motivation
 
 Currently there are two ways to test code that reads and writes to a database:
@@ -21,6 +15,12 @@ Currently there are two ways to test code that reads and writes to a database:
   It might make sense to test with a separate database instance – this is we have done at Vimeo. But databases like MySQL are designed to be filled with lots of long-lasting data, whereas unit tests write small amounts of very short-lived data. This means that extra care has to be taken to make sure that test databases are truncated between tests, which creates a performance issue.
 
 PHP MySQL Engine takes a different approach - it parses and executes `SELECT`, `INSERT`, `UPDATE`, and `DELETE` queries against an in-memory "database" stored in PHP arrays. As long as the amount of data used for testing is small, this solves the problems mentioned above.
+
+## Caveat Emptor
+
+Unlike [Psalm](https://github.com/vimeo/psalm), this package is not designed with a wide audience in mind. For a project to really benefit from this library it should already have a large number of unit tests that require a database connection to complete, and the project maintainers must understand the tradeoffs associated with using an unofficial MySQL implementation in their test suite.
+
+Pull requests are welcome, but this project doesn’t have an issue tracker as it won’t be actively maintained. If you want to fork the project, feel free!
 
 ## SQL Syntax Supported
 
