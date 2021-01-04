@@ -11,11 +11,11 @@ use Vimeo\MysqlEngine\MultiOperand;
 final class SelectProcessor extends Processor
 {
     /**
-     * @param array<string, mixed>|null $_1
+     * @param array<string, mixed>|null $row
      *
      * @return array<int, array<string, mixed>>
      */
-    public static function process(FakePdo $conn, SelectQuery $stmt) : array
+    public static function process(FakePdo $conn, SelectQuery $stmt, ?array $row) : array
     {
         return self::processMultiQuery(
             $conn,
@@ -40,7 +40,7 @@ final class SelectProcessor extends Processor
                                     self::applyWhere(
                                         $conn,
                                         $stmt->whereClause,
-                                        self::applyFrom($conn, $stmt)
+                                        self::applyFrom($conn, $stmt, $row)
                                     )
                                 )
                             )
@@ -54,7 +54,7 @@ final class SelectProcessor extends Processor
     /**
      * @return array<int, array<string, mixed>>
      */
-    protected static function applyFrom(FakePdo $conn, SelectQuery $stmt)
+    protected static function applyFrom(FakePdo $conn, SelectQuery $stmt, ?array $row)
     {
         $from = $stmt->fromClause;
 
@@ -62,7 +62,18 @@ final class SelectProcessor extends Processor
             return [];
         }
 
-        return FromProcessor::process($conn, $stmt->fromClause);
+        $from_rows = FromProcessor::process($conn, $stmt->fromClause);
+
+        if ($row) {
+            $from_rows = \array_map(
+                function ($from_row) use ($row) {
+                    return \array_merge($from_row, $row);
+                },
+                $from_rows
+            );
+        }
+
+        return $from_rows;
     }
 
     /**
@@ -332,7 +343,7 @@ final class SelectProcessor extends Processor
         };
 
         foreach ($stmt->multiQueries as $sub) {
-            $subquery_results = SelectProcessor::process($conn, $sub['query']);
+            $subquery_results = SelectProcessor::process($conn, $sub['query'], null);
 
             switch ($sub['type']) {
                 case MultiOperand::UNION:

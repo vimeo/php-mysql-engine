@@ -148,7 +148,8 @@ class FakePdoStatement extends \PDOStatement
             case Query\SelectQuery::class:
                 $this->result = Processor\SelectProcessor::process(
                     $this->conn,
-                    $parsed_query
+                    $parsed_query,
+                    null
                 );
 
                 if ($this->realStatement) {

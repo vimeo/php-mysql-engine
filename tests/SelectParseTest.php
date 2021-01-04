@@ -24,7 +24,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame(
             [['a' => 3]],
-            \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $select_query)
+            \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $select_query, null)
         );
     }
 
@@ -60,7 +60,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame(
             [['a' => 5]],
-            \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $select_query)
+            \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $select_query, null)
         );
     }
 
