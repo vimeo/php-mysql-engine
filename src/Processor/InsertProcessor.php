@@ -83,7 +83,7 @@ final class InsertProcessor extends Processor
             }
 
             if (\count($table_definition->primaryKeyColumns) === 1 && $conn->lastInsertId === "0") {
-                $conn->lastInsertId = $row[$table_definition->primaryKeyColumns[0]];
+                $conn->lastInsertId = (string) $row[$table_definition->primaryKeyColumns[0]];
             }
 
             $table[] = $row;
