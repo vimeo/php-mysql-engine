@@ -671,9 +671,13 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL DATE() function must be called with one argument");
         }
 
-        $subject = $args[0];
+        $subject = Evaluator::evaluate($args[0], $row, $conn);
 
-        return (new \DateTimeImmutable(Evaluator::evaluate($subject, $row, $conn)))->format('Y-m-d');
+        if (strpos($subject, '0000-00-00') === 0) {
+            return '0000-00-00';
+        }
+
+        return (new \DateTimeImmutable($subject))->format('Y-m-d');
     }
 
     /**
@@ -691,7 +695,21 @@ final class FunctionEvaluator
         }
 
         $subject = Evaluator::evaluate($args[0], $row, $conn);
-        $format = \str_replace('%', '', Evaluator::evaluate($args[1], $row, $conn));
+        $format = Evaluator::evaluate($args[1], $row, $conn);
+
+        if (strpos($subject, '0000-00-00') === 0) {
+            $format = str_replace(
+                ['%Y', '%m', '%d', '%H', '%i', '%s'],
+                ['0000', '00', '00', '00', '00', '00'],
+                $format
+            );
+        }
+
+        if (strpos($format, '%') === false) {
+            return $format;
+        }
+
+        $format = \str_replace('%', '', $format);
 
         return (new \DateTimeImmutable($subject))->format($format);
     }
