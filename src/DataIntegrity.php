@@ -203,7 +203,7 @@ final class DataIntegrity
                 }
 
                 if ($column instanceof Schema\Column\Decimal) {
-                    return \number_format($value, $column->getDecimalScale(), '.', '');
+                    return \number_format((float) $value, $column->getDecimalScale(), '.', '');
                 }
 
                 return $value;
