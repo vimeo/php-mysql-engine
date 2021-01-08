@@ -120,7 +120,7 @@ class FakePdoStatement extends \PDOStatement
                     break;
 
                 case \PhpMyAdmin\SqlParser\Statements\DropStatement::class:
-                    $this->conn->getServer()->resetTable(
+                    $this->conn->getServer()->dropTable(
                         $this->conn->databaseName,
                         $statement->fields[0]->table
                     );

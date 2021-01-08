@@ -188,15 +188,19 @@ final class Server
         $this->databases[$database_name][$name]->table = $rows;
     }
 
-    /**
-     * @param array<int, array<string, mixed>> $rows
-     */
     public function resetTable(string $database_name, string $name) : void
     {
         static::$snapshot_names = [];
         $this->snapshots = [];
         $this->databases[$database_name][$name] = new TableData();
         $this->databases[$database_name][$name]->was_truncated = true;
+    }
+
+    public function dropTable(string $database_name, string $name) : void
+    {
+        static::$snapshot_names = [];
+        $this->snapshots = [];
+        unset($this->databases[$database_name][$name]);
     }
 
     public function getNextAutoIncrementValue(
