@@ -67,7 +67,7 @@ final class SelectProcessor extends Processor
         if ($row) {
             $from_rows = \array_map(
                 function ($from_row) use ($row) {
-                    return \array_merge($row, $from_row);
+                    return \array_merge($from_row, array_diff_key($row, $from_row));
                 },
                 $from_rows
             );
