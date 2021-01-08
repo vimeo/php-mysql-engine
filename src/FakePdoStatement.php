@@ -60,15 +60,24 @@ class FakePdoStatement extends \PDOStatement
         $this->sql = $sql;
         $this->conn = $conn;
         $this->real = $real;
+
+        if ($this->real) {
+            $this->realStatement = $this->real->prepare($this->sql);
+        }
     }
 
     /**
-     * @param string $key
+     * @param string|int $key
      * @param scalar $value
+     * @param int $type
      */
-    public function bindValue(string $key, $value) : void
+    public function bindValue($key, $value, $type = \PDO::PARAM_STR) : void
     {
         $this->boundValues[$key] = $value;
+
+        if ($this->realStatement) {
+            $this->realStatement->bindValue($key, $value, $type);
+        }
     }
 
     /**
@@ -76,14 +85,12 @@ class FakePdoStatement extends \PDOStatement
      *
      * @return bool
      */
-    public function execute()
+    public function execute(?array $params = null)
     {
-        $sql = $this->getExecutedSql();
+        $sql = $this->getExecutedSql($this->boundValues ?: $params);
 
-        if ($this->real) {
-            $this->realStatement = $this->real->prepare($this->sql);
-
-            if ($this->realStatement->execute($this->boundValues) === false) {
+        if ($this->realStatement) {
+            if ($this->realStatement->execute($params) === false) {
                 var_dump($this->sql);
                 throw new \UnexpectedValueException($this->realStatement->errorInfo()[2]);
             }
@@ -274,12 +281,19 @@ class FakePdoStatement extends \PDOStatement
         throw new \Exception('not implemented');
     }
 
-    public function fetchAll(int $fetch_style = -123, $fetch_argument = null, array $ctor_args = []) : array
+    /**
+     * @param  int $fetch_style
+     * @param  mixed      $args
+     */
+    public function fetchAll(int $fetch_style = -123, ...$args) : array
     {
         if ($fetch_style === -123) {
             $fetch_style = $this->fetchMode;
             $fetch_argument = $this->fetchArgument;
             $ctor_args = $this->fetchConstructorArgs;
+        } else {
+            $fetch_argument = $args[0] ?? null;
+            $ctor_args = $args[1] ?? [];
         }
 
         if ($fetch_style === \PDO::FETCH_ASSOC) {
@@ -371,8 +385,15 @@ class FakePdoStatement extends \PDOStatement
         throw new \Exception('Fetch style not implemented');
     }
 
-    public function setFetchMode(int $mode, $fetch_argument = null, array $ctorargs = []) : bool
+    /**
+     * @param  int $fetch_style
+     * @param  mixed      $args
+     */
+    public function setFetchMode(int $mode, ...$args) : bool
     {
+        $fetch_argument = $args[0] ?? null;
+        $ctorargs = $args[1] ?? [];
+
         if ($this->realStatement) {
             $this->realStatement->setFetchMode($mode, $fetch_argument, $ctorargs);
         }
@@ -437,20 +458,20 @@ class FakePdoStatement extends \PDOStatement
      * @param    class-string<T> $class
      * @return   false|T
      */
-    public function fetchObject(string $class = \stdClass::class)
+    public function fetchObject(?string $class = \stdClass::class, ?array $ctorArgs = null)
     {
         throw new \Exception('not implemented');
     }
 
-    private function getExecutedSql() : string
+    private function getExecutedSql(?array $params) : string
     {
-        if (!$this->boundValues) {
+        if (!$params) {
             return $this->sql;
         }
 
         $sql = $this->sql;
 
-        foreach ($this->boundValues as $key => $value) {
+        foreach ($params as $key => $value) {
             if ($key[0] === ':') {
                 $key = \substr($key, 1);
             }
