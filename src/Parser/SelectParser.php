@@ -49,7 +49,7 @@ final class SelectParser
     }
 
     /**
-     * @return array{0:int, 1:SelectQuery}
+     * @return array{int, SelectQuery}
      */
     public function parse()
     {
@@ -70,6 +70,35 @@ final class SelectParser
             throw new SQLFakeParseException("Parser error: expected SELECT");
         }
 
+        $query = $this->parseMainSelect();
+
+        if (\array_key_exists($this->pointer, $this->tokens)) {
+            $next = $this->tokens[$this->pointer] ?? null;
+            $val = $next ? $next->value : 'null';
+            while ($next !== null
+                && ($next->value === 'UNION' || $next->value === 'INTERSECT' || $next->value === 'EXCEPT')
+            ) {
+                $type = $next->value;
+                if ($next->value === 'UNION') {
+                    $next_plus = $this->tokens[$this->pointer + 1];
+                    if ($next_plus->value === 'ALL') {
+                        $type = 'UNION_ALL';
+                        $this->pointer++;
+                    }
+                }
+                $this->pointer++;
+                $select = new SelectParser($this->pointer, $this->tokens, $this->sql);
+                list($this->pointer, $q) = $select->parse();
+                $query->addMultiQuery($type, $q);
+                $next = $this->tokens[$this->pointer] ?? null;
+            }
+        }
+
+        return [$this->pointer, $query];
+    }
+
+    private function parseMainSelect() : SelectQuery
+    {
         $query = new SelectQuery($this->sql);
         $this->pointer++;
 
@@ -125,7 +154,7 @@ final class SelectParser
                             if ($this->pointer !== $count - 1) {
                                 throw new SQLFakeParseException("Unexpected tokens after semicolon");
                             }
-                            return [$this->pointer, $query];
+                            return $query;
                         } else {
                             throw new SQLFakeParseException("Unexpected {$token->value}");
                         }
@@ -196,7 +225,7 @@ final class SelectParser
                         case 'UNION':
                         case 'EXCEPT':
                         case 'INTERSECT':
-                            return [$this->pointer, $query];
+                            return $query;
                         break;
                         default:
                             throw new SQLFakeParseException("Unexpected {$token->value}");
@@ -236,8 +265,10 @@ final class SelectParser
                     }
                     break;
             }
+
             $this->pointer++;
         }
-        return [$this->pointer, $query];
+
+        return $query;
     }
 }

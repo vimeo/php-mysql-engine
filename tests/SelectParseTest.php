@@ -7,7 +7,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
     {
         $query = 'SELECT `foo` FROM `bar` WHERE `id` = 1';
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($query);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
@@ -16,7 +16,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
     {
         $query = 'SELECT CAST(1 + 2 AS UNSIGNED) as `a`';
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($query);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
 
@@ -32,7 +32,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
     {
         $query = 'SELECT IFNULL(`a`.`b`, 0) + ISNULL(`a`.`c`)';
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($query);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
 
@@ -52,7 +52,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
     {
         $query = 'SELECT (SELECT 2) + (SELECT 3) as `a`';
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($query);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
 
@@ -68,7 +68,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
     {
         $sql = 'SELECT SUM(`a`.`foo` - IFNULL(`b`.`bar`, 0) - `c`.`baz`) as `a`';
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
 
@@ -95,7 +95,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
     public function testWrappedSubquery()
     {
         $sql = 'SELECT * FROM (((SELECT 5))) AS all_parts';
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
@@ -104,7 +104,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
     {
         $sql = "SELECT CASE WHEN NOT EXISTS (SELECT * FROM `bar`) THEN 'BAZ' ELSE NULL END FROM `bam`";
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
@@ -113,7 +113,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
     {
         $sql = 'SELECT DATE_ADD(\'2008-01-02\', INTERVAL 31 DAY)';
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
@@ -123,7 +123,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $sql = "SELECT *
                 FROM  ((SELECT * FROM `c`) UNION ALL (SELECT * FROM `d`)) AS `bar`";
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
@@ -135,7 +135,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
                 WHERE `a` > 0
                 AND NOT EXISTS (SELECT * FROM `bar`)";
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
@@ -145,7 +145,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $sql = "SELECT SUM((CASE WHEN `a`.`b` THEN 1 ELSE 0 END) * (CASE WHEN `a`.`c` THEN 1 ELSE 0 END))
                  FROM `foo`";
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
@@ -154,8 +154,21 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
     {
         $sql = "SELECT (@refund_date := `ordered_transactions`.`refund_date`) as refund_date FROM `foo`";
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($sql);
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
+
+    public function testParseComplexJoin()
+    {
+        $sql = "SELECT * FROM (SELECT * FROM `foo` UNION ALL SELECT * FROM `bar`) AS `baz`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\FromClause::class, $select_query->fromClause);
+        $this->assertCount(1, $select_query->fromClause->tables);
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class, $select_query->fromClause->tables[0]['subquery']);
+        $this->assertNotEmpty($select_query->fromClause->tables[0]['subquery']->query->multiQueries);
     }
 }

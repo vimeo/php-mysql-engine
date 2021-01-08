@@ -165,27 +165,6 @@ final class SQLParser
             case 'SELECT':
                 $select = new SelectParser(0, $tokens, $sql);
                 list($pointer, $query) = $select->parse();
-                if (\array_key_exists($pointer, $tokens)) {
-                    $next = $tokens[$pointer] ?? null;
-                    $val = $next ? $next->value : 'null';
-                    while ($next !== null
-                    && ($next->value === 'UNION' || $next->value === 'INTERSECT' || $next->value === 'EXCEPT')
-                    ) {
-                        $type = $next->value;
-                        if ($next->value === 'UNION') {
-                            $next_plus = $tokens[$pointer + 1];
-                            if ($next_plus->value === 'ALL') {
-                                $type = 'UNION_ALL';
-                                $pointer++;
-                            }
-                        }
-                        $pointer++;
-                        $select = new SelectParser($pointer, $tokens, $sql);
-                        list($pointer, $q) = $select->parse();
-                        $query->addMultiQuery($type, $q);
-                        $next = $tokens[$pointer] ?? null;
-                    }
-                }
                 return $query;
             case 'UPDATE':
                 $update = new UpdateParser($tokens, $sql);
