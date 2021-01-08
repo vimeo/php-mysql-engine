@@ -3,6 +3,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\RowExpression;
 use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
 use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
@@ -31,6 +32,29 @@ final class BinaryOperatorEvaluator
 
         if ($right === null) {
             throw new SQLFakeRuntimeException("Attempted to evaluate BinaryOperatorExpression with no right operand");
+        }
+
+        if ($right instanceof IntervalOperatorExpression
+            && ($expr->operator === '+' || $expr->operator === '-')
+        ) {
+            $functionName = $expr->operator === '+' ? 'DATE_ADD' : 'DATE_SUB';
+
+            return FunctionEvaluator::evaluate(
+                new FunctionExpression(
+                    new \Vimeo\MysqlEngine\Parser\Token(
+                        TokenType::SQLFUNCTION,
+                        $functionName,
+                        $functionName
+                    ),
+                    [
+                        $left,
+                        $right,
+                    ],
+                    false
+                ),
+                $row,
+                $conn
+            );
         }
 
         $l_value = Evaluator::evaluate($left, $row, $conn);
@@ -77,21 +101,21 @@ final class BinaryOperatorEvaluator
                 }
 
                 return (int) $l_value >= (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
-             
+
             case '<':
                 if ($as_string) {
                     return (string) $l_value < (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
 
                 return (int) $l_value < (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
-            
+
             case '<=':
                 if ($as_string) {
                     return (string) $l_value <= (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
 
                 return (int) $l_value <= (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
-                
+
             case '*':
             case '%':
             case 'MOD':
@@ -105,7 +129,7 @@ final class BinaryOperatorEvaluator
             case '&':
                 $left_number = self::extractNumericValue($l_value);
                 $right_number = self::extractNumericValue($r_value);
-                
+
                 switch ($expr->operator) {
                     case '*':
                         return $left_number * $right_number;
@@ -134,31 +158,31 @@ final class BinaryOperatorEvaluator
 
             case 'LIKE':
                 $left_string = (string) Evaluator::evaluate($left, $row, $conn);
-                
+
                 if (!$right instanceof ConstantExpression) {
                     throw new SQLFakeRuntimeException("LIKE pattern should be a constant string");
                 }
-                
+
                 $pattern = (string) $r_value;
                 $start_pattern = '^';
                 $end_pattern = '$';
-                
+
                 if ($pattern[0] === '%') {
                     $start_pattern = '';
                     $pattern = \substr($pattern, 1);
                 }
-                
+
                 if (\substr($pattern, -1) === '%') {
                     $end_pattern = '';
                     $pattern = \substr($pattern, 0, -1);
                 }
-                
+
                 // escape all + characters
                 $pattern = \preg_quote($pattern, '/');
                 $pattern = \preg_replace('/(?<!\\\\)%/', '.*?', $pattern);
                 $pattern = \preg_replace('/(?<!\\\\)_/', '.', $pattern);
                 $regex = '/' . $start_pattern . $pattern . $end_pattern . '/s';
-                
+
                 return ((bool) \preg_match($regex, $left_string) ? 1 : 0) ^ $expr->negatedInt;
 
             case 'IS':

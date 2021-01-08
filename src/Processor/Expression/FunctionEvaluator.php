@@ -4,6 +4,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
+use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
 
 final class FunctionEvaluator
 {
@@ -70,6 +71,10 @@ final class FunctionEvaluator
                 return self::sqlDateFormat($expr, $row, $conn);
             case 'ISNULL':
                 return self::sqlIsNull($expr, $row, $conn);
+            case 'DATE_SUB':
+                return self::sqlDateSub($expr, $row, $conn);
+            case 'DATE_ADD':
+                return self::sqlDateAdd($expr, $row, $conn);
         }
 
         throw new SQLFakeRuntimeException("Function " . $expr->functionName . " not implemented yet");
@@ -501,7 +506,7 @@ final class FunctionEvaluator
         return $left === $right ? null : $left;
     }
 
-     /**
+    /**
      * @param array<string, mixed> $row
      */
     private static function sqlIsNull(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : int
@@ -726,5 +731,91 @@ final class FunctionEvaluator
             return $first;
         }
         return $rows;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function sqlDateSub(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : string
+    {
+        if (!$expr->hasAggregate()) {
+            $row = self::maybeUnrollGroupedDataset($row);
+        }
+
+        $args = $expr->args;
+
+        if (\count($args) !== 2) {
+            throw new SQLFakeRuntimeException("MySQL DATE_SUB() function must be called with one arguments");
+        }
+
+        if (!$args[1] instanceof IntervalOperatorExpression) {
+            throw new SQLFakeRuntimeException("MySQL DATE_SUB() arg 2 must be an interval");
+        }
+
+        $firstArg = Evaluator::evaluate($args[0], $row, $conn);
+
+        return (new \DateTimeImmutable($firstArg))
+            ->sub(self::getPhpIntervalFromExpression($args[1], $row, $conn))
+            ->format('Y-m-d H:i:s');
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function sqlDateAdd(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : string
+    {
+        if (!$expr->hasAggregate()) {
+            $row = self::maybeUnrollGroupedDataset($row);
+        }
+
+        $args = $expr->args;
+
+        if (\count($args) !== 2) {
+            throw new SQLFakeRuntimeException("MySQL DATE_ADD() function must be called with one arguments");
+        }
+
+        if (!$args[1] instanceof IntervalOperatorExpression) {
+            throw new SQLFakeRuntimeException("MySQL DATE_ADD() arg 2 must be an interval");
+        }
+
+        $firstArg = Evaluator::evaluate($args[0], $row, $conn);
+
+        return (new \DateTimeImmutable($firstArg))
+            ->add(self::getPhpIntervalFromExpression($args[1], $row, $conn))
+            ->format('Y-m-d H:i:s');
+    }
+
+    private static function getPhpIntervalFromExpression(
+        IntervalOperatorExpression $expr,
+        array $row,
+        \Vimeo\MysqlEngine\FakePdo $conn
+    ) : \DateInterval {
+        $number = Evaluator::evaluate($expr->number, $row, $conn);
+
+        switch ($expr->unit) {
+            case 'DAY':
+                return new \DateInterval('P' . $number . 'D');
+
+            case 'HOUR':
+                return new \DateInterval('P' . $number . 'H');
+
+            case 'MONTH':
+                return new \DateInterval('P' . $number . 'M');
+
+            case 'MINUTE':
+                return new \DateInterval('PT' . $number . 'M');
+
+            case 'SECOND':
+                return new \DateInterval('P' . $number . 'S');
+
+            case 'WEEK':
+                return new \DateInterval('P' . $number . 'W');
+
+            case 'YEAR':
+                return new \DateInterval('P' . $number . 'Y');
+
+            default:
+                throw new SQLFakeRuntimeException('MySQL INTERVAL unit ' . $expr->unit . ' not supported yet');
+        }
     }
 }
