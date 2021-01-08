@@ -59,7 +59,25 @@ final class BinaryOperatorEvaluator
 
         $l_value = Evaluator::evaluate($left, $row, $conn);
         $r_value = Evaluator::evaluate($right, $row, $conn);
+
+        $l_value = self::maybeUnrollGroupedDataset($l_value);
+        $r_value = self::maybeUnrollGroupedDataset($r_value);
+
         $as_string = $left->getType() == TokenType::STRING_CONSTANT || $right->getType() == TokenType::STRING_CONSTANT;
+
+        if (\is_string($l_value) && \is_string($r_value)) {
+            if (\preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/', $l_value)
+                && \preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9]$/', $r_value)
+            ) {
+                $r_value .= ' 00:00:00';
+            } elseif (\preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/', $r_value)
+                && \preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9]$/', $l_value)
+            ) {
+                $l_value .= ' 00:00:00';
+            }
+
+            $as_string = true;
+        }
 
         switch ($expr->operator) {
             case '':
@@ -86,35 +104,35 @@ final class BinaryOperatorEvaluator
                     return (string) $l_value != (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
 
-                return (int) $l_value != (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                return (float) $l_value != (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
 
             case '>':
                 if ($as_string) {
                     return (string) $l_value > (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
 
-                return (int) $l_value > (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                return (float) $l_value > (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 // no break
             case '>=':
                 if ($as_string) {
                     return (string) $l_value >= (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
 
-                return (int) $l_value >= (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                return (float) $l_value >= (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
 
             case '<':
                 if ($as_string) {
                     return (string) $l_value < (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
 
-                return (int) $l_value < (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                return (float) $l_value < (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
 
             case '<=':
                 if ($as_string) {
                     return (string) $l_value <= (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
 
-                return (int) $l_value <= (int) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                return (float) $l_value <= (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
 
             case '*':
             case '%':
@@ -220,6 +238,34 @@ final class BinaryOperatorEvaluator
             default:
                 throw new SQLFakeRuntimeException("Operator {$expr->operator} not implemented in SQLFake");
         }
+    }
+
+    /**
+     * @param mixed $data
+     *
+     * @return mixed
+     */
+    private static function maybeUnrollGroupedDataset($data)
+    {
+        if (\is_array($data)) {
+            if (\count($data) === 1) {
+                $data = reset($data);
+
+                if (\is_array($data)) {
+                    if (\count($data) === 1) {
+                        return reset($data);
+                    }
+
+                    throw new SQLFakeRuntimeException("Subquery should return a single column");
+                }
+
+                return reset($data);
+            }
+
+            throw new SQLFakeRuntimeException("Subquery should return a single column");
+        }
+
+        return $data;
     }
 
     /**
