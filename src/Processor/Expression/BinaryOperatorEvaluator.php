@@ -248,6 +248,10 @@ final class BinaryOperatorEvaluator
     private static function maybeUnrollGroupedDataset($data)
     {
         if (\is_array($data)) {
+            if (!$data) {
+                return null;
+            }
+
             if (\count($data) === 1) {
                 $data = reset($data);
 
