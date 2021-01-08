@@ -196,6 +196,7 @@ final class Server
         static::$snapshot_names = [];
         $this->snapshots = [];
         $this->databases[$database_name][$name] = new TableData();
+        $this->databases[$database_name][$name]->was_truncated = true;
     }
 
     public function getNextAutoIncrementValue(
@@ -216,7 +217,7 @@ final class Server
         }
 
         if (!isset($table->autoIncrementCursors[$column_name])) {
-            if (isset($table_definition->autoIncrementOffsets[$column_name])) {
+            if (isset($table_definition->autoIncrementOffsets[$column_name]) && !$table->was_truncated) {
                 $table->autoIncrementCursors[$column_name] = $table_definition->autoIncrementOffsets[$column_name] - 1;
             } else {
                 $table->autoIncrementCursors[$column_name] = 0;
