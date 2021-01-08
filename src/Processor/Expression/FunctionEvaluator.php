@@ -851,23 +851,23 @@ final class FunctionEvaluator
             case 'DAY':
                 return new \DateInterval('P' . $number . 'D');
 
-            case 'HOUR':
-                return new \DateInterval('P' . $number . 'H');
-
             case 'MONTH':
                 return new \DateInterval('P' . $number . 'M');
-
-            case 'MINUTE':
-                return new \DateInterval('PT' . $number . 'M');
-
-            case 'SECOND':
-                return new \DateInterval('P' . $number . 'S');
 
             case 'WEEK':
                 return new \DateInterval('P' . $number . 'W');
 
             case 'YEAR':
                 return new \DateInterval('P' . $number . 'Y');
+
+            case 'MINUTE':
+                return new \DateInterval('PT' . $number . 'M');
+
+            case 'HOUR':
+                return new \DateInterval('PT' . $number . 'H');
+
+            case 'SECOND':
+                return new \DateInterval('PT' . $number . 'S');
 
             default:
                 throw new SQLFakeRuntimeException('MySQL INTERVAL unit ' . $expr->unit . ' not supported yet');

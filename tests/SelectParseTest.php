@@ -159,6 +159,23 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
 
+    public function testDateArithhmetic()
+    {
+        $query = 'SELECT DATE_SUB(\'2020-03-01 12:00:00\', INTERVAL 1 HOUR) as `a`,
+                        DATE_ADD(\'2020-03-01 12:00:00\', INTERVAL 1 HOUR) as `b`';
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+
+        $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
+
+        $this->assertSame(
+            [['a' => '2020-03-01 11:00:00', 'b' => '2020-03-01 13:00:00']],
+            \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $select_query, null)
+        );
+    }
+
     public function testParseComplexJoin()
     {
         $sql = "SELECT * FROM (SELECT * FROM `foo` UNION ALL SELECT * FROM `bar`) AS `baz`";
