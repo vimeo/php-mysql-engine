@@ -126,6 +126,40 @@ final class FunctionEvaluator
     private static function sqlSum(FunctionExpression $expr, array $rows, \Vimeo\MysqlEngine\FakePdo $conn)
     {
         $expr = $expr->getExpr();
+
+        if (!$rows) {
+            if ($expr instanceof ColumnExpression) {
+                $server = $conn->getServer();
+                $database_name = $expr->databaseName ?: $conn->databaseName;
+                $table_name = $expr->tableName;
+
+                if ($database_name
+                    && $table_name
+                    && $expr->columnName
+                    && ($table_definition = $server->getTableDefinition($database_name, $table_name))
+                ) {
+                    $column = $table_definition->columns[$expr->columnName] ?? null;
+
+                    if ($column) {
+                        switch ($column->getPhpType()) {
+                            case 'int':
+                                return 0;
+
+                            case 'float':
+                                return 0.00;
+
+                            case 'string':
+                                if ($column instanceof \Vimeo\MysqlEngine\Schema\Column\Decimal) {
+                                    return \number_format(0, $column->getDecimalScale(), '.', '');
+                                }
+                        }
+                    }
+                }
+            }
+
+            return 0;
+        }
+
         $sum = 0;
 
         foreach ($rows as $row) {
