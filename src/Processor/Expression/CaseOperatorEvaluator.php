@@ -17,13 +17,16 @@ final class CaseOperatorEvaluator
             throw new SQLFakeRuntimeException("Attempted to evaluate incomplete CASE expression");
         }
 
-        if ($expr->case) {
-            $case_row = Evaluator::evaluate($expr->case, $row, $conn);
-            $row = array_merge($row, [$expr->case->name => $case_row]);
-        }
-
         foreach ($expr->whenExpressions as $clause) {
-            if ((bool) Evaluator::evaluate($clause['when'], $row, $conn)) {
+            $when = Evaluator::evaluate($clause['when'], $row, $conn);
+
+            if ($expr->case) {
+                $evaluated_case = Evaluator::evaluate($expr->case, $row, $conn);
+
+                if ($evaluated_case == $when) {
+                    return Evaluator::evaluate($clause['then'], $row, $conn);
+                }
+            } elseif ((bool) $when) {
                 return Evaluator::evaluate($clause['then'], $row, $conn);
             }
         }
