@@ -127,37 +127,20 @@ final class FunctionEvaluator
     {
         $expr = $expr->getExpr();
 
-        if (!$rows) {
-            if ($expr instanceof ColumnExpression) {
-                $server = $conn->getServer();
-                $database_name = $expr->databaseName ?: $conn->databaseName;
-                $table_name = $expr->tableName;
+        $column = null;
 
-                if ($database_name
-                    && $table_name
-                    && $expr->columnName
-                    && ($table_definition = $server->getTableDefinition($database_name, $table_name))
-                ) {
-                    $column = $table_definition->columns[$expr->columnName] ?? null;
+        if ($expr instanceof ColumnExpression) {
+            $server = $conn->getServer();
+            $database_name = $expr->databaseName ?: $conn->databaseName;
+            $table_name = $expr->tableName;
 
-                    if ($column) {
-                        switch ($column->getPhpType()) {
-                            case 'int':
-                                return 0;
-
-                            case 'float':
-                                return 0.00;
-
-                            case 'string':
-                                if ($column instanceof \Vimeo\MysqlEngine\Schema\Column\Decimal) {
-                                    return \number_format(0, $column->getDecimalScale(), '.', '');
-                                }
-                        }
-                    }
-                }
+            if ($database_name
+                && $table_name
+                && $expr->columnName
+                && ($table_definition = $server->getTableDefinition($database_name, $table_name))
+            ) {
+                $column = $table_definition->columns[$expr->columnName] ?? null;
             }
-
-            return 0;
         }
 
         $sum = 0;
@@ -169,6 +152,21 @@ final class FunctionEvaluator
             $val = Evaluator::evaluate($expr, $row, $conn);
             $num = \is_int($val) ? $val : (double) $val;
             $sum += $num;
+        }
+
+        if ($column) {
+            switch ($column->getPhpType()) {
+                case 'int':
+                    return (int) $sum;
+
+                case 'float':
+                    return (float) $sum;
+
+                case 'string':
+                    if ($column instanceof \Vimeo\MysqlEngine\Schema\Column\Decimal) {
+                        return \number_format($sum, $column->getDecimalScale(), '.', '');
+                    }
+            }
         }
 
         return $sum;
