@@ -50,7 +50,17 @@ class Evaluator
                 return RowEvaluator::evaluate($expr, $row, $conn);
 
             case \Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class:
-                return \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $expr->query, $row);
+                $evaluated = \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $expr->query, $row);
+
+                $has_aggregate = \count($expr->query->selectExpressions) === 1
+                    && \count($evaluated) === 1
+                    && $expr->query->selectExpressions[0]->hasAggregate();
+
+                if ($has_aggregate) {
+                    return reset($evaluated[0]);
+                }
+
+                return $evaluated;
 
             case \Vimeo\MysqlEngine\Query\Expression\UnaryExpression::class:
                 return UnaryEvaluator::evaluate($expr, $row, $conn);

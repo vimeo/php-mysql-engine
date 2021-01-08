@@ -75,6 +75,8 @@ final class FunctionEvaluator
                 return self::sqlDateSub($expr, $row, $conn);
             case 'DATE_ADD':
                 return self::sqlDateAdd($expr, $row, $conn);
+            case 'ROUND':
+                return self::sqlRound($expr, $row, $conn);
         }
 
         throw new SQLFakeRuntimeException("Function " . $expr->functionName . " not implemented yet");
@@ -815,6 +817,27 @@ final class FunctionEvaluator
         return (new \DateTimeImmutable($firstArg))
             ->add(self::getPhpIntervalFromExpression($args[1], $row, $conn))
             ->format('Y-m-d H:i:s');
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function sqlRound(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : float
+    {
+        if (!$expr->hasAggregate()) {
+            $row = self::maybeUnrollGroupedDataset($row);
+        }
+
+        $args = $expr->args;
+
+        if (\count($args) !== 2) {
+            throw new SQLFakeRuntimeException("MySQL ROUND() function must be called with one arguments");
+        }
+
+        $first = Evaluator::evaluate($args[0], $row, $conn);
+        $second = Evaluator::evaluate($args[1], $row, $conn);
+
+        return \round($first, $second);
     }
 
     private static function getPhpIntervalFromExpression(
