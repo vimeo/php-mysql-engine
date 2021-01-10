@@ -1,8 +1,11 @@
 <?php
 
 /**
- * Ported to Hack from https://github.com/iamcal/SQLParser
- * Ported back to PHP from https://github.com/slackhq/hack-sql-fake
+ * Ported to Hack from PHP source:
+ *     https://github.com/iamcal/SQLParser/blob/master/src/SQLParser.php
+ *
+ * Ported to PHP from Hack source:
+ *.    https://github.com/slackhq/hack-sql-fake/blob/main/src/Parser/CreateTableParser.php
  *
  * MIT License
  *
