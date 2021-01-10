@@ -1,4 +1,32 @@
 <?php
+
+/**
+ * Ported to Hack from https://github.com/iamcal/SQLParser
+ * Ported back to PHP from https://github.com/slackhq/hack-sql-fake
+ *
+ * MIT License
+ *
+ * Copyright (c) 2013-2017 Cal Henderson
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+*/
+
 namespace Vimeo\MysqlEngine\Parser;
 
 use Vimeo\MysqlEngine\TokenType;
@@ -48,7 +76,7 @@ final class CreateTableParser
         $len = \strlen($sql);
         $source_map = [];
         while ($pos < $len) {
-            \preg_match("!s+!A", $sql, $matches, 0, $pos);
+            \preg_match("!\s+!A", $sql, $matches, 0, $pos);
             if ($matches) {
                 $pos += \strlen($matches[0]);
                 continue;
@@ -62,7 +90,7 @@ final class CreateTableParser
                 }
                 continue;
             }
-            if (\preg_match("!\\*!A", $sql, $matches, 0, $pos)) {
+            if (\preg_match('!/\\*!A', $sql, $matches, 0, $pos)) {
                 $p2 = \strpos($sql, "*/", $pos);
                 if ($p2 === false) {
                     $pos = $len;
@@ -71,7 +99,7 @@ final class CreateTableParser
                 }
                 continue;
             }
-            \preg_match("![[:alpha:]][[:alnum:]_]*!A", $sql, $matches, 0, $pos);
+            \preg_match('![[:alpha:]][[:alnum:]_]*!A', $sql, $matches, 0, $pos);
             if ($matches) {
                 $source_map[] = [$pos, \strlen($matches[0])];
                 $pos += \strlen($matches[0]);
@@ -87,7 +115,7 @@ final class CreateTableParser
                 }
                 continue;
             }
-            $match = \preg_match("!(d+.?d*|.d+)!A", $sql, $matches, 0, $pos);
+            $match = \preg_match('!(\d+\.?\d*|\.\d+)!A', $sql, $matches, 0, $pos);
             if ($matches) {
                 $source_map[] = [$pos, \strlen($matches[0])];
                 $pos += \strlen($matches[0]);
@@ -128,7 +156,7 @@ final class CreateTableParser
         $statements = [];
         $temp = [];
         $start = 0;
-        for ($i = 0; $i < \count($tokens); $i++) {
+        foreach ($tokens as $i => $t) {
             $t = $tokens[$i];
             if ($t === ';') {
                 if (\count($temp)) {
@@ -757,7 +785,7 @@ final class CreateTableParser
      *
      * @return void
      */
-    private static function parseIndexOptions(array $tokens, CreateIndex $index)
+    private static function parseIndexOptions(array &$tokens, CreateIndex $index)
     {
         if (($tokens) && $tokens[0] === 'KEY_BLOCK_SIZE') {
             \array_shift($tokens);
@@ -782,7 +810,7 @@ final class CreateTableParser
      *
      * @return void
      */
-    private static function parseFieldLength(array $tokens, MysqlColumnType $t)
+    private static function parseFieldLength(array &$tokens, MysqlColumnType $t)
     {
         if (($tokens) && $tokens[0] === '(' && $tokens[2] === ')') {
             $t->length = (int) $tokens[1];
@@ -795,7 +823,7 @@ final class CreateTableParser
      *
      * @return void
      */
-    private static function parseFieldLengthDecimals(array $tokens, MysqlColumnType $t)
+    private static function parseFieldLengthDecimals(array &$tokens, MysqlColumnType $t)
     {
         if (($tokens) && $tokens[0] === '(' && $tokens[2] === ',' && $tokens[4] === ')') {
             $t->length = (int) $tokens[1];
@@ -809,7 +837,7 @@ final class CreateTableParser
      *
      * @return void
      */
-    private static function parseFieldUnsigned(array $tokens, MysqlColumnType $t)
+    private static function parseFieldUnsigned(array &$tokens, MysqlColumnType $t)
     {
         if (($tokens) && \strtoupper($tokens[0]) === 'UNSIGNED') {
             $t->unsigned = true;
@@ -863,7 +891,7 @@ final class CreateTableParser
      *
      * @return array<int, string>|null
      */
-    private static function parseValueList(array $tokens)
+    private static function parseValueList(array &$tokens)
     {
         if (!($tokens) || $tokens[0] !== '(') {
             return null;

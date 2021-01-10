@@ -48,10 +48,7 @@ final class SelectParser
         $this->sql = $sql;
     }
 
-    /**
-     * @return array{int, SelectQuery}
-     */
-    public function parse()
+    public function parse() : SelectQuery
     {
         // if the first part of this query is nested, we should be able to unwrap it safely
         while ($this->tokens[$this->pointer]->value === '(') {
@@ -88,13 +85,14 @@ final class SelectParser
                 }
                 $this->pointer++;
                 $select = new SelectParser($this->pointer, $this->tokens, $this->sql);
-                list($this->pointer, $q) = $select->parse();
+                $q = $select->parse();
+                $this->pointer = $select->pointer;
                 $query->addMultiQuery($type, $q);
                 $next = $this->tokens[$this->pointer] ?? null;
             }
         }
 
-        return [$this->pointer, $query];
+        return $query;
     }
 
     private function parseMainSelect() : SelectQuery

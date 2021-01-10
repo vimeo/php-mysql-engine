@@ -295,7 +295,7 @@ final class ExpressionParser
                         );
 
                         $parser = new SelectParser(0, $arg_tokens, $subquery_sql);
-                        list($p, $select) = $parser->parse();
+                        $select = $parser->parse();
                         $expr = new SubqueryExpression($select, '');
                     } else {
                         if ($this->expression instanceof InOperatorExpression) {

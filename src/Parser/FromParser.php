@@ -196,7 +196,7 @@ final class FromParser
             )
         );
         $parser = new SelectParser(0, $subquery_tokens, $subquery_sql);
-        list($p, $select) = $parser->parse();
+        $select = $parser->parse();
         $expr = new SubqueryExpression($select, '');
         $this->pointer++;
         $next = $this->tokens[$this->pointer] ?? null;

@@ -46,12 +46,15 @@ abstract class Processor
             return $data;
         }
 
+        // allow all column expressions to fall through to the full row
         foreach ($orders as $rule) {
             $expr = $rule['expression'];
-            if ($expr instanceof \PhpMyAdmin\SqlParser\Components\Reference) {
+            
+            if ($expr instanceof ColumnExpression) {
                 $expr->allowFallthrough();
             }
         }
+
         $sort_fun = function (array $a, array $b) use ($orders, $conn) {
             foreach ($orders as $rule) {
                 $value_a = Expression\Evaluator::evaluate($rule['expression'], $a, $conn);

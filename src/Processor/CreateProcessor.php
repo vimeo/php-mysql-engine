@@ -1,9 +1,8 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor;
 
-use PhpMyAdmin\SqlParser;
-
 use Vimeo\MysqlEngine\DataType;
+use Vimeo\MysqlEngine\Query;
 use Vimeo\MysqlEngine\Schema\TableDefinition;
 use Vimeo\MysqlEngine\Schema\Column;
 
@@ -11,7 +10,7 @@ final class CreateProcessor
 {
     public static function process(
         \Vimeo\MysqlEngine\FakePdo $conn,
-        SqlParser\Statements\CreateStatement $stmt
+        Query\CreateQuery $stmt
     ) : void {
         $definition_columns = [];
 
@@ -20,48 +19,39 @@ final class CreateProcessor
         $indexes = [];
 
         foreach ($stmt->fields as $field) {
-            if ($field->key) {
-                $columns = \array_map(
-                    function ($column) {
-                        return $column['name'];
-                    },
-                    $field->key->columns
-                );
-
-                if ($field->key->type === 'PRIMARY KEY') {
-                    $primary_key_columns = $columns;
-                }
-
-                $type = \substr($field->key->type, 0, -4);
-
-                $indexes[$field->key->name ?: $type] = new \Vimeo\MysqlEngine\Schema\Index(
-                    \substr($field->key->type, 0, -4),
-                    $columns
-                );
-            }
-
-            if (!$field->type || !$field->name) {
-                continue;
-            }
-
             $definition_columns[$field->name] = $column = self::getDefinitionColumn($field->type);
 
-            foreach ($field->options->options as $option) {
-                if ($option === 'NOT NULL') {
-                    $column->isNullable = false;
-                } elseif ($option === 'NULL') {
-                    $column->isNullable = true;
-                } elseif ($option === 'AUTO_INCREMENT' && $column instanceof Column\IntegerColumn) {
-                    $column->autoIncrement();
-                } elseif (\is_array($option)
-                    && $option['name'] === 'DEFAULT'
-                    && $column instanceof Column\Defaultable
-                ) {
-                    $column->setDefault(
-                        $option['expr']->column ?? ($option['value'] === 'NULL' ? null : $option['value'])
-                    );
-                }
+            if (!$field->type->null) {
+                $column->isNullable = false;
             }
+
+            if ($field->auto_increment && $column instanceof Column\IntegerColumn) {
+                $column->autoIncrement();
+            }
+
+            if ($field->default && $column instanceof Column\Defaultable) {
+                $column->setDefault(
+                    $field->default === 'NULL' ? null : $field->default
+                );
+            }
+        }
+
+        foreach ($stmt->indexes as $index) {
+            $columns = \array_map(
+                function ($col) {
+                    return $col['name'];
+                },
+                $index->cols
+            );
+
+            if ($index->type === 'PRIMARY') {
+                $primary_key_columns = $columns;
+            }
+
+            $indexes[$field->name ?: $index->type] = new \Vimeo\MysqlEngine\Schema\Index(
+                $index->type,
+                $columns
+            );
         }
 
 
@@ -70,15 +60,15 @@ final class CreateProcessor
 
         $auto_increment_offsets = [];
 
-        foreach ($stmt->entityOptions->options as $option) {
-            if ($option['name'] === 'DEFAULT CHARSET') {
-                $default_character_set = $option['value'];
-            } elseif ($option['name'] === 'COLLATE') {
-                $default_collation = $option['value'];
-            } elseif ($option['name'] === 'AUTO_INCREMENT') {
+        foreach ($stmt->props as $key => $value) {
+            if ($key === 'CHARSET') {
+                $default_character_set = $value;
+            } elseif ($key === 'COLLATE') {
+                $default_collation = $value;
+            } elseif ($key === 'AUTO_INCREMENT') {
                 foreach ($definition_columns as $name => $column) {
                     if ($column instanceof Column\IntegerColumn && $column->isAutoIncrement()) {
-                        $auto_increment_offsets[$name] = $option['value'];
+                        $auto_increment_offsets[$name] = $value;
                     }
                 }
             }
@@ -89,8 +79,8 @@ final class CreateProcessor
         }
 
         $definition = new TableDefinition(
-            $stmt->name->table,
-            $stmt->name->database ?: $conn->databaseName,
+            $stmt->name,
+            $conn->databaseName,
             $definition_columns,
             $default_character_set,
             $default_collation,
@@ -100,15 +90,15 @@ final class CreateProcessor
         );
 
         $conn->getServer()->addTableDefinition(
-            $stmt->name->database ?: $conn->databaseName,
-            $stmt->name->table,
+            $conn->databaseName,
+            $stmt->name,
             $definition
         );
     }
 
-    private static function getDefinitionColumn(SqlParser\Components\DataType $stmt) : Column
+    private static function getDefinitionColumn(Query\MysqlColumnType $stmt) : Column
     {
-        switch (strtoupper($stmt->name)) {
+        switch (strtoupper($stmt->type)) {
             case DataType::TINYINT:
             case DataType::SMALLINT:
             case DataType::INT:
@@ -118,17 +108,17 @@ final class CreateProcessor
                 return self::getIntegerDefinitionColumn($stmt);
 
             case DataType::FLOAT:
-                return new Column\FloatColumn((int) $stmt->parameters[0], (int) $stmt->parameters[1]);
+                return new Column\FloatColumn($stmt->length, $stmt->decimals);
 
             case DataType::DOUBLE:
-                return new Column\DoubleColumn((int) $stmt->parameters[0], (int) $stmt->parameters[1]);
+                return new Column\DoubleColumn($stmt->length, $stmt->decimals);
 
             case DataType::DECIMAL:
-                return new Column\Decimal((int) $stmt->parameters[0], (int) $stmt->parameters[1]);
+                return new Column\Decimal($stmt->length, $stmt->decimals);
 
             case DataType::BINARY:
             case DataType::CHAR:
-                return new Column\Char((int) $stmt->parameters[0]);
+                return new Column\Char($stmt->length);
 
             case DataType::ENUM:
                 return new Column\Enum(
@@ -136,7 +126,7 @@ final class CreateProcessor
                         function ($param) {
                             return substr($param, 1, -1);
                         },
-                        $stmt->parameters
+                        $stmt->values
                     )
                 );
 
@@ -146,7 +136,7 @@ final class CreateProcessor
                         function ($param) {
                             return substr($param, 1, -1);
                         },
-                        $stmt->parameters
+                        $stmt->values
                     )
                 );
 
@@ -196,17 +186,17 @@ final class CreateProcessor
                 throw new \UnexpectedValueException('NUMERIC is not yet supported');
 
             default:
-                throw new \UnexpectedValueException('Column type ' . $stmt->name . ' not recognized');
+                throw new \UnexpectedValueException('Column type ' . $stmt->type . ' not recognized');
         }
     }
 
-    private static function getIntegerDefinitionColumn(SqlParser\Components\DataType $stmt)
+    private static function getIntegerDefinitionColumn(Query\MysqlColumnType $stmt)
     {
-        $unsigned = false;
+        $unsigned = $stmt->unsigned;
 
-        $display_width = (int) $stmt->parameters[0];
+        $display_width = (int) $stmt->length;
 
-        switch (strtoupper($stmt->name)) {
+        switch (strtoupper($stmt->type)) {
             case DataType::TINYINT:
                 return new Column\TinyInt($unsigned, $display_width);
 
@@ -230,22 +220,12 @@ final class CreateProcessor
         }
     }
 
-    private static function getTextDefinitionColumn(SqlParser\Components\DataType $stmt)
+    private static function getTextDefinitionColumn(Query\MysqlColumnType $stmt)
     {
         $collation = null;
         $character_set = null;
 
-        foreach ($options->options as $option) {
-            if (isset($option['name'])) {
-                if ($option['name'] === 'CHARACTER SET') {
-                    $character_set = $option->value;
-                } elseif ($option['name'] === 'COLLATE') {
-                    $collation = $option->value;
-                }
-            }
-        }
-
-        switch (strtoupper($stmt->name)) {
+        switch (strtoupper($stmt->type)) {
             case DataType::TEXT:
                 return new Column\Text($character_set, $collation);
 
@@ -259,7 +239,7 @@ final class CreateProcessor
                 return new Column\LongText($character_set, $collation);
 
             case DataType::VARCHAR:
-                return new Column\Varchar((int) $stmt->parameters[0], $character_set, $collation);
+                return new Column\Varchar((int) $stmt->length, $character_set, $collation);
 
             default:
                 throw new \TypeError('something is bad');

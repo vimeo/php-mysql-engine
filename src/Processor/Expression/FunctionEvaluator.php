@@ -166,6 +166,7 @@ final class FunctionEvaluator
 
                 case 'string':
                     if ($column instanceof \Vimeo\MysqlEngine\Schema\Column\Decimal) {
+                        /** @var numeric-string */
                         return \number_format($sum, $column->getDecimalScale(), '.', '');
                     }
             }

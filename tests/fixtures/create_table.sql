@@ -1,0 +1,20 @@
+CREATE TABLE `video_game_characters` (
+`id` int(10) NOT NULL AUTO_INCREMENT,
+`name` varchar(16) NOT NULL DEFAULT '',
+`type` enum('hero', 'villain') NOT NULL DEFAULT 'hero',
+`profession` varchar(30) CHARACTER SET utf8mb4 DEFAULT NULL,
+`console` enum('atari', 'gameboy', 'nes', 'pc', 'sega genesis', 'super nintendo') DEFAULT NULL,
+`is_alive` tinyint(3) NOT NULL DEFAULT '1',
+`tags` varchar(200) NOT NULL DEFAULT '',
+`powerups` tinyint(3) NOT NULL DEFAULT '0',
+`skills` varchar(1000) NOT NULL DEFAULT '',
+`nullable_field` tinyint(3) DEFAULT NULL,
+`total_games` int(11) NOT NULL DEFAULT '0',
+`lives` int(11) unsigned NOT NULL DEFAULT '0',
+`created_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+`modified_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+primary key (`id`),
+key `name` (`name`),
+key `co_index` (`profession`, `powerups`),
+key `app_co_index` (`profession`, `is_alive`, `powerups`))
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci

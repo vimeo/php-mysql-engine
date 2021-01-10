@@ -21,7 +21,7 @@ class MysqlColumnType
     /**
      * @var bool
      */
-    public $unsigned;
+    public $unsigned = false;
 
     /**
      * @var array

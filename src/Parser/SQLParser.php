@@ -7,7 +7,9 @@ use Vimeo\MysqlEngine\Query\{
     DeleteQuery,
     TruncateQuery,
     InsertQuery,
-    UpdateQuery
+    UpdateQuery,
+    DropTableQuery,
+    ShowTablesQuery
 };
 
 final class SQLParser
@@ -30,7 +32,9 @@ final class SQLParser
         'EXCEPT' => true,
         'INTERSECT' => true,
         'INSERT' => true,
-        'VALUES' => true
+        'VALUES' => true,
+        'DROP' => true,
+        'SHOW' => true,
     ];
 
     /**
@@ -131,22 +135,22 @@ final class SQLParser
         'LOCK' => true,
         'DUPLICATE' => true,
         'DELAYED' => true,
-        'LOW_PRIORITY' => true
+        'LOW_PRIORITY' => true,
+        'TABLE' => true,
+        'TABLES' => true,
+        'IF' => true,
     ];
 
     /**
-     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery
+     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery
      */
     public static function parse(string $sql)
     {
-        if (\substr(\strtoupper($sql), 6) === 'SELECT') {
-            return static::parseMemoized($sql);
-        }
         return static::parseImpl($sql);
     }
 
     /**
-     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery
+     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery
      */
     private static function parseImpl(string $sql)
     {
@@ -164,8 +168,7 @@ final class SQLParser
         switch ($token->value) {
             case 'SELECT':
                 $select = new SelectParser(0, $tokens, $sql);
-                list($pointer, $query) = $select->parse();
-                return $query;
+                return $select->parse();
             case 'UPDATE':
                 $update = new UpdateParser($tokens, $sql);
                 return $update->parse();
@@ -178,18 +181,16 @@ final class SQLParser
             case 'TRUNCATE':
                 $truncate = new TruncateParser($tokens, $sql);
                 return $truncate->parse();
+            case 'DROP':
+                $truncate = new DropParser($tokens, $sql);
+                return $truncate->parse();
+            case 'SHOW':
+                $truncate = new ShowParser($tokens, $sql);
+                return $truncate->parse();
             default:
                 throw new SQLFakeParseException("Unexpected {$token->value}");
         }
         throw new SQLFakeParseException("Parse error: unexpected end of input");
-    }
-
-    /**
-     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery
-     */
-    private static function parseMemoized(string $sql)
-    {
-        return static::parseImpl($sql);
     }
 
     /**

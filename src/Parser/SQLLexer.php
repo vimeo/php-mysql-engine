@@ -17,7 +17,7 @@ final class SQLLexer
      */
     public function lex(string $sql)
     {
-        $tokens = (array) preg_split(
+        $tokens = preg_split(
             self::TOKEN_SPLIT_REGEX,
             $sql,
             -1,

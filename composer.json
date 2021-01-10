@@ -15,7 +15,6 @@
   "require": {
     "php": "^7.1|^8",
     "ext-pdo": "*",
-    "phpmyadmin/sql-parser": "^5.4",
     "nyholm/dsn": "^2.0"
   },
   "autoload": {

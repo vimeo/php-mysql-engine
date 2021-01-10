@@ -51,7 +51,7 @@ class FakePdoStatement extends \PDOStatement
     private $realStatement = null;
 
     /**
-     * @var array<string, scalar>
+     * @var array<string|int, scalar>
      */
     private $boundValues = [];
 
@@ -82,10 +82,10 @@ class FakePdoStatement extends \PDOStatement
 
     /**
      * Overriding execute method to add query logging
-     *
+     * @param ?array $params
      * @return bool
      */
-    public function execute(?array $params = null)
+    public function execute($params = null)
     {
         $sql = $this->getExecutedSql($this->boundValues ?: $params);
 
@@ -96,54 +96,17 @@ class FakePdoStatement extends \PDOStatement
             }
         }
 
-        //echo "\n" . $sql . "\n";
+        if (stripos($sql, 'CREATE TABLE') !== false) {
+            $create_queries = (new Parser\CreateTableParser())->parse($sql);
 
-        if (stripos($sql, 'CREATE TABLE') !== false
-            || stripos($sql, 'DROP TABLE') !== false
-            || stripos($sql, 'SHOW TABLES') !== false
-        ) {
-            $parsed_query = new \PhpMyAdmin\SqlParser\Parser($sql);
-
-            if ($parsed_query->errors) {
-                throw $parsed_query->errors[0];
-            }
-
-            if (!isset($parsed_query->statements[0])) {
-                throw new \UnexpectedValueException('Bad query ' . $sql);
-            }
-
-            $statement = $parsed_query->statements[0];
-
-            switch (get_class($statement)) {
-                case \PhpMyAdmin\SqlParser\Statements\CreateStatement::class:
-                    Processor\CreateProcessor::process($this->conn, $statement);
-                    break;
-
-                case \PhpMyAdmin\SqlParser\Statements\DropStatement::class:
-                    $this->conn->getServer()->dropTable(
-                        $this->conn->databaseName,
-                        $statement->fields[0]->table
-                    );
-                    break;
-                case \PhpMyAdmin\SqlParser\Statements\ShowStatement::class:
-                    if (count($statement->unknown) === 7
-                        && $statement->unknown[4]->value === 'LIKE'
-                    ) {
-                        if ($this->conn->getServer()->getTable(
-                            $this->conn->databaseName,
-                            $statement->unknown[4]->value
-                        )) {
-                            $this->result = [[$statement->unknown[4]->value]];
-                        }
-
-                        $this->result = [];
-
-                        return true;
-                    }
+            foreach ($create_queries as $create_query) {
+                Processor\CreateProcessor::process($this->conn, $create_query);
             }
 
             return true;
         }
+
+        //echo "\n" . $sql . "\n";
 
         $parsed_query = Parser\SQLParser::parse($sql);
 
@@ -210,6 +173,23 @@ class FakePdoStatement extends \PDOStatement
                 );
                 break;
 
+            case Query\DropTableQuery::class:
+                $this->conn->getServer()->dropTable(
+                    $this->conn->databaseName,
+                    $parsed_query->table
+                );
+                break;
+            case Query\ShowTablesQuery::class:
+                if ($this->conn->getServer()->getTable(
+                    $this->conn->databaseName,
+                    $parsed_query->pattern
+                )) {
+                    $this->result = [[$parsed_query->pattern]];
+                } else {
+                    $this->result = [];
+                }
+                break;
+
             default:
                 throw new \UnexpectedValueException('Unsupported operation type ' . $sql);
         }
@@ -231,10 +211,15 @@ class FakePdoStatement extends \PDOStatement
         return $this->affectedRows;
     }
 
+    /**
+     * @param int $fetch_style
+     * @param int $cursor_orientation
+     * @param int $cursor_offset
+     */
     public function fetch(
-        int $fetch_style = -123,
-        int $cursor_orientation = \PDO::FETCH_ORI_NEXT,
-        int $cursor_offset = 0
+        $fetch_style = -123,
+        $cursor_orientation = \PDO::FETCH_ORI_NEXT,
+        $cursor_offset = 0
     ) {
         if ($fetch_style === -123) {
             $fetch_style = $this->fetchMode;
@@ -283,17 +268,19 @@ class FakePdoStatement extends \PDOStatement
 
     /**
      * @param  int $fetch_style
-     * @param  mixed      $args
+     * @param  string $fetch_argument
+     * @param  array $ctor_args
      */
-    public function fetchAll(int $fetch_style = -123, ...$args) : array
+    public function fetchAll($fetch_style = -123, $fetch_argument = NULL, $ctor_args = NULL) : array
     {
         if ($fetch_style === -123) {
             $fetch_style = $this->fetchMode;
             $fetch_argument = $this->fetchArgument;
             $ctor_args = $this->fetchConstructorArgs;
         } else {
-            $fetch_argument = $args[0] ?? null;
-            $ctor_args = $args[1] ?? [];
+            // may have to uncomment for PHP 8
+            //$fetch_argument = $args[0] ?? null;
+            //$ctor_args = $args[1] ?? [];
         }
 
         if ($fetch_style === \PDO::FETCH_ASSOC) {
@@ -387,12 +374,15 @@ class FakePdoStatement extends \PDOStatement
 
     /**
      * @param  int $fetch_style
-     * @param  mixed      $args
+     * @param  mixed $fetch_argument
+     * @param  array $ctorargs
+     * @param  array ...$args
      */
-    public function setFetchMode(int $mode, ...$args) : bool
+    public function setFetchMode($mode, $fetch_argument = null, $ctorargs = []) : bool
     {
-        $fetch_argument = $args[0] ?? null;
-        $ctorargs = $args[1] ?? [];
+        // may have to uncomment for PHP 8
+        //$fetch_argument = $args[0] ?? null;
+        //$ctorargs = $args[1] ?? [];
 
         if ($this->realStatement) {
             $this->realStatement->setFetchMode($mode, $fetch_argument, $ctorargs);
@@ -455,10 +445,11 @@ class FakePdoStatement extends \PDOStatement
      * @psalm-taint-sink callable $class
      *
      * @template T
-     * @param    class-string<T> $class
+     * @param    class-string<T>|null $class
+     * @param    array|null $ctorArgs
      * @return   false|T
      */
-    public function fetchObject(?string $class = \stdClass::class, ?array $ctorArgs = null)
+    public function fetchObject($class = \stdClass::class, $ctorArgs = null)
     {
         throw new \Exception('not implemented');
     }

@@ -7,7 +7,7 @@ class UpdateParseTest extends \PHPUnit\Framework\TestCase
     {
         $query = 'UPDATE `foo` SET `bar` = `bat` WHERE id = 1';
 
-        $update_query = \Vimeo\MysqlEngine\Parser\SqlParser::parse($query);
+        $update_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\UpdateQuery::class, $update_query);
     }
