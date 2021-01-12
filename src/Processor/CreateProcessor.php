@@ -21,9 +21,7 @@ final class CreateProcessor
         foreach ($stmt->fields as $field) {
             $definition_columns[$field->name] = $column = self::getDefinitionColumn($field->type);
 
-            if (!$field->type->null) {
-                $column->isNullable = false;
-            }
+            $column->isNullable = (bool) $field->type->null;
 
             if ($field->auto_increment && $column instanceof Column\IntegerColumn) {
                 $column->autoIncrement();

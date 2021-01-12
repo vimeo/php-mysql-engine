@@ -3,12 +3,12 @@ namespace Vimeo\MysqlEngine\Tests;
 
 class EndToEndTest extends \PHPUnit\Framework\TestCase
 {
-	public function tearDown() : void
-	{
-		\Vimeo\MysqlEngine\Server::reset();
-	}
+    public function tearDown() : void
+    {
+        \Vimeo\MysqlEngine\Server::reset();
+    }
 
-	public function testSelectEmptyResults()
+    public function testSelectEmptyResults()
     {
         $pdo = self::getConnectionToFullDB();
 
@@ -28,11 +28,11 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $query->execute();
 
         $this->assertSame(
-        	[
-        		['id' => '15'],
-        		['id' => '16']
-        	],
-        	$query->fetchAll(\PDO::FETCH_ASSOC)
+            [
+                ['id' => '15'],
+                ['id' => '16']
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
         );
     }
 
@@ -45,19 +45,35 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $query->execute();
 
         $this->assertSame(
-        	[
-        		['id' => 15],
-        		['id' => 16]
-        	],
-        	$query->fetchAll(\PDO::FETCH_ASSOC)
+            [
+                ['id' => 15],
+                ['id' => 16]
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testDefaultNullTimestamp()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare("SELECT `deleted_on` FROM `video_game_characters` WHERE `id` = 1");
+        $query->bindValue(':id', 14);
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['deleted_on' => null],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
         );
     }
 
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
     {
-    	$pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');
+        $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');
 
-    	$pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, $emulate_prepares);
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, $emulate_prepares);
 
         // create table
         $pdo->prepare(file_get_contents(__DIR__ . '/fixtures/create_table.sql'))->execute();
@@ -65,6 +81,6 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         // insertData
         $pdo->prepare(file_get_contents(__DIR__ . '/fixtures/bulk_insert.sql'))->execute();
 
- 		return $pdo;
+        return $pdo;
     }
 }

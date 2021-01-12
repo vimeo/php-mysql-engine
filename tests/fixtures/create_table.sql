@@ -14,6 +14,7 @@ CREATE TABLE `video_game_characters` (
 `lives` int(11) unsigned NOT NULL DEFAULT '0',
 `created_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 `modified_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+`deleted_on` timestamp NULL DEFAULT NULL,
 primary key (`id`),
 key `name` (`name`),
 key `co_index` (`profession`, `powerups`),

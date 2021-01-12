@@ -29,7 +29,7 @@ class MysqlColumnType
     public $values;
 
     /**
-     * @var bool
+     * @var ?bool
      */
     public $null;
 
