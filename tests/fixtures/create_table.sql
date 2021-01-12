@@ -9,6 +9,7 @@ CREATE TABLE `video_game_characters` (
 `powerups` tinyint(3) NOT NULL DEFAULT '0',
 `skills` varchar(1000) NOT NULL DEFAULT '',
 `nullable_field` tinyint(3) DEFAULT NULL,
+`some_float` float DEFAULT '0.00',
 `total_games` int(11) NOT NULL DEFAULT '0',
 `lives` int(11) unsigned NOT NULL DEFAULT '0',
 `created_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,

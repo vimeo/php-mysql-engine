@@ -108,10 +108,10 @@ final class CreateProcessor
                 return self::getIntegerDefinitionColumn($stmt);
 
             case DataType::FLOAT:
-                return new Column\FloatColumn($stmt->length, $stmt->decimals);
+                return new Column\FloatColumn($stmt->length ?? 10, $stmt->decimals ?? 2);
 
             case DataType::DOUBLE:
-                return new Column\DoubleColumn($stmt->length, $stmt->decimals);
+                return new Column\DoubleColumn($stmt->length ?? 16, $stmt->decimals ?? 4);
 
             case DataType::DECIMAL:
                 return new Column\Decimal($stmt->length, $stmt->decimals);

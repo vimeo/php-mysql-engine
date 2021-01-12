@@ -9,12 +9,12 @@ class MysqlColumnType
     public $type;
 
     /**
-     * @var int
+     * @var ?int
      */
     public $length;
 
     /**
-     * @var int
+     * @var ?int
      */
     public $decimals;
 
