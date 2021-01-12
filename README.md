@@ -43,7 +43,7 @@ This library supports a wide variety of query syntax, including:
 ## Installation
 
 ```
-composer require-dev vimeo/php-mysql-engine
+composer require --dev vimeo/php-mysql-engine
 ```
 
 ## Usage
