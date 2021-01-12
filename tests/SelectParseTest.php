@@ -176,6 +176,15 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testSumIf()
+    {
+        $query = "SELECT SUM(IF(`a` < 0, 0, 5)) FROM `foo`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
+
     public function testParseComplexJoin()
     {
         $sql = "SELECT * FROM (SELECT * FROM `foo` UNION ALL SELECT * FROM `bar`) AS `baz`";

@@ -138,7 +138,6 @@ final class SQLParser
         'LOW_PRIORITY' => true,
         'TABLE' => true,
         'TABLES' => true,
-        'IF' => true,
     ];
 
     /**
@@ -332,6 +331,8 @@ final class SQLParser
             ) {
                 $out[] = new Token(TokenType::OPERATOR, $token_upper, $token);
             } elseif (\array_key_exists($token_upper, self::RESERVED_WORDS)) {
+                $out[] = new Token(TokenType::RESERVED, $token_upper, $token);
+            } elseif ($token_upper === 'IF' && $i < $count - 1 && $tokens[$i + 1] !== '(') {
                 $out[] = new Token(TokenType::RESERVED, $token_upper, $token);
             } elseif (\array_key_exists($token_upper, self::SEPARATORS)) {
                 $out[] = new Token(TokenType::SEPARATOR, $token_upper, $token);
