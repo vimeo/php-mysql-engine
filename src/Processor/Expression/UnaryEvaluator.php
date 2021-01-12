@@ -26,6 +26,8 @@ final class UnaryEvaluator
                 return (double) $val;
             case '~':
                 return ~(int) $val;
+            case '!':
+                return (int) !$val;
             default:
                 throw new SQLFakeRuntimeException("Unimplemented unary operand {$expr->name}");
         }

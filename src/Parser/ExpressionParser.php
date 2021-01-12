@@ -511,6 +511,7 @@ final class ExpressionParser
                         } elseif ($operator === 'UNARY_MINUS'
                             || $operator === 'UNARY_PLUS'
                             || $operator === '~'
+                            || $operator === '!'
                         ) {
                             if (!$this->expression instanceof PlaceholderExpression) {
                                 throw new \TypeError('Failed assertion');
