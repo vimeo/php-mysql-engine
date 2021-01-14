@@ -69,6 +69,22 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testAliasWithType()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare("SELECT SUM(`a`) FROM (SELECT `id` as `a` FROM `video_game_characters`) `foo`");
+        $query->bindValue(':id', 14);
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['SUM(`a`)' => 136]
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
     {
         $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');
