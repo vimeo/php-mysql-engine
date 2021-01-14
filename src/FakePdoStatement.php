@@ -118,6 +118,7 @@ class FakePdoStatement extends \PDOStatement
             case Query\SelectQuery::class:
                 $this->result = Processor\SelectProcessor::process(
                     $this->conn,
+                    new Processor\Scope(),
                     $parsed_query,
                     null
                 );
@@ -155,15 +156,30 @@ class FakePdoStatement extends \PDOStatement
                 break;
 
             case Query\InsertQuery::class:
-                $this->affectedRows = Processor\InsertProcessor::process($this->conn, $parsed_query);
+                $this->affectedRows = Processor\InsertProcessor::process(
+                    $this->conn,
+                    new Processor\Scope(),
+                    $parsed_query
+                );
+
                 break;
 
             case Query\UpdateQuery::class:
-                $this->affectedRows = Processor\UpdateProcessor::process($this->conn, $parsed_query);
+                $this->affectedRows = Processor\UpdateProcessor::process(
+                    $this->conn,
+                    new Processor\Scope(),
+                    $parsed_query
+                );
+
                 break;
 
             case Query\DeleteQuery::class:
-                $this->affectedRows = Processor\DeleteProcessor::process($this->conn, $parsed_query);
+                $this->affectedRows = Processor\DeleteProcessor::process(
+                    $this->conn,
+                    new Processor\Scope(),
+                    $parsed_query
+                );
+
                 break;
 
             case Query\TruncateQuery::class:
@@ -171,6 +187,7 @@ class FakePdoStatement extends \PDOStatement
                     $this->conn->databaseName,
                     $parsed_query->table
                 );
+                
                 break;
 
             case Query\DropTableQuery::class:
@@ -178,7 +195,9 @@ class FakePdoStatement extends \PDOStatement
                     $this->conn->databaseName,
                     $parsed_query->table
                 );
+
                 break;
+
             case Query\ShowTablesQuery::class:
                 if ($this->conn->getServer()->getTable(
                     $this->conn->databaseName,
@@ -188,6 +207,7 @@ class FakePdoStatement extends \PDOStatement
                 } else {
                     $this->result = [];
                 }
+
                 break;
 
             default:

@@ -15,10 +15,11 @@ final class SelectProcessor extends Processor
      *
      * @return array<int, array<string, mixed>>
      */
-    public static function process(FakePdo $conn, SelectQuery $stmt, ?array $row) : array
+    public static function process(FakePdo $conn, Scope $scope, SelectQuery $stmt, ?array $row) : array
     {
         return self::processMultiQuery(
             $conn,
+            $scope,
             $stmt,
             self::removeOrderByExtras(
                 $conn,
@@ -27,20 +28,25 @@ final class SelectProcessor extends Processor
                     $stmt->limitClause,
                     self::applyOrderBy(
                         $conn,
+                        $scope,
                         $stmt->orderBy,
                         self::applySelect(
                             $conn,
+                            $scope,
                             $stmt,
                             self::applyHaving(
                                 $conn,
+                                $scope,
                                 $stmt,
                                 self::applyGroupBy(
                                     $conn,
+                                    $scope,
                                     $stmt,
                                     self::applyWhere(
                                         $conn,
+                                        $scope,
                                         $stmt->whereClause,
-                                        self::applyFrom($conn, $stmt, $row)
+                                        self::applyFrom($conn, $scope, $stmt, $row)
                                     )
                                 )
                             )
@@ -54,7 +60,7 @@ final class SelectProcessor extends Processor
     /**
      * @return array<int, array<string, mixed>>
      */
-    protected static function applyFrom(FakePdo $conn, SelectQuery $stmt, ?array $row)
+    protected static function applyFrom(FakePdo $conn, Scope $scope, SelectQuery $stmt, ?array $row)
     {
         $from = $stmt->fromClause;
 
@@ -62,7 +68,7 @@ final class SelectProcessor extends Processor
             return [];
         }
 
-        $from_rows = FromProcessor::process($conn, $stmt->fromClause);
+        $from_rows = FromProcessor::process($conn, $scope, $stmt->fromClause);
 
         if ($row) {
             $from_rows = \array_map(
@@ -81,7 +87,7 @@ final class SelectProcessor extends Processor
      *
      * @return array<int, array<string, mixed>>
      */
-    protected static function applyGroupBy(FakePdo $conn, SelectQuery $stmt, array $data)
+    protected static function applyGroupBy(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data)
     {
         $group_by = $stmt->groupBy;
 
@@ -94,7 +100,7 @@ final class SelectProcessor extends Processor
                 $hashes = '';
 
                 foreach ($group_by as $expr) {
-                    $hashes .= \sha1((string) Expression\Evaluator::evaluate($expr, $row, $conn));
+                    $hashes .= \sha1((string) Expression\Evaluator::evaluate($conn, $scope, $expr, $row));
                 }
 
                 $hash = \sha1($hashes);
@@ -131,15 +137,15 @@ final class SelectProcessor extends Processor
      *
      * @return array<int, array<string, mixed>>
      */
-    protected static function applyHaving(FakePdo $conn, SelectQuery $stmt, array $data)
+    protected static function applyHaving(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data)
     {
         $havingClause = $stmt->havingClause;
 
         if ($havingClause !== null) {
             return \array_filter(
                 $data,
-                function ($row) use ($conn, $havingClause) {
-                    return (bool) Expression\Evaluator::evaluate($havingClause, $row, $conn);
+                function ($row) use ($conn, $scope, $havingClause) {
+                    return (bool) Expression\Evaluator::evaluate($conn, $scope, $havingClause, $row);
                 }
             );
         }
@@ -152,7 +158,7 @@ final class SelectProcessor extends Processor
      *
      * @return array<int, array<string, mixed>>
      */
-    protected static function applySelect(FakePdo $conn, SelectQuery $stmt, array $data) : array
+    protected static function applySelect(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data) : array
     {
         $out = [];
 
@@ -164,7 +170,7 @@ final class SelectProcessor extends Processor
             $formatted_row = [];
 
             foreach ($stmt->selectExpressions as $expr) {
-                $val = Expression\Evaluator::evaluate($expr, [], $conn);
+                $val = Expression\Evaluator::evaluate($conn, $scope, $expr, []);
                 $name = $expr->name;
 
                 $formatted_row[\substr($name, 0, 255)] = $val;
@@ -207,7 +213,7 @@ final class SelectProcessor extends Processor
                     continue;
                 }
 
-                $val = Expression\Evaluator::evaluate($expr, $row, $conn);
+                $val = Expression\Evaluator::evaluate($conn, $scope, $expr, $row);
                 $name = $expr->name;
 
                 if ($expr instanceof SubqueryExpression) {
@@ -234,7 +240,7 @@ final class SelectProcessor extends Processor
                 \is_array($row) ? $row : (function () {
                     throw new \TypeError('Failed assertion');
                 })();
-                $val = Expression\Evaluator::evaluate($order_by['expression'], $row, $conn);
+                $val = Expression\Evaluator::evaluate($conn, $scope, $order_by['expression'], $row);
                 $name = $order_by['expression']->name;
                 $formatted_row[\substr($name, 0, 255)] = $formatted_row[$name] ?? $val;
             }
@@ -328,7 +334,7 @@ final class SelectProcessor extends Processor
      *
      * @return array<int, array<string, mixed>>
      */
-    protected static function processMultiQuery(FakePdo $conn, SelectQuery $stmt, array $data)
+    protected static function processMultiQuery(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data)
     {
         $row_encoder = function ($row) {
             return \implode(
@@ -343,7 +349,7 @@ final class SelectProcessor extends Processor
         };
 
         foreach ($stmt->multiQueries as $sub) {
-            $subquery_results = SelectProcessor::process($conn, $sub['query'], null);
+            $subquery_results = SelectProcessor::process($conn, $scope, $sub['query'], null);
 
             switch ($sub['type']) {
                 case MultiOperand::UNION:

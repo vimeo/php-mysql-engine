@@ -8,7 +8,7 @@ final class DeleteProcessor extends Processor
     /**
      * @return int
      */
-    public static function process(\Vimeo\MysqlEngine\FakePdo $conn, DeleteQuery $stmt)
+    public static function process(\Vimeo\MysqlEngine\FakePdo $conn, Scope $scope, DeleteQuery $stmt)
     {
         ($__tmp1__ = $stmt->fromClause) !== null ? $__tmp1__ : (function () {
             throw new \TypeError('Failed assertion');
@@ -25,9 +25,11 @@ final class DeleteProcessor extends Processor
                 $stmt->limitClause,
                 self::applyOrderBy(
                     $conn,
+                    $scope,
                     $stmt->orderBy,
                     self::applyWhere(
                         $conn,
+                        $scope,
                         $stmt->whereClause,
                         $data
                     )

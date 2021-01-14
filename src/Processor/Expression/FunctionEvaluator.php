@@ -5,6 +5,8 @@ use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
 use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
+use Vimeo\MysqlEngine\Processor\Scope;
+use Vimeo\MysqlEngine\FakePdo;
 
 final class FunctionEvaluator
 {
@@ -13,70 +15,70 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    public static function evaluate(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    public static function evaluate(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         switch ($expr->functionName) {
             case 'COUNT':
-                return self::sqlCount($expr, $row, $conn);
+                return self::sqlCount($conn, $scope, $expr, $row);
             case 'SUM':
-                return (string) self::sqlSum($expr, $row, $conn);
+                return (string) self::sqlSum($conn, $scope, $expr, $row);
             case 'MAX':
-                return (string) self::sqlMax($expr, $row, $conn);
+                return (string) self::sqlMax($conn, $scope, $expr, $row);
             case 'MIN':
-                return (string) self::sqlMin($expr, $row, $conn);
+                return (string) self::sqlMin($conn, $scope, $expr, $row);
             case 'MOD':
-                return self::sqlMod($expr, $row, $conn);
+                return self::sqlMod($conn, $scope, $expr, $row);
             case 'AVG':
-                return self::sqlAvg($expr, $row, $conn);
+                return self::sqlAvg($conn, $scope, $expr, $row);
             case 'IF':
-                return self::sqlIf($expr, $row, $conn);
+                return self::sqlIf($conn, $scope, $expr, $row);
             case 'IFNULL':
             case 'COALESCE':
-                return self::sqlCoalesce($expr, $row, $conn);
+                return self::sqlCoalesce($conn, $scope, $expr, $row);
             case 'NULLIF':
-                return self::sqlNullif($expr, $row, $conn);
+                return self::sqlNullif($conn, $scope, $expr, $row);
             case 'SUBSTRING':
             case 'SUBSTR':
-                return self::sqlSubstring($expr, $row, $conn);
+                return self::sqlSubstring($conn, $scope, $expr, $row);
             case 'SUBSTRING_INDEX':
-                return self::sqlSubstringIndex($expr, $row, $conn);
+                return self::sqlSubstringIndex($conn, $scope, $expr, $row);
             case 'LENGTH':
-                return self::sqlLength($expr, $row, $conn);
+                return self::sqlLength($conn, $scope, $expr, $row);
             case 'LOWER':
-                return self::sqlLower($expr, $row, $conn);
+                return self::sqlLower($conn, $scope, $expr, $row);
             case 'UPPER':
-                return self::sqlUpper($expr, $row, $conn);
+                return self::sqlUpper($conn, $scope, $expr, $row);
             case 'CHAR_LENGTH':
             case 'CHARACTER_LENGTH':
-                return self::sqlCharLength($expr, $row, $conn);
+                return self::sqlCharLength($conn, $scope, $expr, $row);
             case 'CONCAT_WS':
-                return self::sqlConcatWS($expr, $row, $conn);
+                return self::sqlConcatWS($conn, $scope, $expr, $row);
             case 'CONCAT':
-                return self::sqlConcat($expr, $row, $conn);
+                return self::sqlConcat($conn, $scope, $expr, $row);
             case 'FIELD':
-                return self::sqlColumn($expr, $row, $conn);
+                return self::sqlColumn($conn, $scope, $expr, $row);
             case 'BINARY':
-                return self::sqlBinary($expr, $row, $conn);
+                return self::sqlBinary($conn, $scope, $expr, $row);
             case 'FROM_UNIXTIME':
-                return self::sqlFromUnixtime($expr, $row, $conn);
+                return self::sqlFromUnixtime($conn, $scope, $expr, $row);
             case 'GREATEST':
-                return self::sqlGreatest($expr, $row, $conn);
+                return self::sqlGreatest($conn, $scope, $expr, $row);
             case 'VALUES':
-                return self::sqlValues($expr, $row, $conn);
+                return self::sqlValues($conn, $scope, $expr, $row);
             case 'NOW':
                 return \date('Y-m-d H:i:s', time());
             case 'DATE':
-                return self::sqlDate($expr, $row, $conn);
+                return self::sqlDate($conn, $scope, $expr, $row);
             case 'DATE_FORMAT':
-                return self::sqlDateFormat($expr, $row, $conn);
+                return self::sqlDateFormat($conn, $scope, $expr, $row);
             case 'ISNULL':
-                return self::sqlIsNull($expr, $row, $conn);
+                return self::sqlIsNull($conn, $scope, $expr, $row);
             case 'DATE_SUB':
-                return self::sqlDateSub($expr, $row, $conn);
+                return self::sqlDateSub($conn, $scope, $expr, $row);
             case 'DATE_ADD':
-                return self::sqlDateAdd($expr, $row, $conn);
+                return self::sqlDateAdd($conn, $scope, $expr, $row);
             case 'ROUND':
-                return self::sqlRound($expr, $row, $conn);
+                return self::sqlRound($conn, $scope, $expr, $row);
         }
 
         throw new SQLFakeRuntimeException("Function " . $expr->functionName . " not implemented yet");
@@ -87,7 +89,7 @@ final class FunctionEvaluator
      *
      * @return int
      */
-    private static function sqlCount(FunctionExpression $expr, array $rows, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlCount(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $rows)
     {
         $inner = $expr->getExpr();
 
@@ -98,7 +100,7 @@ final class FunctionEvaluator
                     throw new \TypeError('Failed assertion');
                 })();
 
-                $val = Evaluator::evaluate($inner, $row, $conn);
+                $val = Evaluator::evaluate($conn, $scope, $inner, $row);
                 if (\is_int($val) || \is_string($val)) {
                     $buckets[$val] = 1;
                 }
@@ -112,7 +114,7 @@ final class FunctionEvaluator
             \is_array($row) ? $row : (function () {
                 throw new \TypeError('Failed assertion');
             })();
-            if (Evaluator::evaluate($inner, $row, $conn) !== null) {
+            if (Evaluator::evaluate($conn, $scope, $inner, $row) !== null) {
                 $count++;
             }
         }
@@ -125,7 +127,7 @@ final class FunctionEvaluator
      *
      * @return numeric
      */
-    private static function sqlSum(FunctionExpression $expr, array $rows, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlSum(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $rows)
     {
         $expr = $expr->getExpr();
 
@@ -151,7 +153,7 @@ final class FunctionEvaluator
             \is_array($row) ? $row : (function () {
                 throw new \TypeError('Failed assertion');
             })();
-            $val = Evaluator::evaluate($expr, $row, $conn);
+            $val = Evaluator::evaluate($conn, $scope, $expr, $row);
             $num = \is_int($val) ? $val : (double) $val;
             $sum += $num;
         }
@@ -180,7 +182,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlMin(FunctionExpression $expr, array $rows, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlMin(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $rows)
     {
         $expr = $expr->getExpr();
         $values = [];
@@ -189,7 +191,7 @@ final class FunctionEvaluator
             \is_array($row) ? $row : (function () {
                 throw new \TypeError('Failed assertion');
             })();
-            $values[] = Evaluator::evaluate($expr, $row, $conn);
+            $values[] = Evaluator::evaluate($conn, $scope, $expr, $row);
         }
 
         if (0 === \count($values)) {
@@ -204,7 +206,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlMax(FunctionExpression $expr, array $rows, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlMax(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $rows)
     {
         $expr = $expr->getExpr();
         $values = [];
@@ -213,7 +215,7 @@ final class FunctionEvaluator
             \is_array($row) ? $row : (function () {
                 throw new \TypeError('Failed assertion');
             })();
-            $values[] = Evaluator::evaluate($expr, $row, $conn);
+            $values[] = Evaluator::evaluate($conn, $scope, $expr, $row);
         }
 
         if (0 === \count($values)) {
@@ -228,7 +230,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlMod(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlMod(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -238,9 +240,9 @@ final class FunctionEvaluator
         }
 
         $n = $args[0];
-        $n_value = (int) Evaluator::evaluate($n, $row, $conn);
+        $n_value = (int) Evaluator::evaluate($conn, $scope, $n, $row);
         $m = $args[1];
-        $m_value = (int) Evaluator::evaluate($m, $row, $conn);
+        $m_value = (int) Evaluator::evaluate($conn, $scope, $m, $row);
 
         return $n_value % $m_value;
     }
@@ -250,7 +252,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlAvg(FunctionExpression $expr, array $rows, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlAvg(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $rows)
     {
         $expr = $expr->getExpr();
         $values = [];
@@ -260,7 +262,7 @@ final class FunctionEvaluator
                 throw new \TypeError('Failed assertion');
             })();
 
-            $value = Evaluator::evaluate($expr, $row, $conn);
+            $value = Evaluator::evaluate($conn, $scope, $expr, $row);
 
             if (!\is_int($value) && !\is_float($value)) {
                 throw new \TypeError('Failed assertion');
@@ -279,7 +281,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlIf(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlIf(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         if (!$expr->hasAggregate()) {
             $row = self::maybeUnrollGroupedDataset($row);
@@ -294,12 +296,12 @@ final class FunctionEvaluator
         $condition = $args[0];
         $arg_to_evaluate = 2;
 
-        if ((bool) Evaluator::evaluate($condition, $row, $conn)) {
+        if ((bool) Evaluator::evaluate($conn, $scope, $condition, $row)) {
             $arg_to_evaluate = 1;
         }
 
         $expr = $args[$arg_to_evaluate];
-        return Evaluator::evaluate($expr, $row, $conn);
+        return Evaluator::evaluate($conn, $scope, $expr, $row);
     }
 
     /**
@@ -307,7 +309,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlSubstring(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlSubstring(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -317,14 +319,14 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string) Evaluator::evaluate($subject, $row, $conn);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row);
         $position = $args[1];
-        $pos = (int) Evaluator::evaluate($position, $row, $conn);
+        $pos = (int) Evaluator::evaluate($conn, $scope, $position, $row);
         $pos -= 1;
         $length = $args[2] ?? null;
 
         if ($length !== null) {
-            $len = (int) Evaluator::evaluate($length, $row, $conn);
+            $len = (int) Evaluator::evaluate($conn, $scope, $length, $row);
             return \mb_substr($string, $pos, $len);
         }
 
@@ -336,7 +338,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlSubstringIndex(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlSubstringIndex(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -346,13 +348,13 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string) Evaluator::evaluate($subject, $row, $conn);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row);
         $delimiter = $args[1];
-        $delim = (string) Evaluator::evaluate($delimiter, $row, $conn);
+        $delim = (string) Evaluator::evaluate($conn, $scope, $delimiter, $row);
         $pos = $args[2];
 
         if ($pos !== null) {
-            $count = (int) Evaluator::evaluate($pos, $row, $conn);
+            $count = (int) Evaluator::evaluate($conn, $scope, $pos, $row);
             $parts = \explode($delim, $string);
 
             if ($count < 0) {
@@ -372,7 +374,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlLower(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlLower(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -382,7 +384,7 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string) Evaluator::evaluate($subject, $row, $conn);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row);
         return \strtolower($string);
     }
 
@@ -391,7 +393,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlUpper(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlUpper(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -401,7 +403,7 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string) Evaluator::evaluate($subject, $row, $conn);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row);
         return \strtoupper($string);
     }
 
@@ -410,7 +412,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlLength(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlLength(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -420,7 +422,7 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string) Evaluator::evaluate($subject, $row, $conn);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row);
         return \strlen($string);
     }
 
@@ -429,7 +431,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlBinary(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlBinary(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -439,7 +441,7 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        return Evaluator::evaluate($subject, $row, $conn);
+        return Evaluator::evaluate($conn, $scope, $subject, $row);
     }
 
     /**
@@ -447,7 +449,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlCharLength(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlCharLength(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -457,7 +459,7 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string) Evaluator::evaluate($subject, $row, $conn);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row);
 
         return \mb_strlen($string);
     }
@@ -467,7 +469,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlCoalesce(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlCoalesce(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         if (!\count($expr->args)) {
             throw new SQLFakeRuntimeException("MySQL COALESCE() function must be called with at least one argument");
@@ -480,7 +482,7 @@ final class FunctionEvaluator
                 $eval_row = self::maybeUnrollGroupedDataset($row);
             }
 
-            $val = Evaluator::evaluate($arg, $eval_row, $conn);
+            $val = Evaluator::evaluate($conn, $scope, $arg, $eval_row);
 
             if ($val !== null) {
                 return $val;
@@ -495,7 +497,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlGreatest(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlGreatest(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $args = $expr->args;
 
@@ -511,7 +513,7 @@ final class FunctionEvaluator
                 $eval_row = self::maybeUnrollGroupedDataset($row);
             }
 
-            $val = Evaluator::evaluate($arg, $eval_row, $conn);
+            $val = Evaluator::evaluate($conn, $scope, $arg, $eval_row);
             $values[] = $val;
         }
 
@@ -523,7 +525,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlNullif(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlNullif(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         if (!$expr->hasAggregate()) {
             $row = self::maybeUnrollGroupedDataset($row);
@@ -535,8 +537,8 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL NULLIF() function must be called with two arguments");
         }
 
-        $left = Evaluator::evaluate($args[0], $row, $conn);
-        $right = Evaluator::evaluate($args[1], $row, $conn);
+        $left = Evaluator::evaluate($conn, $scope, $args[0], $row);
+        $right = Evaluator::evaluate($conn, $scope, $args[1], $row);
 
         return $left === $right ? null : $left;
     }
@@ -544,7 +546,7 @@ final class FunctionEvaluator
     /**
      * @param array<string, mixed> $row
      */
-    private static function sqlIsNull(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : int
+    private static function sqlIsNull(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row) : int
     {
         if (!$expr->hasAggregate()) {
             $row = self::maybeUnrollGroupedDataset($row);
@@ -556,16 +558,17 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL ISNULL() function must be called with one arguments");
         }
 
-        return Evaluator::evaluate($args[0], $row, $conn) === null ? 1 : 0;
+        return Evaluator::evaluate($conn, $scope, $args[0], $row) === null ? 1 : 0;
     }
 
     /**
      * @param array<string, mixed> $row
      */
     private static function sqlFromUnixtime(
+        FakePdo $conn,
+        Scope $scope, 
         FunctionExpression $expr,
-        array $row,
-        \Vimeo\MysqlEngine\FakePdo $conn
+        array $row
     ) : string {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -574,7 +577,7 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL FROM_UNIXTIME() SQLFake only implemented for 1 argument");
         }
 
-        $column = Evaluator::evaluate($args[0], $row, $conn);
+        $column = Evaluator::evaluate($conn, $scope, $args[0], $row);
         $format = 'Y-m-d G:i:s';
 
         return \date($format, (int) $column);
@@ -585,7 +588,7 @@ final class FunctionEvaluator
      *
      * @return string
      */
-    private static function sqlConcat(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlConcat(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -596,7 +599,7 @@ final class FunctionEvaluator
 
         $final_concat = "";
         foreach ($args as $k => $arg) {
-            $val = (string) Evaluator::evaluate($arg, $row, $conn);
+            $val = (string) Evaluator::evaluate($conn, $scope, $arg, $row);
             $final_concat .= $val;
         }
 
@@ -608,7 +611,7 @@ final class FunctionEvaluator
      *
      * @return string
      */
-    private static function sqlConcatWS(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlConcatWS(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -617,7 +620,7 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL CONCAT_WS() function must be called with at least two arguments");
         }
 
-        $separator = Evaluator::evaluate($args[0], $row, $conn);
+        $separator = Evaluator::evaluate($conn, $scope, $args[0], $row);
         if ($separator === null) {
             throw new SQLFakeRuntimeException("MySQL CONCAT_WS() function required non null separator");
         }
@@ -630,7 +633,7 @@ final class FunctionEvaluator
                 continue;
             }
 
-            $val = (string) Evaluator::evaluate($arg, $row, $conn);
+            $val = (string) Evaluator::evaluate($conn, $scope, $arg, $row);
 
             if ($final_concat === '') {
                 $final_concat = $final_concat . $val;
@@ -647,7 +650,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlColumn(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlColumn(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $args = $expr->args;
         $num_args = \count($args);
@@ -656,14 +659,14 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL FIELD() function must be called with at least two arguments");
         }
 
-        $value = Evaluator::evaluate($args[0], $row, $conn);
+        $value = Evaluator::evaluate($conn, $scope, $args[0], $row);
 
         foreach ($args as $k => $arg) {
             if ($k < 1) {
                 continue;
             }
 
-            if ($value == Evaluator::evaluate($arg, $row, $conn)) {
+            if ($value == Evaluator::evaluate($conn, $scope, $arg, $row)) {
                 return $k;
             }
         }
@@ -676,7 +679,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlValues(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlValues(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $args = $expr->args;
         $num_args = \count($args);
@@ -694,7 +697,7 @@ final class FunctionEvaluator
             $arg->columnExpression = 'sql_fake_values.' . $arg->columnExpression;
         }
 
-        return Evaluator::evaluate($arg, $row, $conn);
+        return Evaluator::evaluate($conn, $scope, $arg, $row);
     }
 
     /**
@@ -702,7 +705,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlDate(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlDate(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -711,7 +714,7 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL DATE() function must be called with one argument");
         }
 
-        $subject = Evaluator::evaluate($args[0], $row, $conn);
+        $subject = Evaluator::evaluate($conn, $scope, $args[0], $row);
 
         if (strpos($subject, '0000-00-00') === 0) {
             return '0000-00-00';
@@ -725,7 +728,7 @@ final class FunctionEvaluator
      *
      * @return mixed
      */
-    private static function sqlDateFormat(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    private static function sqlDateFormat(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row)
     {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
@@ -734,8 +737,8 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL DATE_FORMAT() function must be called with one argument");
         }
 
-        $subject = Evaluator::evaluate($args[0], $row, $conn);
-        $format = Evaluator::evaluate($args[1], $row, $conn);
+        $subject = Evaluator::evaluate($conn, $scope, $args[0], $row);
+        $format = Evaluator::evaluate($conn, $scope, $args[1], $row);
 
         if (strpos($subject, '0000-00-00') === 0) {
             $format = str_replace(
@@ -771,7 +774,7 @@ final class FunctionEvaluator
     /**
      * @param array<string, mixed> $row
      */
-    private static function sqlDateSub(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : string
+    private static function sqlDateSub(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row) : string
     {
         if (!$expr->hasAggregate()) {
             $row = self::maybeUnrollGroupedDataset($row);
@@ -787,17 +790,17 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL DATE_SUB() arg 2 must be an interval");
         }
 
-        $firstArg = Evaluator::evaluate($args[0], $row, $conn);
+        $firstArg = Evaluator::evaluate($conn, $scope, $args[0], $row);
 
         return (new \DateTimeImmutable($firstArg))
-            ->sub(self::getPhpIntervalFromExpression($args[1], $row, $conn))
+            ->sub(self::getPhpIntervalFromExpression($conn, $scope, $args[1], $row))
             ->format('Y-m-d H:i:s');
     }
 
     /**
      * @param array<string, mixed> $row
      */
-    private static function sqlDateAdd(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : string
+    private static function sqlDateAdd(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row) : string
     {
         if (!$expr->hasAggregate()) {
             $row = self::maybeUnrollGroupedDataset($row);
@@ -813,17 +816,17 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL DATE_ADD() arg 2 must be an interval");
         }
 
-        $firstArg = Evaluator::evaluate($args[0], $row, $conn);
+        $firstArg = Evaluator::evaluate($conn, $scope, $args[0], $row);
 
         return (new \DateTimeImmutable($firstArg))
-            ->add(self::getPhpIntervalFromExpression($args[1], $row, $conn))
+            ->add(self::getPhpIntervalFromExpression($conn, $scope, $args[1], $row))
             ->format('Y-m-d H:i:s');
     }
 
     /**
      * @param array<string, mixed> $row
      */
-    private static function sqlRound(FunctionExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn) : float
+    private static function sqlRound(FakePdo $conn, Scope $scope, FunctionExpression $expr, array $row) : float
     {
         if (!$expr->hasAggregate()) {
             $row = self::maybeUnrollGroupedDataset($row);
@@ -835,18 +838,19 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL ROUND() function must be called with one arguments");
         }
 
-        $first = Evaluator::evaluate($args[0], $row, $conn);
-        $second = Evaluator::evaluate($args[1], $row, $conn);
+        $first = Evaluator::evaluate($conn, $scope, $args[0], $row);
+        $second = Evaluator::evaluate($conn, $scope, $args[1], $row);
 
         return \round($first, $second);
     }
 
     private static function getPhpIntervalFromExpression(
+        FakePdo $conn,
+        Scope $scope, 
         IntervalOperatorExpression $expr,
-        array $row,
-        \Vimeo\MysqlEngine\FakePdo $conn
+        array $row
     ) : \DateInterval {
-        $number = Evaluator::evaluate($expr->number, $row, $conn);
+        $number = Evaluator::evaluate($conn, $scope, $expr->number, $row);
 
         switch ($expr->unit) {
             case 'DAY':

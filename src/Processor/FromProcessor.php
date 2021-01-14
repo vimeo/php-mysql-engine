@@ -8,7 +8,7 @@ final class FromProcessor
     /**
      * @return array<int, array<string, mixed>>
      */
-    public static function process(\Vimeo\MysqlEngine\FakePdo $conn, FromClause $stmt)
+    public static function process(\Vimeo\MysqlEngine\FakePdo $conn, Scope $scope, FromClause $stmt)
     {
         $data = [];
         $columns = [];
@@ -17,7 +17,7 @@ final class FromProcessor
 
         foreach ($stmt->tables as $table) {
             if (\array_key_exists('subquery', $table)) {
-                $res = Expression\Evaluator::evaluate($table['subquery'], [], $conn);
+                $res = Expression\Evaluator::evaluate($conn, $scope, $table['subquery'], []);
 
                 $columns = [];
 
@@ -65,6 +65,7 @@ final class FromProcessor
             if ($data || !$is_first_table) {
                 $data = JoinProcessor::process(
                     $conn,
+                    $scope,
                     $data,
                     $new_dataset,
                     $name,

@@ -5,6 +5,7 @@ final class UpdateProcessor extends Processor
 {
     public static function process(
         \Vimeo\MysqlEngine\FakePdo $conn,
+        Scope $scope,
         \Vimeo\MysqlEngine\Query\UpdateQuery $stmt
     ) : int {
         list($table_name, $database) = self::processUpdateClause($conn, $stmt);
@@ -16,15 +17,18 @@ final class UpdateProcessor extends Processor
 
         list($rows_affected, $_) = self::applySet(
             $conn,
+            $scope,
             $database,
             $table_name,
             self::applyLimit(
                 $stmt->limitClause,
                 self::applyOrderBy(
                     $conn,
+                    $scope,
                     $stmt->orderBy,
                     self::applyWhere(
                         $conn,
+                        $scope,
                         $stmt->whereClause,
                         $data
                     )

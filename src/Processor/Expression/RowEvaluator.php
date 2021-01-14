@@ -2,6 +2,7 @@
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Query\Expression\RowExpression;
+use Vimeo\MysqlEngine\Processor\Scope;
 
 final class RowEvaluator
 {
@@ -10,11 +11,11 @@ final class RowEvaluator
      *
      * @return mixed
      */
-    public static function evaluate(RowExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    public static function evaluate(\Vimeo\MysqlEngine\FakePdo $conn, Scope $scope, RowExpression $expr, array $row)
     {
         $result = [];
         foreach ($expr->elements as $expr) {
-            $result[] = Evaluator::evaluate($expr, $row, $conn);
+            $result[] = Evaluator::evaluate($conn, $scope, $expr, $row);
         }
         return $result;
     }

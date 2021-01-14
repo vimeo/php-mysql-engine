@@ -3,6 +3,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Expression;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\Scope;
 
 class Evaluator
 {
@@ -11,46 +12,47 @@ class Evaluator
      * @return mixed
      */
     public static function evaluate(
+        \Vimeo\MysqlEngine\FakePdo $conn,
+        Scope $scope, 
         \Vimeo\MysqlEngine\Query\Expression\Expression $expr,
-        array $row,
-        \Vimeo\MysqlEngine\FakePdo $conn
+        array $row
     ) {
         switch (get_class($expr)) {
             case \Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression::class:
-                return BetweenOperatorEvaluator::evaluate($expr, $row, $conn);
+                return BetweenOperatorEvaluator::evaluate($conn, $scope, $expr, $row);
 
             case \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class:
-                return BinaryOperatorEvaluator::evaluate($expr, $row, $conn);
+                return BinaryOperatorEvaluator::evaluate($conn, $scope, $expr, $row);
 
             case \Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression::class:
-                return CaseOperatorEvaluator::evaluate($expr, $row, $conn);
+                return CaseOperatorEvaluator::evaluate($conn, $scope, $expr, $row);
 
             case \Vimeo\MysqlEngine\Query\Expression\ColumnExpression::class:
-                return ColumnEvaluator::evaluate($expr, $row, $conn);
+                return ColumnEvaluator::evaluate($conn, $scope, $expr, $row);
 
             case \Vimeo\MysqlEngine\Query\Expression\ConstantExpression::class:
                 return $expr->value;
 
             case \Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression::class:
-                return ExistsOperatorEvaluator::evaluate($expr, $row, $conn);
+                return ExistsOperatorEvaluator::evaluate($conn, $scope, $expr, $row);
 
             case \Vimeo\MysqlEngine\Query\Expression\FunctionExpression::class:
-                return FunctionEvaluator::evaluate($expr, $row, $conn);
+                return FunctionEvaluator::evaluate($conn, $scope, $expr, $row);
 
             case \Vimeo\MysqlEngine\Query\Expression\InOperatorExpression::class:
-                return InOperatorEvaluator::evaluate($expr, $row, $conn);
+                return InOperatorEvaluator::evaluate($conn, $scope, $expr, $row);
 
             case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
                 throw new SQLFakeRuntimeException("Attempted to evaluate placeholder expression!");
 
             case \Vimeo\MysqlEngine\Query\Expression\PositionExpression::class:
-                return PositionEvaluator::evaluate($expr, $row, $conn);
+                return PositionEvaluator::evaluate($expr, $row);
 
             case \Vimeo\MysqlEngine\Query\Expression\RowExpression::class:
-                return RowEvaluator::evaluate($expr, $row, $conn);
+                return RowEvaluator::evaluate($conn, $scope, $expr, $row);
 
             case \Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class:
-                $evaluated = \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $expr->query, $row);
+                $evaluated = \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $scope, $expr->query, $row);
 
                 $has_aggregate = \count($expr->query->selectExpressions) === 1
                     && \count($evaluated) === 1
@@ -63,10 +65,10 @@ class Evaluator
                 return $evaluated;
 
             case \Vimeo\MysqlEngine\Query\Expression\UnaryExpression::class:
-                return UnaryEvaluator::evaluate($expr, $row, $conn);
+                return UnaryEvaluator::evaluate($conn, $scope, $expr, $row);
 
             case \Vimeo\MysqlEngine\Query\Expression\CastExpression::class:
-                return CastEvaluator::evaluate($expr, $row, $conn);
+                return CastEvaluator::evaluate($conn, $scope, $expr, $row);
 
             default:
                 throw new SQLFakeRuntimeException('Unsupported expression ' . get_class($expr));

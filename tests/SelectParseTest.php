@@ -24,7 +24,12 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame(
             [['a' => 3]],
-            \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $select_query, null)
+            \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+                $conn,
+                new \Vimeo\MysqlEngine\Processor\Scope(),
+                $select_query,
+                null
+            )
         );
     }
 
@@ -60,7 +65,12 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame(
             [['a' => 5]],
-            \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $select_query, null)
+            \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+                $conn,
+                new \Vimeo\MysqlEngine\Processor\Scope(),
+                $select_query,
+                null
+            )
         );
     }
 
@@ -172,7 +182,12 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame(
             [['a' => '2020-03-01 11:00:00', 'b' => '2020-03-01 13:00:00']],
-            \Vimeo\MysqlEngine\Processor\SelectProcessor::process($conn, $select_query, null)
+            \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+                $conn,
+                new \Vimeo\MysqlEngine\Processor\Scope(),
+                $select_query,
+                null
+            )
         );
     }
 

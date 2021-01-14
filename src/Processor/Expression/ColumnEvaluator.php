@@ -3,6 +3,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
+use Vimeo\MysqlEngine\Processor\Scope;
 
 final class ColumnEvaluator
 {
@@ -11,7 +12,7 @@ final class ColumnEvaluator
      *
      * @return scalar|null
      */
-    public static function evaluate(ColumnExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $_conn)
+    public static function evaluate(\Vimeo\MysqlEngine\FakePdo $conn, Scope $scope, ColumnExpression $expr, array $row)
     {
         if ($expr->name === '*') {
             return 1;

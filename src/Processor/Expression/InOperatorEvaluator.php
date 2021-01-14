@@ -5,6 +5,7 @@ use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
 use Vimeo\MysqlEngine\Query\Expression\InOperatorExpression;
+use Vimeo\MysqlEngine\Processor\Scope;
 
 final class InOperatorEvaluator
 {
@@ -13,7 +14,7 @@ final class InOperatorEvaluator
      *
      * @return mixed
      */
-    public static function evaluate(InOperatorExpression $expr, array $row, \Vimeo\MysqlEngine\FakePdo $conn)
+    public static function evaluate(\Vimeo\MysqlEngine\FakePdo $conn, Scope $scope, InOperatorExpression $expr, array $row)
     {
         $inList = $expr->inList;
 
@@ -21,7 +22,7 @@ final class InOperatorEvaluator
             throw new SQLFakeParseException("Parse error: empty IN list");
         }
 
-        if (\count($inList) === 1 && Evaluator::evaluate($inList[0], $row, $conn) === null) {
+        if (\count($inList) === 1 && Evaluator::evaluate($conn, $scope, $inList[0], $row) === null) {
             if (!$expr->negated) {
                 return false;
             }
@@ -31,11 +32,11 @@ final class InOperatorEvaluator
             );
         }
 
-        $value = Evaluator::evaluate($expr->left, $row, $conn);
+        $value = Evaluator::evaluate($conn, $scope, $expr->left, $row);
 
         foreach ($inList as $in_expr) {
             if ($in_expr instanceof SubqueryExpression) {
-                $ret = Evaluator::evaluate($in_expr, $row, $conn);
+                $ret = Evaluator::evaluate($conn, $scope, $in_expr, $row);
 
                 foreach ($ret as $r) {
                     if (\count($r) !== 1) {
@@ -49,7 +50,7 @@ final class InOperatorEvaluator
                     }
                 }
             } else {
-                if ($value == Evaluator::evaluate($in_expr, $row, $conn)) {
+                if ($value == Evaluator::evaluate($conn, $scope, $in_expr, $row)) {
                     return !$expr->negated;
                 }
             }

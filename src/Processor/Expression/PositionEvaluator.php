@@ -3,6 +3,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\PositionExpression;
+use Vimeo\MysqlEngine\Processor\Scope;
 
 final class PositionEvaluator
 {
@@ -11,7 +12,7 @@ final class PositionEvaluator
      *
      * @return mixed
      */
-    public static function evaluate(PositionExpression $expr, array $data, \Vimeo\MysqlEngine\FakePdo $_conn)
+    public static function evaluate(PositionExpression $expr, array $data)
     {
         $first_row = reset($data);
 

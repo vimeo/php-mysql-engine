@@ -16,6 +16,7 @@ abstract class Processor
      */
     protected static function applyWhere(
         \Vimeo\MysqlEngine\FakePdo $conn,
+        Scope $scope,
         ?\Vimeo\MysqlEngine\Query\Expression\Expression $where,
         array $data
     ) {
@@ -25,8 +26,8 @@ abstract class Processor
 
         return \array_filter(
             $data,
-            function ($row) use ($where, $conn) {
-                return Expression\Evaluator::evaluate($where, $row, $conn);
+            function ($row) use ($conn, $scope, $where) {
+                return Expression\Evaluator::evaluate($conn, $scope, $where, $row);
             }
         );
     }
@@ -39,6 +40,7 @@ abstract class Processor
      */
     protected static function applyOrderBy(
         \Vimeo\MysqlEngine\FakePdo $conn,
+        Scope $scope,
         ?array $orders,
         array $data
     ) {
@@ -55,10 +57,10 @@ abstract class Processor
             }
         }
 
-        $sort_fun = function (array $a, array $b) use ($orders, $conn) {
+        $sort_fun = function (array $a, array $b) use ($conn, $scope, $orders) {
             foreach ($orders as $rule) {
-                $value_a = Expression\Evaluator::evaluate($rule['expression'], $a, $conn);
-                $value_b = Expression\Evaluator::evaluate($rule['expression'], $b, $conn);
+                $value_a = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $a);
+                $value_b = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $b);
 
                 if ($value_a != $value_b) {
                     if ((\is_int($value_a) || \is_float($value_a)) && (\is_int($value_b) || \is_float($value_b))) {
@@ -137,6 +139,7 @@ abstract class Processor
      */
     protected static function applySet(
         \Vimeo\MysqlEngine\FakePdo $conn,
+        Scope $scope,
         string $database,
         string $table_name,
         ?array $filtered_rows,
@@ -186,7 +189,7 @@ abstract class Processor
 
                 foreach ($set_clauses as $clause) {
                     $existing_value = $row[$clause['column']] ?? null;
-                    $new_value = Expression\Evaluator::evaluate($clause['expression'], $update_row, $conn);
+                    $new_value = Expression\Evaluator::evaluate($conn, $scope, $clause['expression'], $update_row);
                     if ($new_value !== $existing_value) {
                         $row[$clause['column']] = $new_value;
                         $changes_found = true;
@@ -210,7 +213,7 @@ abstract class Processor
             $row = [];
 
             foreach ($set_clauses as $clause) {
-                $row[$clause['column']] = Expression\Evaluator::evaluate($clause['expression'], [], $conn);
+                $row[$clause['column']] = Expression\Evaluator::evaluate($conn, $scope, $clause['expression'], []);
             }
 
             foreach ($row as $column_name => $value) {

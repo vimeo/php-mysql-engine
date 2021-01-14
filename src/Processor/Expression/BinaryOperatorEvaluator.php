@@ -7,6 +7,7 @@ use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\RowExpression;
 use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
 use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
+use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\TokenType;
 
 final class BinaryOperatorEvaluator
@@ -15,9 +16,10 @@ final class BinaryOperatorEvaluator
      * @param array<string, mixed> $row
      */
     public static function evaluate(
+        \Vimeo\MysqlEngine\FakePdo $conn,
+        Scope $scope, 
         BinaryOperatorExpression $expr,
-        array $row,
-        \Vimeo\MysqlEngine\FakePdo $conn
+        array $row
     ) {
         $right = $expr->right;
         $left = $expr->left;
@@ -27,7 +29,7 @@ final class BinaryOperatorEvaluator
                 throw new SQLFakeRuntimeException("Expected row expression on RHS of {$expr->operator} operand");
             }
 
-            return (int) self::evaluateRowComparison($expr, $left, $right, $row, $conn);
+            return (int) self::evaluateRowComparison($conn, $scope, $expr, $left, $right, $row);
         }
 
         if ($right === null) {
@@ -40,6 +42,8 @@ final class BinaryOperatorEvaluator
             $functionName = $expr->operator === '+' ? 'DATE_ADD' : 'DATE_SUB';
 
             return FunctionEvaluator::evaluate(
+                $conn,
+                $scope, 
                 new FunctionExpression(
                     new \Vimeo\MysqlEngine\Parser\Token(
                         TokenType::SQLFUNCTION,
@@ -52,13 +56,12 @@ final class BinaryOperatorEvaluator
                     ],
                     false
                 ),
-                $row,
-                $conn
+                $row
             );
         }
 
-        $l_value = Evaluator::evaluate($left, $row, $conn);
-        $r_value = Evaluator::evaluate($right, $row, $conn);
+        $l_value = Evaluator::evaluate($conn, $scope, $left, $row);
+        $r_value = Evaluator::evaluate($conn, $scope, $right, $row);
 
         $l_value = self::maybeUnrollGroupedDataset($l_value);
         $r_value = self::maybeUnrollGroupedDataset($r_value);
@@ -175,7 +178,7 @@ final class BinaryOperatorEvaluator
                 throw new SQLFakeRuntimeException("Operator recognized but not implemented");
 
             case 'LIKE':
-                $left_string = (string) Evaluator::evaluate($left, $row, $conn);
+                $left_string = (string) Evaluator::evaluate($conn, $scope, $left, $row);
 
                 if (!$right instanceof ConstantExpression) {
                     throw new SQLFakeRuntimeException("LIKE pattern should be a constant string");
@@ -207,7 +210,7 @@ final class BinaryOperatorEvaluator
                 if (!$right instanceof ConstantExpression) {
                     throw new SQLFakeRuntimeException("Unsupported right operand for IS keyword");
                 }
-                $val = Evaluator::evaluate($left, $row, $conn);
+                $val = Evaluator::evaluate($conn, $scope, $left, $row);
                 $r = $r_value;
                 if ($r === null) {
                     return ($val === null ? 1 : 0) ^ $expr->negatedInt;
@@ -216,7 +219,7 @@ final class BinaryOperatorEvaluator
 
             case 'RLIKE':
             case 'REGEXP':
-                $left_string = (string) Evaluator::evaluate($left, $row, $conn);
+                $left_string = (string) Evaluator::evaluate($conn, $scope, $left, $row);
                 $case_insensitive = 'i';
                 if ($right instanceof FunctionExpression && $right->functionName() == 'BINARY') {
                     $case_insensitive = '';
@@ -278,15 +281,16 @@ final class BinaryOperatorEvaluator
      * @return bool
      */
     private static function evaluateRowComparison(
+        \Vimeo\MysqlEngine\FakePdo $conn,
+        Scope $scope,
         BinaryOperatorExpression $expr,
         RowExpression $left,
         RowExpression $right,
-        array $row,
-        \Vimeo\MysqlEngine\FakePdo $conn
+        array $row
     ) {
-        $left_elems = Evaluator::evaluate($left, $row, $conn);
+        $left_elems = Evaluator::evaluate($conn, $scope, $left, $row);
         assert(\is_array($left_elems), "RowExpression must return vec");
-        $right_elems = Evaluator::evaluate($right, $row, $conn);
+        $right_elems = Evaluator::evaluate($conn, $scope, $right, $row);
         assert(\is_array($right_elems), "RowExpression must return vec");
         if (\count($left_elems) !== \count($right_elems)) {
             throw new SQLFakeRuntimeException("Mismatched column count in row comparison expression");

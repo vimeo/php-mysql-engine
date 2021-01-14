@@ -23,6 +23,7 @@ final class JoinProcessor
      */
     public static function process(
         \Vimeo\MysqlEngine\FakePdo $conn,
+        Scope $scope,
         array $left_dataset,
         array $right_dataset,
         string $right_table_name,
@@ -40,7 +41,7 @@ final class JoinProcessor
                     foreach ($right_dataset as $r) {
                         $left_row = $row;
                         $candidate_row = \array_merge($row, $r);
-                        if (!$filter || ExpressionEvaluator::evaluate($filter, $candidate_row, $conn)) {
+                        if (!$filter || ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row)) {
                             $out[] = $candidate_row;
                         }
                     }
@@ -58,7 +59,7 @@ final class JoinProcessor
                     foreach ($right_dataset as $r) {
                         $left_row = $row;
                         $candidate_row = \array_merge($left_row, $r);
-                        if (!$filter || ExpressionEvaluator::evaluate($filter, $candidate_row, $conn)) {
+                        if (!$filter || ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row)) {
                             $out[] = $candidate_row;
                             $any_match = true;
                         }
@@ -84,7 +85,7 @@ final class JoinProcessor
                         $left_row = $row;
                         $candidate_row = \array_merge($left_row, $raw);
                         
-                        if (!$filter || ExpressionEvaluator::evaluate($filter, $candidate_row, $conn)) {
+                        if (!$filter || ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row)) {
                             $out[] = $candidate_row;
                             $any_match = true;
                         }
@@ -111,7 +112,7 @@ final class JoinProcessor
                     foreach ($right_dataset as $r) {
                         $left_row = $row;
                         $candidate_row = \array_merge($left_row, $r);
-                        if (ExpressionEvaluator::evaluate($filter, $candidate_row, $conn)) {
+                        if (ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row)) {
                             $out[] = $candidate_row;
                         }
                     }

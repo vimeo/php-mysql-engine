@@ -13,6 +13,7 @@ final class InsertProcessor extends Processor
      */
     public static function process(
         \Vimeo\MysqlEngine\FakePdo $conn,
+        Scope $scope,
         InsertQuery $stmt
     ) {
         list($database, $table_name) = self::parseTableName($conn, $stmt->table);
@@ -37,7 +38,7 @@ final class InsertProcessor extends Processor
             $row = [];
 
             foreach ($stmt->insertColumns as $key => $col) {
-                $row[$col] = Expression\Evaluator::evaluate($value_list[$key], [], $conn);
+                $row[$col] = Expression\Evaluator::evaluate($conn, $scope, $value_list[$key], []);
             }
 
             $row = DataIntegrity::coerceToSchema($conn, $row, $table_definition);
@@ -50,6 +51,7 @@ final class InsertProcessor extends Processor
                     $existing_row = $table[$row_id];
                     list($affected, $table) = self::applySet(
                         $conn,
+                        $scope,
                         $database,
                         $table_name,
                         [$row_id => $existing_row],
@@ -95,6 +97,7 @@ final class InsertProcessor extends Processor
         if ($stmt->setClause) {
             list($set_rows_affected) = self::applySet(
                 $conn,
+                $scope,
                 $database,
                 $table_name,
                 null,
