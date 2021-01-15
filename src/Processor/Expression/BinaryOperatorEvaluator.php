@@ -40,6 +40,12 @@ final class BinaryOperatorEvaluator
             throw new SQLFakeRuntimeException("Attempted to evaluate BinaryOperatorExpression with no right operand");
         }
 
+        if ($expr->operator === 'COLLATE') {
+            $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $columns);
+
+            return $l_value;
+        }
+
         if ($right instanceof IntervalOperatorExpression
             && ($expr->operator === '+' || $expr->operator === '-')
         ) {
@@ -322,7 +328,7 @@ final class BinaryOperatorEvaluator
                 }
 
                 return new Column\FloatColumn(10, 2);
-            
+
             case '%':
             case 'MOD':
                 if ($l_type instanceof Column\IntegerColumn) {
