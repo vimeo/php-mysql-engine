@@ -162,7 +162,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
     public function testBadAs()
     {
-        $sql = "SELECT (@refund_date := `ordered_transactions`.`refund_date`) as refund_date FROM `foo`";
+        $sql = "SELECT (@refund_date := `ordered_transactions`.`refund_date`) AS `r` FROM `foo`";
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 

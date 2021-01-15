@@ -7,6 +7,7 @@ use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\RowExpression;
 use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
 use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
+use Vimeo\MysqlEngine\Query\Expression\VariableExpression;
 use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\Schema\Column;
 use Vimeo\MysqlEngine\TokenType;
@@ -67,8 +68,8 @@ final class BinaryOperatorEvaluator
         $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $columns);
         $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $columns);
 
-        $l_type = Evaluator::getColumnSchema($left, $columns);
-        $r_type = Evaluator::getColumnSchema($right, $columns);
+        $l_type = Evaluator::getColumnSchema($left, $scope, $columns);
+        $r_type = Evaluator::getColumnSchema($right, $scope, $columns);
 
         $l_value = self::maybeUnrollGroupedDataset($l_value);
         $r_value = self::maybeUnrollGroupedDataset($r_value);
@@ -235,6 +236,15 @@ final class BinaryOperatorEvaluator
                 $regex = '/' . $pattern . '/' . $case_insensitive;
                 return ((bool) \preg_match($regex, $left_string) ? 1 : 0) ^ $expr->negatedInt;
 
+            case ':=':
+                if (!$left instanceof VariableExpression) {
+                    throw new SQLFakeRuntimeException("Unsupported left operand for variable assignment");
+                }
+
+                $scope->variables[$left->variableName] = $r_value;
+
+                return $scope->variables[$left->variableName];
+
             case '&&':
             case 'BINARY':
             case 'COLLATE':
@@ -256,6 +266,7 @@ final class BinaryOperatorEvaluator
      */
     public static function getColumnSchema(
         BinaryOperatorExpression $expr,
+        Scope $scope,
         array $columns
     ) {
         $left = $expr->left;
@@ -281,8 +292,8 @@ final class BinaryOperatorEvaluator
             return new Column\DateTime();
         }
 
-        $l_type = Evaluator::getColumnSchema($left, $columns);
-        $r_type = Evaluator::getColumnSchema($right, $columns);
+        $l_type = Evaluator::getColumnSchema($left, $scope, $columns);
+        $r_type = Evaluator::getColumnSchema($right, $scope, $columns);
 
         switch ($expr->operator) {
             case '':
@@ -331,6 +342,9 @@ final class BinaryOperatorEvaluator
             case '|':
             case '&':
                 return new Column\IntColumn(false, 11);
+
+            case ':=':
+                return $r_type;
         }
 
         return new Column\Varchar(255);

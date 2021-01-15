@@ -98,17 +98,18 @@ final class FunctionEvaluator
      */
     public static function getColumnSchema(
         FunctionExpression $expr,
+        Scope $scope,
         array $columns
     ) : Column {
         switch ($expr->functionName) {
             case 'COUNT':
                 return new Column\IntColumn(true, 10);
             case 'SUM':
-                return Evaluator::getColumnSchema($expr->args[0], $columns);
+                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
             case 'MAX':
-                return Evaluator::getColumnSchema($expr->args[0], $columns);
+                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
             case 'MIN':
-                return Evaluator::getColumnSchema($expr->args[0], $columns);
+                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
             case 'MOD':
                 return new Column\IntColumn(false, 10);
             case 'AVG':
@@ -132,9 +133,9 @@ final class FunctionEvaluator
             case 'LENGTH':
                 return new Column\IntColumn(true, 10);
             case 'LOWER':
-                return Evaluator::getColumnSchema($expr->args[0], $columns);
+                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
             case 'UPPER':
-                return Evaluator::getColumnSchema($expr->args[0], $columns);
+                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
             case 'CHAR_LENGTH':
             case 'CHARACTER_LENGTH':
                 return new Column\IntColumn(true, 10);
@@ -149,7 +150,7 @@ final class FunctionEvaluator
             case 'FROM_UNIXTIME':
                 return new Column\DateTime();
             case 'GREATEST':
-                return Evaluator::getColumnSchema($expr->args[0], $columns);
+                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
             case 'VALUES':
                 break;
             case 'NOW':
@@ -165,7 +166,7 @@ final class FunctionEvaluator
             case 'DATE_ADD':
                 return new Column\DateTime();
             case 'ROUND':
-                return Evaluator::getColumnSchema($expr->args[0], $columns);
+                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
         }
 
         // default type, a cop-out

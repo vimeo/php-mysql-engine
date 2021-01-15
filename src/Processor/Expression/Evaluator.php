@@ -80,6 +80,9 @@ class Evaluator
             case \Vimeo\MysqlEngine\Query\Expression\CastExpression::class:
                 return CastEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
 
+            case \Vimeo\MysqlEngine\Query\Expression\VariableExpression::class:
+                return VariableEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+
             default:
                 throw new SQLFakeRuntimeException('Unsupported expression ' . get_class($expr));
         }
@@ -91,6 +94,7 @@ class Evaluator
      */
     public static function getColumnSchema(
         \Vimeo\MysqlEngine\Query\Expression\Expression $expr,
+        Scope $scope,
         array $columns
     ) : Column {
         switch (get_class($expr)) {
@@ -98,7 +102,7 @@ class Evaluator
                 return new Column\TinyInt(true, 1);
 
             case \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class:
-                return BinaryOperatorEvaluator::getColumnSchema($expr, $columns);
+                return BinaryOperatorEvaluator::getColumnSchema($expr, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression::class:
                 // TODO
@@ -128,7 +132,7 @@ class Evaluator
                 return new Column\TinyInt(true, 1);
 
             case \Vimeo\MysqlEngine\Query\Expression\FunctionExpression::class:
-                return FunctionEvaluator::getColumnSchema($expr, $columns);
+                return FunctionEvaluator::getColumnSchema($expr, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\InOperatorExpression::class:
                 break;
@@ -149,6 +153,21 @@ class Evaluator
                 break;
 
             case \Vimeo\MysqlEngine\Query\Expression\CastExpression::class:
+                break;
+
+            case \Vimeo\MysqlEngine\Query\Expression\VariableExpression::class:
+                if (array_key_exists($expr->variableName, $scope->variables)) {
+                    $value = $scope->variables[$expr->variableName];
+
+                    if (\is_int($value)) {
+                        return new Column\IntColumn(false, 10);
+                    }
+                    
+                    if (\is_float($value)) {
+                        return new Column\FloatColumn(10, 2);
+                    }
+                }
+
                 break;
         }
 

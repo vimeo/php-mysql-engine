@@ -172,6 +172,30 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testIncrementCounter()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'SELECT `name`, (@var := @var + 2) AS `counter`
+                FROM `video_game_characters`
+                CROSS JOIN (SELECT @var := 0) as `vars` 
+                WHERE `type` = \'hero\'
+                LIMIT 3'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['name' => 'mario', 'counter' => 2],
+                ['name' => 'luigi', 'counter' => 4],
+                ['name' => 'sonic', 'counter' => 6],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
     {
         $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');

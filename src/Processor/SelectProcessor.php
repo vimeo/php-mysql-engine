@@ -201,7 +201,7 @@ final class SelectProcessor extends Processor
                     }
                 }
             } else {
-                $columns[$expr->name] = Expression\Evaluator::getColumnSchema($expr, $data[1]);
+                $columns[$expr->name] = Expression\Evaluator::getColumnSchema($expr, $scope, $data[1]);
             }
         }
 
@@ -210,6 +210,7 @@ final class SelectProcessor extends Processor
         foreach ($order_by_expressions as $order_by) {
             $columns[$order_by['expression']->name] = Expression\Evaluator::getColumnSchema(
                 $order_by['expression'],
+                $scope,
                 $data[1]
             );
         }

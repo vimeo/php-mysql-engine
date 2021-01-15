@@ -18,6 +18,7 @@ use Vimeo\MysqlEngine\Query\Expression\PositionExpression;
 use Vimeo\MysqlEngine\Query\Expression\RowExpression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
 use Vimeo\MysqlEngine\Query\Expression\UnaryExpression;
+use Vimeo\MysqlEngine\Query\Expression\VariableExpression;
 use Vimeo\MysqlEngine\TokenType;
 
 final class ExpressionParser
@@ -66,7 +67,7 @@ final class ExpressionParser
         'XOR' => 3,
         'OR' => 2,
         '||' => 2,
-        'ASSIGNMENT' => 1
+        ':=' => 1,
     ];
 
     /**
@@ -217,6 +218,10 @@ final class ExpressionParser
                             return $expr;
                         }
                     }
+                }
+
+                if ($token->value[0] === '@') {
+                    return new VariableExpression($token);
                 }
 
                 return new ColumnExpression($token);

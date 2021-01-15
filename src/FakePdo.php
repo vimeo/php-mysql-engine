@@ -59,8 +59,10 @@ class FakePdo extends \PDO
         }
 
         if ($this->real && $key !== \PDO::ATTR_STATEMENT_CLASS) {
-            $this->real->setAttribute($key, $value);
+            return $this->real->setAttribute($key, $value);
         }
+
+        return true;
     }
 
     public function getServer() : Server

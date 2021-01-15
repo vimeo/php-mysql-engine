@@ -255,6 +255,7 @@ final class FromParser
         }
         $this->pointer++;
         $next = $this->tokens[$this->pointer] ?? null;
+
         if ($next === null) {
             throw new SQLFakeParseException("Expected table or subquery after join keyword");
         }
@@ -265,6 +266,12 @@ final class FromParser
         if ($next === null) {
             return $table;
         }
+
+        if ($next->type === TokenType::CLAUSE) {
+            $this->pointer--;
+            return $table;
+        }
+
         if ($next->type === TokenType::IDENTIFIER) {
             $table['alias'] = $next->value;
             $this->pointer++;

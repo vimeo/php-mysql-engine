@@ -90,7 +90,8 @@ final class SQLParser
         '&&' => true,
         'XOR' => true,
         'OR' => true,
-        '||' => true
+        '||' => true,
+        ':=' => true,
     ];
 
     /**
