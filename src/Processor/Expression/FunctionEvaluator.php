@@ -104,12 +104,14 @@ final class FunctionEvaluator
         switch ($expr->functionName) {
             case 'COUNT':
                 return new Column\IntColumn(true, 10);
+
             case 'SUM':
-                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
             case 'MAX':
-                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
             case 'MIN':
-                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
+                $column = clone Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
+                $column->isNullable = true;
+                return $column;
+
             case 'MOD':
                 return new Column\IntColumn(false, 10);
             case 'AVG':
