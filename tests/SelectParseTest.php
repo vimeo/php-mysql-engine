@@ -203,6 +203,30 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
 
+    public function testCaseNested()
+    {
+        $sql = "SELECT *
+                FROM `foo`
+                WHERE CASE
+                    WHEN `a` > 0
+                    THEN `b` > 0 OR `c` NOT LIKE '%foo'
+                    ELSE 0
+                END";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+
+        $this->assertInstanceOf(
+            \Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression::class,
+            $select_query->whereClause
+        );
+
+        $this->assertTrue(
+            $select_query->selectExpressions[0]->isWellFormed()
+        );
+    }
+
     public function testBadAs()
     {
         $sql = "SELECT (@refund_date := `ordered_transactions`.`refund_date`) AS `r` FROM `foo`";
