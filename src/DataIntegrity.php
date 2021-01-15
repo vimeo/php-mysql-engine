@@ -195,8 +195,8 @@ final class DataIntegrity
 
                     if ($value[0] === '-' || $value === '') {
                         $value = '0000-00-00 00:00:00';
-                    } elseif (!\preg_match(
-                        '/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/',
+                    } elseif (\preg_match(
+                        '/^([0-9]{2,4}-[0-1][0-9]-[0-3][0-9]|[0-9]+)$/',
                         $value
                     )) {
                         $value = (new \DateTime($value))->format('Y-m-d H:i:s');
