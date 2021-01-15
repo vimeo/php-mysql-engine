@@ -45,6 +45,11 @@ final class BinaryOperatorExpression extends Expression
         string $operator = '',
         ?Expression $right = null
     ) {
+        if ($operator !== '' && \substr($operator, 0, 4) === 'NOT ') {
+            $operator = \substr($operator, 4);
+            $negated = !$negated;
+        }
+
         $this->left = $left;
         $this->negated = $negated;
         $this->operator = $operator;
@@ -88,6 +93,11 @@ final class BinaryOperatorExpression extends Expression
      */
     public function setOperator(string $operator)
     {
+        if (\substr($operator, 0, 4) === 'NOT ') {
+            $operator = \substr($operator, 4);
+            $this->negatedInt = 1 - $this->negatedInt;
+        }
+
         $this->operator = $operator;
         $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[$operator];
     }

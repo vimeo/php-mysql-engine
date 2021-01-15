@@ -153,6 +153,15 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
 
+    public function testCaseThenBoolean()
+    {
+        $sql = "SELECT CASE WHEN `b` NOT IN ('c', 'd') THEN ((`e` < 0) OR `d` NOT LIKE '%bar') ELSE TRUE END FROM `foo`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
+
     public function testInterval()
     {
         $sql = 'SELECT DATE_ADD(\'2008-01-02\', INTERVAL 31 DAY)';

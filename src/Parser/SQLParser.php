@@ -319,6 +319,22 @@ final class SQLParser
 
             $token_upper = \strtoupper($token);
 
+            if ($token_upper === 'LIKE'
+                || $token_upper === 'REGEXP'
+                || $token_upper === 'IN'
+            ) {
+                $previous_key = \array_key_last($out);
+
+                if ($previous_key !== null
+                    && $out[$previous_key]->value === 'NOT'
+                ) {
+                    $out[$previous_key]->value .= ' ' . $token_upper;
+                    $out[$previous_key]->raw .= $token;
+
+                    continue;
+                }
+            }
+
             if ($token_upper === 'NULL') {
                 $out[] = new Token(TokenType::NULL_CONSTANT, $token, $token);
             } elseif ($token_upper === 'TRUE') {
