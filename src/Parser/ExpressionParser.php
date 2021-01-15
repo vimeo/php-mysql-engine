@@ -521,9 +521,9 @@ final class ExpressionParser
                                 $this->expression->left,
                                 $operator === 'NOT IN' || $this->expression->negated
                             );
-                        } elseif ($operator === 'EXISTS') {
+                        } elseif ($operator === 'EXISTS' || $operator === 'NOT EXISTS') {
                             $this->expression = new ExistsOperatorExpression(
-                                $this->expression->negated
+                                $operator === 'NOT EXISTS' || $this->expression->negated
                             );
                         } elseif ($operator === 'UNARY_MINUS'
                             || $operator === 'UNARY_PLUS'
