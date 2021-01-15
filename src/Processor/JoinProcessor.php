@@ -1,25 +1,26 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor;
 
-use Vimeo\MysqlEngine\Query\Expression\Expression;
+use Vimeo\MysqlEngine\JoinType;
 use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
 use Vimeo\MysqlEngine\Parser\Token;
+use Vimeo\MysqlEngine\Processor\Expression\Evaluator as ExpressionEvaluator;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\JoinType;
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Processor\Expression\Evaluator as ExpressionEvaluator;
 use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
+use Vimeo\MysqlEngine\Query\Expression\Expression;
+use Vimeo\MysqlEngine\Schema\Column;
+use Vimeo\MysqlEngine\TokenType;
 
 final class JoinProcessor
 {
     /**
-     * @param array<int, array<string, mixed>> $left_dataset
-     * @param array<int, array<string, mixed>> $right_dataset
+     * @param array{array<int, array<string, mixed>>, array<string, Column>} $left_dataset
+     * @param array{array<int, array<string, mixed>>, array<string, Column>} $right_dataset
      * @param JoinType::*                      $join_type
      * @param 'USING'|'OM'|null                $_ref_type
      *
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
     public static function process(
         \Vimeo\MysqlEngine\FakePdo $conn,
@@ -29,20 +30,23 @@ final class JoinProcessor
         string $right_table_name,
         $join_type,
         $_ref_type,
-        ?Expression $filter,
-        \Vimeo\MysqlEngine\Schema\TableDefinition $right_table_definition
+        ?Expression $filter
     ) {
-        $out = [];
+        $rows = [];
 
         switch ($join_type) {
             case JoinType::JOIN:
             case JoinType::STRAIGHT:
-                foreach ($left_dataset as $row) {
-                    foreach ($right_dataset as $r) {
+                $joined_columns = array_merge($left_dataset[1], $right_dataset[1]);
+
+                foreach ($left_dataset[0] as $row) {
+                    foreach ($right_dataset[0] as $r) {
                         $left_row = $row;
                         $candidate_row = \array_merge($row, $r);
-                        if (!$filter || ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row)) {
-                            $out[] = $candidate_row;
+                        if (!$filter
+                            || ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row, $joined_columns)
+                        ) {
+                            $rows[] = $candidate_row;
                         }
                     }
                 }
@@ -50,22 +54,31 @@ final class JoinProcessor
 
             case JoinType::LEFT:
                 $null_placeholder = [];
-                foreach ($right_table_definition->columns as $name => $_) {
-                    $null_placeholder["{$right_table_name}.{$name}"] = null;
+
+                foreach ($right_dataset[1] as $name => $column) {
+                    $parts = explode('.', $name);
+                    $null_placeholder[$right_table_name . '.' . end($parts)] = null;
+                    $column = clone $column;
+                    $column->isNullable = true;
+                    $right_dataset[1][$name] = $column;
                 }
 
-                foreach ($left_dataset as $row) {
+                $joined_columns = array_merge($left_dataset[1], $right_dataset[1]);
+
+                foreach ($left_dataset[0] as $left_row) {
                     $any_match = false;
-                    foreach ($right_dataset as $r) {
-                        $left_row = $row;
-                        $candidate_row = \array_merge($left_row, $r);
-                        if (!$filter || ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row)) {
-                            $out[] = $candidate_row;
+                    foreach ($right_dataset[0] as $right_row) {
+                        $candidate_row = \array_merge($left_row, $right_row);
+
+                        if (!$filter
+                            || ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row, $joined_columns)
+                        ) {
+                            $rows[] = $candidate_row;
                             $any_match = true;
                         }
                     }
                     if (!$any_match) {
-                        $out[] = \array_merge($row, $null_placeholder);
+                        $rows[] = \array_merge($left_row, $null_placeholder);
                     }
                 }
 
@@ -73,54 +86,65 @@ final class JoinProcessor
 
             case JoinType::RIGHT:
                 $null_placeholder = [];
-                
-                foreach ($right_table_definition->columns as $name => $_) {
-                    $null_placeholder["{$right_table_name}.{$name}"] = null;
+
+                foreach ($right_dataset[1] as $name => $_) {
+                    $parts = explode('.', $name);
+                    $null_placeholder[$right_table_name . '.' . end($parts)] = null;
                 }
 
-                foreach ($right_dataset as $raw) {
+                $joined_columns = array_merge($left_dataset[1], $right_dataset[1]);
+
+                foreach ($right_dataset[0] as $raw) {
                     $any_match = false;
 
-                    foreach ($left_dataset as $row) {
+                    foreach ($left_dataset[0] as $row) {
                         $left_row = $row;
                         $candidate_row = \array_merge($left_row, $raw);
-                        
-                        if (!$filter || ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row)) {
-                            $out[] = $candidate_row;
+
+                        if (!$filter
+                            || ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row, $joined_columns)
+                        ) {
+                            $rows[] = $candidate_row;
                             $any_match = true;
                         }
                     }
 
                     if (!$any_match) {
-                        $out[] = $raw;
+                        $rows[] = $raw;
                     }
                 }
                 break;
 
             case JoinType::CROSS:
-                foreach ($left_dataset as $row) {
-                    foreach ($right_dataset as $r) {
+                $joined_columns = array_merge($left_dataset[1], $right_dataset[1]);
+
+                foreach ($left_dataset[0] as $row) {
+                    foreach ($right_dataset[0] as $r) {
                         $left_row = $row;
-                        $out[] = \array_merge($left_row, $r);
+                        $rows[] = \array_merge($left_row, $r);
                     }
                 }
+
                 break;
 
             case JoinType::NATURAL:
-                $filter = self::buildNaturalJoinFilter($left_dataset, $right_dataset);
-                foreach ($left_dataset as $row) {
-                    foreach ($right_dataset as $r) {
+                $joined_columns = array_merge($left_dataset[1], $right_dataset[1]);
+
+                $filter = self::buildNaturalJoinFilter($left_dataset[0], $right_dataset[0]);
+
+                foreach ($left_dataset[0] as $row) {
+                    foreach ($right_dataset[0] as $r) {
                         $left_row = $row;
                         $candidate_row = \array_merge($left_row, $r);
-                        if (ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row)) {
-                            $out[] = $candidate_row;
+                        if (ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row, $joined_columns)) {
+                            $rows[] = $candidate_row;
                         }
                     }
                 }
                 break;
         }
 
-        return $out;
+        return [$rows, $joined_columns];
     }
 
     /**

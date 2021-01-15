@@ -4,6 +4,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\PositionExpression;
 use Vimeo\MysqlEngine\Processor\Scope;
+use Vimeo\MysqlEngine\Schema\Column;
 
 final class PositionEvaluator
 {

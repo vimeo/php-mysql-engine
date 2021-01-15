@@ -120,22 +120,12 @@ final class CreateProcessor
 
             case DataType::ENUM:
                 return new Column\Enum(
-                    array_map(
-                        function ($param) {
-                            return substr($param, 1, -1);
-                        },
-                        $stmt->values
-                    )
+                    $stmt->values
                 );
 
             case DataType::SET:
                 return new Column\Set(
-                    array_map(
-                        function ($param) {
-                            return substr($param, 1, -1);
-                        },
-                        $stmt->values
-                    )
+                    $stmt->values
                 );
 
             case DataType::TINYBLOB:

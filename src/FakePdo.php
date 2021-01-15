@@ -63,7 +63,7 @@ class FakePdo extends \PDO
         }
     }
 
-    public function getServer()
+    public function getServer() : Server
     {
         return $this->server;
     }

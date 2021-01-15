@@ -6,13 +6,14 @@ use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Schema\Column\IntegerColumn;
 use Vimeo\MysqlEngine\Schema\TableDefinition;
+use Vimeo\MysqlEngine\Schema\Column;
 
 abstract class Processor
 {
     /**
-     * @param array<int, array<string, mixed>> $data
+     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
      *
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
     protected static function applyWhere(
         \Vimeo\MysqlEngine\FakePdo $conn,
@@ -24,19 +25,22 @@ abstract class Processor
             return $data;
         }
 
-        return \array_filter(
-            $data,
-            function ($row) use ($conn, $scope, $where) {
-                return Expression\Evaluator::evaluate($conn, $scope, $where, $row);
-            }
-        );
+        return [
+            \array_filter(
+                $data[0],
+                function ($row) use ($conn, $scope, $where, $data) {
+                    return Expression\Evaluator::evaluate($conn, $scope, $where, $row, $data[1]);
+                }
+            ),
+            $data[1]
+        ];
     }
 
     /**
-     * @param array<int, array<string, mixed>>                                                                  $data
+     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
      * @param ?array<int, array{expression: \Vimeo\MysqlEngine\Query\Expression\Expression, direction: string}> $orders
      *
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
     protected static function applyOrderBy(
         \Vimeo\MysqlEngine\FakePdo $conn,
@@ -51,16 +55,16 @@ abstract class Processor
         // allow all column expressions to fall through to the full row
         foreach ($orders as $rule) {
             $expr = $rule['expression'];
-            
+
             if ($expr instanceof ColumnExpression) {
                 $expr->allowFallthrough();
             }
         }
 
-        $sort_fun = function (array $a, array $b) use ($conn, $scope, $orders) {
+        $sort_fun = function (array $a, array $b) use ($conn, $scope, $orders, $data) {
             foreach ($orders as $rule) {
-                $value_a = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $a);
-                $value_b = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $b);
+                $value_a = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $a, $data[1]);
+                $value_b = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $b, $data[1]);
 
                 if ($value_a != $value_b) {
                     if ((\is_int($value_a) || \is_float($value_a)) && (\is_int($value_b) || \is_float($value_b))) {
@@ -76,31 +80,34 @@ abstract class Processor
             return 0;
         };
 
-        $data_temp = [];
-        foreach ($data as $i => $item) {
-            $data_temp[$i] = [$i, $item];
+        $rows = $data[0];
+
+        $rows_temp = [];
+        foreach ($rows as $i => $item) {
+            $rows_temp[$i] = [$i, $item];
         }
 
         \usort(
-            $data_temp,
+            $rows_temp,
             function ($a, $b) use ($sort_fun) {
                 $result = $sort_fun($a[1], $b[1]);
                 return $result === 0 ? $b[0] - $a[0] : $result;
             }
         );
 
-        $data = [];
-        foreach ($data_temp as $index => $item) {
-            $data[$item[0]] = $item[1];
+        $rows = [];
+        foreach ($rows_temp as $index => $item) {
+            $rows[$item[0]] = $item[1];
         }
-        return array_values($data);
+
+        return [array_values($rows), $data[1]];
     }
 
     /**
      * @param array{rowcount:int, offset:int}|null $limit
-     * @param array<int, array<string, mixed>>     $data
+     * @param array{array<int, array<string, mixed>>, array<string, Column>}    $data
      *
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
     protected static function applyLimit(?array $limit, array $data)
     {
@@ -108,7 +115,10 @@ abstract class Processor
             return $data;
         }
 
-        return \array_slice($data, $limit['offset'], $limit['rowcount'], true);
+        return [
+            \array_slice($data[0], $limit['offset'], $limit['rowcount'], true),
+            $data[1]
+        ];
     }
 
     /**
@@ -189,7 +199,14 @@ abstract class Processor
 
                 foreach ($set_clauses as $clause) {
                     $existing_value = $row[$clause['column']] ?? null;
-                    $new_value = Expression\Evaluator::evaluate($conn, $scope, $clause['expression'], $update_row);
+                    $new_value = Expression\Evaluator::evaluate(
+                        $conn,
+                        $scope,
+                        $clause['expression'],
+                        $update_row,
+                        $table_definition->columns
+                    );
+
                     if ($new_value !== $existing_value) {
                         $row[$clause['column']] = $new_value;
                         $changes_found = true;
@@ -213,7 +230,13 @@ abstract class Processor
             $row = [];
 
             foreach ($set_clauses as $clause) {
-                $row[$clause['column']] = Expression\Evaluator::evaluate($conn, $scope, $clause['expression'], []);
+                $row[$clause['column']] = Expression\Evaluator::evaluate(
+                    $conn,
+                    $scope,
+                    $clause['expression'],
+                    [],
+                    $table_definition->columns
+                );
             }
 
             foreach ($row as $column_name => $value) {

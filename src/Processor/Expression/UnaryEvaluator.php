@@ -4,6 +4,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\UnaryExpression;
 use Vimeo\MysqlEngine\Processor\Scope;
+use Vimeo\MysqlEngine\Schema\Column;
 
 final class UnaryEvaluator
 {
@@ -12,13 +13,18 @@ final class UnaryEvaluator
      *
      * @return mixed
      */
-    public static function evaluate(\Vimeo\MysqlEngine\FakePdo $conn, Scope $scope, UnaryExpression $expr, array $row)
-    {
+    public static function evaluate(
+        \Vimeo\MysqlEngine\FakePdo $conn,
+        Scope $scope,
+        UnaryExpression $expr,
+        array $row,
+        array $columns
+    ) {
         if ($expr->subject === null) {
             throw new SQLFakeRuntimeException("Attempted to evaluate unary operation with no operand");
         }
 
-        $val = Evaluator::evaluate($conn, $scope, $expr->subject, $row);
+        $val = Evaluator::evaluate($conn, $scope, $expr->subject, $row, $columns);
 
         switch ($expr->operator) {
             case 'UNARY_MINUS':

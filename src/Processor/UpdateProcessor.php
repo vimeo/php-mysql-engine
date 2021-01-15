@@ -9,7 +9,10 @@ final class UpdateProcessor extends Processor
         \Vimeo\MysqlEngine\Query\UpdateQuery $stmt
     ) : int {
         list($table_name, $database) = self::processUpdateClause($conn, $stmt);
-        $data = $conn->getServer()->getTable($database, $table_name) ?: [];
+
+        $table_definition = $conn->getServer()->getTableDefinition($database, $table_name);
+
+        $data = [$conn->getServer()->getTable($database, $table_name) ?: [], $table_definition->columns ?? []];
 
         //Metrics::trackQuery(QueryType::UPDATE, $conn->getServer()->name, $table_name, $this->sql);
 
@@ -33,8 +36,8 @@ final class UpdateProcessor extends Processor
                         $data
                     )
                 )
-            ),
-            $data,
+            )[0],
+            $data[0],
             $stmt->setClause,
             $table_definition
         );

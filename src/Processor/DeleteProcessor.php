@@ -14,7 +14,10 @@ final class DeleteProcessor extends Processor
             throw new \TypeError('Failed assertion');
         })();
         list($database, $table_name) = Processor::parseTableName($conn, $stmt->fromClause['name']);
-        $data = $conn->getServer()->getTable($database, $table_name) ?? [];
+
+        $table_definition = $conn->getServer()->getTableDefinition($database, $table_name);
+
+        $data = [$conn->getServer()->getTable($database, $table_name) ?? [], $table_definition->columns];
         //Metrics::trackQuery(QueryType::DELETE, $conn->getServer()->name, $table_name, $stmt->sql);
 
         return self::applyDelete(
@@ -34,8 +37,8 @@ final class DeleteProcessor extends Processor
                         $data
                     )
                 )
-            ),
-            $data
+            )[0],
+            $data[0]
         );
     }
 

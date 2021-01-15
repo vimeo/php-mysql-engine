@@ -157,7 +157,10 @@ final class DataIntegrity
 
         foreach ($row as $column_name => $value) {
             if (!isset($table_definition->columns[$column_name])) {
-                throw new \Exception("Column '$column_name' not found on '{$table_definition->name}'");
+                throw new \Exception(
+                    "Column '$column_name' not found on '{$table_definition->name}', expecting "
+                        . '\'' . implode('\', \'', array_keys($table_definition->columns)) . '\''
+                );
             }
 
             $column = $table_definition->columns[$column_name];
@@ -168,7 +171,7 @@ final class DataIntegrity
         return $row;
     }
 
-    private static function coerceValueToColumn(
+    public static function coerceValueToColumn(
         Schema\Column $column,
         $value
     ) {

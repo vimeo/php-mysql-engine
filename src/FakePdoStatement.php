@@ -116,12 +116,13 @@ class FakePdoStatement extends \PDOStatement
 
         switch (get_class($parsed_query)) {
             case Query\SelectQuery::class:
-                $this->result = Processor\SelectProcessor::process(
+                [$raw_result, $result_columns]  = Processor\SelectProcessor::process(
                     $this->conn,
                     new Processor\Scope(),
-                    $parsed_query,
-                    null
+                    $parsed_query
                 );
+
+                $this->result = self::processResult($raw_result, $result_columns);
 
                 if ($this->realStatement) {
                     $fake_result = $this->result;
@@ -187,7 +188,7 @@ class FakePdoStatement extends \PDOStatement
                     $this->conn->databaseName,
                     $parsed_query->table
                 );
-                
+
                 break;
 
             case Query\DropTableQuery::class:
@@ -215,6 +216,21 @@ class FakePdoStatement extends \PDOStatement
         }
 
         return true;
+    }
+
+    private static function processResult(array $raw_result, array $columns)
+    {
+        $result = [];
+
+        foreach ($raw_result as $i => $row) {
+            foreach ($row as $key => $value) {
+                $result[$i][\substr($key, 0, 255)] = isset($columns[$key])
+                    ? DataIntegrity::coerceValueToColumn($columns[$key], $value)
+                    : $value;
+            }
+        }
+
+        return $result;
     }
 
     public function columnCount() : int
@@ -291,7 +307,7 @@ class FakePdoStatement extends \PDOStatement
      * @param  string $fetch_argument
      * @param  array $ctor_args
      */
-    public function fetchAll($fetch_style = -123, $fetch_argument = NULL, $ctor_args = NULL) : array
+    public function fetchAll($fetch_style = -123, $fetch_argument = null, $ctor_args = null) : array
     {
         if ($fetch_style === -123) {
             $fetch_style = $this->fetchMode;

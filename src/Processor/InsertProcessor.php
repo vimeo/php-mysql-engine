@@ -38,7 +38,7 @@ final class InsertProcessor extends Processor
             $row = [];
 
             foreach ($stmt->insertColumns as $key => $col) {
-                $row[$col] = Expression\Evaluator::evaluate($conn, $scope, $value_list[$key], []);
+                $row[$col] = Expression\Evaluator::evaluate($conn, $scope, $value_list[$key], [], []);
             }
 
             $row = DataIntegrity::coerceToSchema($conn, $row, $table_definition);

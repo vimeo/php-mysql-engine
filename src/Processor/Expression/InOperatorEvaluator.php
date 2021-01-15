@@ -6,6 +6,7 @@ use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
 use Vimeo\MysqlEngine\Query\Expression\InOperatorExpression;
 use Vimeo\MysqlEngine\Processor\Scope;
+use Vimeo\MysqlEngine\Schema\Column;
 
 final class InOperatorEvaluator
 {
@@ -14,15 +15,20 @@ final class InOperatorEvaluator
      *
      * @return mixed
      */
-    public static function evaluate(\Vimeo\MysqlEngine\FakePdo $conn, Scope $scope, InOperatorExpression $expr, array $row)
-    {
+    public static function evaluate(
+        \Vimeo\MysqlEngine\FakePdo $conn,
+        Scope $scope,
+        InOperatorExpression $expr,
+        array $row,
+        array $columns
+    ) {
         $inList = $expr->inList;
 
         if ($inList === null || \count($inList) === 0) {
             throw new SQLFakeParseException("Parse error: empty IN list");
         }
 
-        if (\count($inList) === 1 && Evaluator::evaluate($conn, $scope, $inList[0], $row) === null) {
+        if (\count($inList) === 1 && Evaluator::evaluate($conn, $scope, $inList[0], $row, $columns) === null) {
             if (!$expr->negated) {
                 return false;
             }
@@ -32,11 +38,11 @@ final class InOperatorEvaluator
             );
         }
 
-        $value = Evaluator::evaluate($conn, $scope, $expr->left, $row);
+        $value = Evaluator::evaluate($conn, $scope, $expr->left, $row, $columns);
 
         foreach ($inList as $in_expr) {
             if ($in_expr instanceof SubqueryExpression) {
-                $ret = Evaluator::evaluate($conn, $scope, $in_expr, $row);
+                $ret = Evaluator::evaluate($conn, $scope, $in_expr, $row, $columns);
 
                 foreach ($ret as $r) {
                     if (\count($r) !== 1) {
@@ -50,7 +56,7 @@ final class InOperatorEvaluator
                     }
                 }
             } else {
-                if ($value == Evaluator::evaluate($conn, $scope, $in_expr, $row)) {
+                if ($value == Evaluator::evaluate($conn, $scope, $in_expr, $row, $columns)) {
                     return !$expr->negated;
                 }
             }

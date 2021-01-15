@@ -2,32 +2,36 @@
 namespace Vimeo\MysqlEngine\Processor;
 
 use Vimeo\MysqlEngine\Query\FromClause;
+use Vimeo\MysqlEngine\Schema\Column;
 
 final class FromProcessor
 {
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
     public static function process(\Vimeo\MysqlEngine\FakePdo $conn, Scope $scope, FromClause $stmt)
     {
-        $data = [];
+        $rows = [];
         $columns = [];
         $is_first_table = true;
         $left_column_list = [];
 
         foreach ($stmt->tables as $table) {
             if (\array_key_exists('subquery', $table)) {
-                $res = Expression\Evaluator::evaluate($conn, $scope, $table['subquery'], []);
+                [$res, $subquery_columns] = \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+                    $conn,
+                    $scope,
+                    $table['subquery']->query
+                );
 
-                $columns = [];
+                $table_columns = [];
 
-                foreach ($table['subquery']->query->selectExpressions as $expr) {
-                    // the varchar here is irrelevant – we just want the column to exist
-                    $columns[$expr->name] = new \Vimeo\MysqlEngine\Schema\Column\Varchar(10);
+                foreach ($subquery_columns as $column_name => $column) {
+                    $parts = \explode('.', $column_name);
+                    $table_columns[\end($parts)] = $column;
                 }
 
                 $name = $table['name'];
-                $table_definition = new \Vimeo\MysqlEngine\Schema\TableDefinition($name, '', $columns);
             } else {
                 $table_name = $table['name'];
                 list($database, $table_name) = Processor::parseTableName($conn, $table_name);
@@ -40,6 +44,8 @@ final class FromProcessor
                     );
                 }
 
+                $table_columns = $table_definition->columns;
+
                 $res = $conn->getServer()->getTable($database, $table_name);
 
                 if ($res === null) {
@@ -47,9 +53,15 @@ final class FromProcessor
                 }
             }
 
+            $new_columns = [];
+
+            foreach ($table_columns as $column_name => $column) {
+                $new_columns[$name . '.' . $column_name] = $column;
+            }
+
             $new_dataset = [];
 
-            $ordered_fields = array_keys($table_definition->columns);
+            $ordered_fields = array_keys($table_columns);
 
             foreach ($res as $row) {
                 $m = [];
@@ -62,20 +74,20 @@ final class FromProcessor
                 $new_dataset[] = $m;
             }
 
-            if ($data || !$is_first_table) {
-                $data = JoinProcessor::process(
+            if ($rows || !$is_first_table) {
+                [$rows, $columns] = JoinProcessor::process(
                     $conn,
                     $scope,
-                    $data,
-                    $new_dataset,
+                    [$rows, $columns],
+                    [$new_dataset, $new_columns],
                     $name,
                     $table['join_type'],
                     $table['join_operator'] ?? null,
-                    $table['join_expression'] ?? null,
-                    $table_definition
+                    $table['join_expression'] ?? null
                 );
             } else {
-                $data = $new_dataset;
+                $rows = $new_dataset;
+                $columns = array_merge($columns, $new_columns);
             }
 
             if ($is_first_table) {
@@ -84,6 +96,6 @@ final class FromProcessor
             }
         }
 
-        return $data;
+        return [$rows, $columns];
     }
 }

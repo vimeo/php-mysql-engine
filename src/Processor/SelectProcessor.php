@@ -7,16 +7,23 @@ use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
 use Vimeo\MysqlEngine\FakePdo;
 use Vimeo\MysqlEngine\MultiOperand;
+use Vimeo\MysqlEngine\Schema\Column;
 
 final class SelectProcessor extends Processor
 {
     /**
      * @param array<string, mixed>|null $row
+     * @param array<string, Column>|null $columns
      *
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
-    public static function process(FakePdo $conn, Scope $scope, SelectQuery $stmt, ?array $row) : array
-    {
+    public static function process(
+        FakePdo $conn,
+        Scope $scope,
+        SelectQuery $stmt,
+        ?array $row = null,
+        ?array $columns = null
+    ) : array {
         return self::processMultiQuery(
             $conn,
             $scope,
@@ -46,7 +53,7 @@ final class SelectProcessor extends Processor
                                         $conn,
                                         $scope,
                                         $stmt->whereClause,
-                                        self::applyFrom($conn, $scope, $stmt, $row)
+                                        self::applyFrom($conn, $scope, $stmt, $row, $columns)
                                     )
                                 )
                             )
@@ -58,17 +65,22 @@ final class SelectProcessor extends Processor
     }
 
     /**
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
-    protected static function applyFrom(FakePdo $conn, Scope $scope, SelectQuery $stmt, ?array $row)
-    {
+    protected static function applyFrom(
+        FakePdo $conn,
+        Scope $scope,
+        SelectQuery $stmt,
+        ?array $row,
+        ?array $columns
+    ) {
         $from = $stmt->fromClause;
 
         if (!$from) {
-            return [];
+            return [[], []];
         }
 
-        $from_rows = FromProcessor::process($conn, $scope, $stmt->fromClause);
+        [$from_rows, $from_columns] = FromProcessor::process($conn, $scope, $stmt->fromClause);
 
         if ($row) {
             $from_rows = \array_map(
@@ -79,13 +91,17 @@ final class SelectProcessor extends Processor
             );
         }
 
-        return $from_rows;
+        if ($columns) {
+            $from_columns = array_merge($columns, $from_columns);
+        }
+
+        return [$from_rows, $from_columns];
     }
 
     /**
-     * @param array<int, array<string, mixed>> $data
+     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
      *
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
     protected static function applyGroupBy(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data)
     {
@@ -94,26 +110,28 @@ final class SelectProcessor extends Processor
         $select_expressions = $stmt->selectExpressions;
 
         if ($group_by !== null) {
-            $grouped_data = [];
+            $rows = $data[0];
 
-            foreach ($data as $row) {
+            $grouped_rows = [];
+
+            foreach ($rows as $row) {
                 $hashes = '';
 
                 foreach ($group_by as $expr) {
-                    $hashes .= \sha1((string) Expression\Evaluator::evaluate($conn, $scope, $expr, $row));
+                    $hashes .= \sha1((string) Expression\Evaluator::evaluate($conn, $scope, $expr, $row, $data[1]));
                 }
 
                 $hash = \sha1($hashes);
 
-                if (!\array_key_exists($hash, $grouped_data)) {
-                    $grouped_data[$hash] = [];
+                if (!\array_key_exists($hash, $grouped_rows)) {
+                    $grouped_rows[$hash] = [];
                 }
 
-                $count = \count($grouped_data[$hash]);
-                $grouped_data[$hash][(string) $count] = $row;
+                $count = \count($grouped_rows[$hash]);
+                $grouped_rows[$hash][(string) $count] = $row;
             }
 
-            return \array_values($grouped_data);
+            return [\array_values($grouped_rows), $data[1]];
         }
 
         $found_aggregate = false;
@@ -126,66 +144,100 @@ final class SelectProcessor extends Processor
         }
 
         if ($found_aggregate) {
-            return [$data];
+            return [[$data[0]], $data[1]];
         }
 
         return $data;
     }
 
     /**
-     * @param array<int, array<string, mixed>> $data
+     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
      *
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
     protected static function applyHaving(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data)
     {
         $havingClause = $stmt->havingClause;
 
         if ($havingClause !== null) {
-            return \array_filter(
-                $data,
-                function ($row) use ($conn, $scope, $havingClause) {
-                    return (bool) Expression\Evaluator::evaluate($conn, $scope, $havingClause, $row);
-                }
-            );
+            return [
+                \array_filter(
+                    $data[0],
+                    function ($row) use ($conn, $scope, $havingClause, $data) {
+                        return (bool) Expression\Evaluator::evaluate($conn, $scope, $havingClause, $row, $data[1]);
+                    }
+                ),
+                $data[1]
+            ];
         }
 
         return $data;
     }
 
     /**
-     * @param array<int, array<string, mixed>> $data
+     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
      *
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
     protected static function applySelect(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data) : array
     {
-        $out = [];
+        $columns = [];
 
-        if (!$data) {
-            if ($stmt->fromClause) {
-                return [];
+        foreach ($stmt->selectExpressions as $expr) {
+            if ($expr instanceof ColumnExpression && $expr->name === '*') {
+                foreach ($data[1] as $column_id => $existing_column) {
+                    $parts = \explode(".", $column_id);
+
+                    if ($expr_table_name = $expr->tableName()) {
+                        list($column_table_name, $column_name) = $parts;
+
+                        if ($column_table_name === $expr_table_name) {
+                            $columns[$column_id] = $existing_column;
+                        }
+                    } else {
+                        $col_name = \end($parts);
+
+                        $columns[$col_name] = $existing_column;
+                    }
+                }
+            } else {
+                $columns[$expr->name] = Expression\Evaluator::getColumnSchema($expr, $data[1]);
             }
-
-            $formatted_row = [];
-
-            foreach ($stmt->selectExpressions as $expr) {
-                $val = Expression\Evaluator::evaluate($conn, $scope, $expr, []);
-                $name = $expr->name;
-
-                $formatted_row[\substr($name, 0, 255)] = $val;
-            }
-
-            return [$formatted_row];
         }
 
         $order_by_expressions = $stmt->orderBy ?? [];
 
-        foreach ($data as $row) {
+        foreach ($order_by_expressions as $order_by) {
+            $columns[$order_by['expression']->name] = Expression\Evaluator::getColumnSchema(
+                $order_by['expression'],
+                $data[1]
+            );
+        }
+
+        if (!$data[0]) {
+            if ($stmt->fromClause) {
+                return [[], $columns];
+            }
+
             $formatted_row = [];
 
             foreach ($stmt->selectExpressions as $expr) {
+                $val = Expression\Evaluator::evaluate($conn, $scope, $expr, [], $data[1]);
+                $name = $expr->name;
+
+                $formatted_row[$name] = $val;
+            }
+
+            return [[$formatted_row], $columns];
+        }
+
+        $out = [];
+
+        foreach ($stmt->selectExpressions as $expr) {
+            foreach ($data[0] as $i => $row) {
                 if ($expr instanceof ColumnExpression && $expr->name === '*') {
+                    $formatted_row = [];
+
                     $first_value = \reset($row);
 
                     if (\is_array($first_value)) {
@@ -206,14 +258,16 @@ final class SelectProcessor extends Processor
                             $col_name = \end($parts);
                             $val = $formatted_row[$col_name] ?? $val;
 
-                            $formatted_row[\substr($col_name, 0, 255)] = $val;
+                            $formatted_row[$col_name] = $val;
                         }
                     }
+
+                    $out[$i] = $formatted_row;
 
                     continue;
                 }
 
-                $val = Expression\Evaluator::evaluate($conn, $scope, $expr, $row);
+                $val = Expression\Evaluator::evaluate($conn, $scope, $expr, $row, $data[1]);
                 $name = $expr->name;
 
                 if ($expr instanceof SubqueryExpression) {
@@ -233,20 +287,22 @@ final class SelectProcessor extends Processor
                     }
                 }
 
-                $formatted_row[\substr($name, 0, 255)] = $val;
+                $out[$i][$name] = $val;
             }
+        }
 
-            foreach ($order_by_expressions as $order_by) {
+        foreach ($order_by_expressions as $order_by) {
+            foreach ($data[0] as $i => $row) {
                 \is_array($row) ? $row : (function () {
                     throw new \TypeError('Failed assertion');
                 })();
-                $val = Expression\Evaluator::evaluate($conn, $scope, $order_by['expression'], $row);
+                $val = Expression\Evaluator::evaluate($conn, $scope, $order_by['expression'], $row, $data[1]);
                 $name = $order_by['expression']->name;
-                $formatted_row[\substr($name, 0, 255)] = $formatted_row[$name] ?? $val;
+                $out[$i][$name] = $out[$i][$name] ?? $val;
             }
-
-            $out[] = $formatted_row;
         }
+
+        $out = array_values($out);
 
         if (\array_key_exists('DISTINCT', $stmt->options)) {
             $new_out = [];
@@ -263,26 +319,26 @@ final class SelectProcessor extends Processor
                 );
 
                 if (!array_key_exists($key, $new_out)) {
-                    $new_out[\substr($key, 0, 255)] = $row;
+                    $new_out[$key] = $row;
                 }
             }
 
-            return array_values($new_out);
+            return [array_values($new_out), $columns];
         }
 
-        return $out;
+        return [$out, $columns];
     }
 
     /**
-     * @param array<int, array<string, mixed>> $data
+     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
      *
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
     protected static function removeOrderByExtras(FakePdo $_conn, SelectQuery $stmt, array $data)
     {
         $order_by = $stmt->orderBy;
 
-        if ($order_by === null || \count($data) === 0) {
+        if ($order_by === null || \count($data[0]) === 0) {
             return $data;
         }
 
@@ -315,24 +371,27 @@ final class SelectProcessor extends Processor
             return $data;
         }
 
-        return \array_map(
-            function ($row) use ($remove_fields) {
-                return \array_filter(
-                    $row,
-                    function ($field) use ($remove_fields) {
-                        return !\array_key_exists($field, $remove_fields);
-                    },
-                    \ARRAY_FILTER_USE_KEY
-                );
-            },
-            $data
-        );
+        return [
+            \array_map(
+                function ($row) use ($remove_fields) {
+                    return \array_filter(
+                        $row,
+                        function ($field) use ($remove_fields) {
+                            return !\array_key_exists($field, $remove_fields);
+                        },
+                        \ARRAY_FILTER_USE_KEY
+                    );
+                },
+                $data[0]
+            ),
+            array_diff_key($data[1], $remove_fields)
+        ];
     }
 
     /**
-     * @param array<int, array<string, mixed>> $data
+     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
      *
-     * @return array<int, array<string, mixed>>
+     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
     protected static function processMultiQuery(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data)
     {
@@ -348,36 +407,38 @@ final class SelectProcessor extends Processor
             );
         };
 
+        $rows = $data[0];
+
         foreach ($stmt->multiQueries as $sub) {
-            $subquery_results = SelectProcessor::process($conn, $scope, $sub['query'], null);
+            [$subquery_results, $subquery_columns] = SelectProcessor::process($conn, $scope, $sub['query'], null);
 
             switch ($sub['type']) {
                 case MultiOperand::UNION:
-                    $deduped_data = [];
-                    foreach (\array_merge($subquery_results, $data) as $row) {
-                        $deduped_data[$row_encoder($row)] = $row;
+                    $deduped_rows = [];
+                    foreach (\array_merge($subquery_results, $rows) as $row) {
+                        $deduped_rows[$row_encoder($row)] = $row;
                     }
-                    $data = array_values($deduped_data);
+                    $rows = array_values($deduped_rows);
                     break;
 
                 case MultiOperand::UNION_ALL:
-                    $data = \array_merge($subquery_results, $data);
+                    $rows = \array_merge($subquery_results, $rows);
                     break;
 
                 case MultiOperand::INTERSECT:
-                    $encoded_data = \array_map($row_encoder, $data);
-                    $data = \array_filter(
+                    $encoded_rows = \array_map($row_encoder, $rows);
+                    $rows = \array_filter(
                         $subquery_results,
-                        function ($row) use ($encoded_data, $row_encoder) {
-                            return \in_array($row_encoder($row), $encoded_data);
+                        function ($row) use ($encoded_rows, $row_encoder) {
+                            return \in_array($row_encoder($row), $encoded_rows);
                         }
                     );
                     break;
 
                 case MultiOperand::EXCEPT:
                     $encoded_subquery = \array_map($row_encoder, $subquery_results);
-                    $data = \array_filter(
-                        $data,
+                    $rows = \array_filter(
+                        $rows,
                         function ($row) use ($encoded_subquery, $row_encoder) {
                             return !\in_array($row_encoder($row), $encoded_subquery);
                         }
@@ -386,6 +447,6 @@ final class SelectProcessor extends Processor
             }
         }
 
-        return $data;
+        return [$rows, $data[1]];
     }
 }
