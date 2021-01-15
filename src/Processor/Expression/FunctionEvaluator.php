@@ -162,7 +162,7 @@ final class FunctionEvaluator
             case 'NOW':
                 return new Column\DateTime();
             case 'DATE':
-                return new Column\DateTime();
+                return new Column\Date();
             case 'DATE_FORMAT':
                 return new Column\Varchar(255);
             case 'ISNULL':
