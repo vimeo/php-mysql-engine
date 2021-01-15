@@ -487,6 +487,11 @@ final class ExpressionParser
                                                 $this->expression,
                                                 $this->expression->negated
                                             );
+                                        } elseif ($operator === 'NOT IN') {
+                                            $this->expression = new InOperatorExpression(
+                                                $this->expression,
+                                                !$this->expression->negated
+                                            );
                                         } else {
                                             $this->expression = new BinaryOperatorExpression(
                                                 $this->expression,
@@ -507,14 +512,14 @@ final class ExpressionParser
                             $this->expression = new BetweenOperatorExpression($this->expression->left);
                         } elseif ($operator === 'NOT') {
                             $this->expression->negate();
-                        } elseif ($operator === 'IN') {
+                        } elseif ($operator === 'IN' || $operator === 'NOT IN') {
                             if (!$this->expression instanceof BinaryOperatorExpression) {
                                 throw new SQLFakeParseException('Unexpected keyword IN');
                             }
 
                             $this->expression = new InOperatorExpression(
                                 $this->expression->left,
-                                $this->expression->negated
+                                $operator === 'NOT IN' || $this->expression->negated
                             );
                         } elseif ($operator === 'EXISTS') {
                             $this->expression = new ExistsOperatorExpression(
