@@ -89,6 +89,8 @@ final class FunctionEvaluator
                 return self::sqlRound($conn, $scope, $expr, $row, $columns);
             case 'DATEDIFF':
                 return self::sqlDateDiff($conn, $scope, $expr, $row, $columns);
+            case 'DAY':
+                return self::sqlDay($conn, $scope, $expr, $row, $columns);
         }
 
         throw new SQLFakeRuntimeException("Function " . $expr->functionName . " not implemented yet");
@@ -172,6 +174,7 @@ final class FunctionEvaluator
             case 'ROUND':
                 return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
             case 'DATEDIFF':
+            case 'DAY':
                 return new Column\IntColumn(false, 10);
         }
 
@@ -1085,6 +1088,31 @@ final class FunctionEvaluator
         $second_arg = Evaluator::evaluate($conn, $scope, $args[1], $row, $columns);
 
         return (new \DateTimeImmutable($first_arg))->diff(new \DateTimeImmutable($second_arg))->days;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function sqlDay(
+        FakePdo $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        array $columns
+    ) : int {
+        if (!$expr->hasAggregate()) {
+            $row = self::maybeUnrollGroupedDataset($row);
+        }
+
+        $args = $expr->args;
+
+        if (\count($args) !== 1) {
+            throw new SQLFakeRuntimeException("MySQL DATE_ADD() function must be called with one arguments");
+        }
+
+        $first_arg = Evaluator::evaluate($conn, $scope, $args[0], $row, $columns);
+
+        return (int)(new \DateTimeImmutable($first_arg))->format('d');
     }
 
     /**
