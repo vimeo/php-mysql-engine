@@ -121,7 +121,7 @@ final class FunctionEvaluator
 
             case 'IFNULL':
             case 'COALESCE':
-                break;
+                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
 
             case 'NULLIF':
                 break;

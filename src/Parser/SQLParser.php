@@ -393,6 +393,33 @@ final class SQLParser
      *
      * @return int
      */
+    public static function findMatchingEnd(int $pointer, array $tokens)
+    {
+        $paren_count = 0;
+        $remaining_tokens = \array_slice($tokens, $pointer);
+        $token_count = \count($remaining_tokens);
+        foreach ($remaining_tokens as $i => $token) {
+            if ($token->type === TokenType::OPERATOR
+                && $token->value === 'CASE'
+            ) {
+                $paren_count++;
+            } else {
+                if ($token->type === TokenType::OPERATOR && $token->value === 'END') {
+                    $paren_count--;
+                    if ($paren_count === 0) {
+                        return $pointer + $i;
+                    }
+                }
+            }
+        }
+        throw new SQLFakeParseException("Unclosed parentheses at index {$pointer}");
+    }
+
+    /**
+     * @param array<int, Token> $tokens
+     *
+     * @return int
+     */
     public static function skipIndexHints(int $pointer, array $tokens)
     {
         $next_pointer = $pointer + 1;

@@ -110,9 +110,43 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
     }
 
+    public function testSimpleCaseCase()
+    {
+        $sql = "SELECT CASE WHEN `a` > 5 THEN 0 ELSE 1 END FROM `bam`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
+
     public function testCaseWhenNotExists()
     {
         $sql = "SELECT CASE WHEN NOT EXISTS (SELECT * FROM `bar`) THEN 'BAZ' ELSE NULL END FROM `bam`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+
+        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+    }
+
+    public function testNestedCase()
+    {
+        $sql = "SELECT
+                CASE
+                    WHEN
+                        CASE
+                            WHEN
+                                `powerups` > 1
+                            THEN
+                                1
+                            ELSE
+                                2
+                        END > 1
+                    THEN
+                        3
+                    ELSE
+                        4
+                END
+            FROM `video_game_characters`";
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 

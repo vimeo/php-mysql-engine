@@ -61,6 +61,7 @@ final class ExpressionParser
         'WHEN' => 6,
         'THEN' => 6,
         'ELSE' => 6,
+        'END' => 6,
         'NOT' => 5,
         'AND' => 4,
         '&&' => 4,
@@ -132,7 +133,7 @@ final class ExpressionParser
 
         while ($pos < $token_count) {
             $arg = $tokens[$pos];
-            
+
 
             if ($arg->value === ',') {
                 if ($needs_comma) {
@@ -238,7 +239,7 @@ final class ExpressionParser
                     $this->pointer + 1,
                     $closing_paren_pointer - $this->pointer - 1
                 );
-                
+
                 if ($token->value === 'CAST') {
                     [$expr, $as_type_tokens] = $this->getCastAsExpression($arg_tokens);
 
@@ -260,7 +261,7 @@ final class ExpressionParser
                 }
 
                 $this->pointer = $closing_paren_pointer;
-                
+
                 return $fn;
 
             default:
@@ -382,15 +383,20 @@ final class ExpressionParser
                     $operator = $token->value;
 
                     if ($operator === 'CASE') {
-                        if (!$this->expression instanceof PlaceholderExpression) {
-                            $this->pointer = $this->expression->addRecursiveExpression(
-                                $this->tokens,
-                                $this->pointer - 1
-                            );
-                            break;
+                        $close = SQLParser::findMatchingEnd($this->pointer, $this->tokens);
+                        $arg_tokens = \array_slice($this->tokens, $this->pointer + 1, $close - $this->pointer);
+
+                        $p = new ExpressionParser($arg_tokens, -1, new CaseOperatorExpression());
+                        $expr = $p->build();
+
+                        $this->pointer = $close;
+
+                        if ($this->expression instanceof PlaceholderExpression) {
+                            $this->expression = new BinaryOperatorExpression($expr);
+                        } else {
+                            $this->expression->setNextChild($expr);
                         }
 
-                        $this->expression = new CaseOperatorExpression();
                         break;
                     }
 
@@ -418,6 +424,7 @@ final class ExpressionParser
                         }
 
                         $this->expression->setKeyword($operator);
+
                         if ($operator !== 'END') {
                             $this->pointer = $this->expression->addRecursiveExpression(
                                 $this->tokens,
@@ -436,7 +443,7 @@ final class ExpressionParser
                             if (!$this->expression instanceof BetweenOperatorExpression) {
                                 throw new \TypeError('Failed assertion');
                             }
-                        
+
                             $this->expression->foundAnd();
                         } else {
                             if ($operator === 'NOT') {
@@ -525,7 +532,9 @@ final class ExpressionParser
                             $this->expression = new UnaryExpression($operator);
                         } else {
                             if (!$this->expression instanceof BinaryOperatorExpression) {
-                                throw new \TypeError('Failed assertion');
+                                throw new \TypeError(
+                                    'Expecting BinaryOperatorExpression but saw ' . \get_class($this->expression)
+                                );
                             }
 
                             $this->expression->setOperator($operator);
@@ -582,7 +591,7 @@ final class ExpressionParser
             if ($this->expression instanceof BinaryOperatorExpression && $this->expression->operator === '') {
                 return $this->expression->left;
             }
-            throw new SQLFakeParseException('Parse error, unexpected end of input');
+            throw new SQLFakeParseException('Parse error, unexpected end of input for ' . \get_class($this->expression));
         }
 
         return $this->expression;
