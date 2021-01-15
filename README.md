@@ -38,7 +38,6 @@ This library supports a wide variety of query syntax, including:
 ### Currently unsupported
 
 - MySQL temporary variables (these will likely never be supported)
-- MySQL date functions
 
 ## Installation
 
