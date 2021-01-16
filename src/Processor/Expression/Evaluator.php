@@ -160,6 +160,14 @@ class Evaluator
                 break;
 
             case \Vimeo\MysqlEngine\Query\Expression\CastExpression::class:
+                if ($expr->castType->type === 'UNSIGNED') {
+                    return new Column\IntColumn(true, 10);
+                }
+
+                if ($expr->castType->type === 'UNSIGNED') {
+                    return new Column\IntColumn(false, 10);
+                }
+
                 break;
 
             case \Vimeo\MysqlEngine\Query\Expression\VariableExpression::class:
