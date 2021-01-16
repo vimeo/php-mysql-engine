@@ -181,7 +181,9 @@ class Evaluator
                     return new Column\Varchar(10);
                 }
 
-                return new Column\NullColumn();
+                // When MySQL can't figure out a variable column's type
+                // it defaults to string
+                return new Column\Varchar(10);
         }
 
         return new Column\Varchar(10);

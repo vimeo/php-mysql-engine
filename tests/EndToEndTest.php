@@ -196,6 +196,27 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testAssignUndefinedIntToVariable()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'SELECT @a := `id` as `id`, @b := @a AS `id_copy`
+                FROM `video_game_characters`
+                LIMIT 3');
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['id' => 1, 'id_copy' => '1'],
+                ['id' => 2, 'id_copy' => '2'],
+                ['id' => 3, 'id_copy' => '3'],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     public function testConditionallyIncrementedCounter()
     {
         $pdo = self::getConnectionToFullDB(false);
