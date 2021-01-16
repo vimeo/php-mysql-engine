@@ -105,8 +105,7 @@ class Evaluator
                 return BinaryOperatorEvaluator::getColumnSchema($expr, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression::class:
-                // TODO
-                break;
+                return Evaluator::getColumnSchema($expr->else, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\ColumnExpression::class:
                 return ColumnEvaluator::getColumnSchema($expr, $columns);
@@ -162,7 +161,7 @@ class Evaluator
                     if (\is_int($value)) {
                         return new Column\IntColumn(false, 10);
                     }
-                    
+
                     if (\is_float($value)) {
                         return new Column\FloatColumn(10, 2);
                     }

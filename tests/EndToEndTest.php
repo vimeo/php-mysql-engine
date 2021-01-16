@@ -212,10 +212,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame(
             [
-                ['name' => 'mario', 'counter' => '0'],
-                ['name' => 'luigi', 'counter' => '2'],
-                ['name' => 'sonic', 'counter' => '0'],
-                ['name' => 'earthworm jim', 'counter' => '4'],
+                ['name' => 'mario', 'counter' => 0],
+                ['name' => 'luigi', 'counter' => 2],
+                ['name' => 'sonic', 'counter' => 0],
+                ['name' => 'earthworm jim', 'counter' => 4],
             ],
             $query->fetchAll(\PDO::FETCH_ASSOC)
         );
