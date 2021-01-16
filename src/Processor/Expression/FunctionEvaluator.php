@@ -941,7 +941,7 @@ final class FunctionEvaluator
 
         $subject = Evaluator::evaluate($conn, $scope, $args[0], $row, $columns);
 
-        if (strpos($subject, '0000-00-00') === 0) {
+        if (!$subject || \strpos($subject, '0000-00-00') === 0) {
             return '0000-00-00';
         }
 

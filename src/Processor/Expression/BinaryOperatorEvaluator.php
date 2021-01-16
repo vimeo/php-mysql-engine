@@ -298,6 +298,10 @@ final class BinaryOperatorEvaluator
             return new Column\DateTime();
         }
 
+        if ($expr->operator === 'COLLATE') {
+            return new Column\Varchar(255);
+        }
+
         $l_type = Evaluator::getColumnSchema($left, $scope, $columns);
         $r_type = Evaluator::getColumnSchema($right, $scope, $columns);
 
