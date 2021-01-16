@@ -1088,9 +1088,24 @@ final class FunctionEvaluator
 
         $firstArg = Evaluator::evaluate($conn, $scope, $args[0], $row, $columns);
 
-        return (new \DateTimeImmutable($firstArg))
-            ->add(self::getPhpIntervalFromExpression($conn, $scope, $args[1], $row, $columns))
-            ->format('Y-m-d H:i:s');
+        $interval = self::getPhpIntervalFromExpression($conn, $scope, $args[1], $row, $columns);
+
+        $first_date = new \DateTimeImmutable($firstArg);
+
+        $candidate = $first_date->add($interval);
+
+        // mimic behaviour of MySQL for leap years and other rollover dates
+        if (($interval->m || $interval->y)
+            && (int) $first_date->format('d') >= 28
+            && ($candidate->format('d') !== $first_date->format('d'))
+        ) {
+            // remove a week
+            $candidate = $candidate->sub(new \DateInterval('P7D'));
+            // then get the last day
+            return $candidate->format('Y-m-t H:i:s');
+        }
+
+        return $candidate->format('Y-m-d H:i:s');
     }
 
     /**

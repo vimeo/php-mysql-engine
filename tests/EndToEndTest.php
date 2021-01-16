@@ -329,6 +329,39 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testDateArithhmetic()
+    {
+        $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare(
+            'SELECT DATE_SUB(\'2020-03-01 12:00:00\', INTERVAL 1 HOUR) as `a`,
+                    DATE_ADD(\'2020-03-01 12:00:00\', INTERVAL 1 HOUR) as `b`,
+                    DATEDIFF(\'2017-01-01\', \'2016-12-24\') AS `c`,
+                    DATE(\'2020-03-01 12:00:00\') as `d`,
+                    LAST_DAY(\'2020-03-01 12:00:00\') as `e`,
+                    DATE_ADD(\'2018-01-31 12:31:00\', INTERVAL 1 MONTH) as `f`,
+                    DATE_ADD(\'2020-02-29 12:31:00\', INTERVAL 1 YEAR) as `g`,
+                    DATE_ADD(\'2020-02-29 12:31:00\', INTERVAL 4 YEAR) as `h`'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [[
+                'a' => '2020-03-01 11:00:00',
+                'b' => '2020-03-01 13:00:00',
+                'c' => 8,
+                'd' => '2020-03-01',
+                'e' => '2020-03-31',
+                'f' => '2018-02-28 12:31:00',
+                'g' => '2021-02-28 12:31:00',
+                'h' => '2024-02-29 12:31:00',
+            ]],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
     {
         $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');
