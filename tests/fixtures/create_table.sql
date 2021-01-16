@@ -39,3 +39,11 @@ CREATE TABLE `character_tags` (
 	KEY `character_id` (`character_id`)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+CREATE TABLE `transactions` (
+	`id` int(10) NOT NULL AUTO_INCREMENT,
+	`total` DECIMAL(12, 2) NOT NULL,
+	`tax` DECIMAL(12, 2) NOT NULL,
+	PRIMARY KEY (`id`)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;

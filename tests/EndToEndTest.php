@@ -362,6 +362,27 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testDecimalArithhmetic()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $pdo->prepare(
+            'INSERT INTO `transactions` (`total`, `tax`) VALUES (1.00, 0.10), (2.00, 0.20)'
+        )->execute();
+
+        $query = $pdo->prepare('SELECT `total` - `tax` AS `diff` FROM `transactions`');
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['diff' => '0.90'],
+                ['diff' => '1.80']
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
     {
         $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');

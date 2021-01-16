@@ -331,6 +331,10 @@ final class BinaryOperatorEvaluator
                     return new Column\IntColumn(false, 11);
                 }
 
+                if ($l_type instanceof Column\Decimal && $r_type instanceof Column\Decimal) {
+                    return $l_type;
+                }
+
                 return new Column\FloatColumn(10, 2);
 
             case '%':
