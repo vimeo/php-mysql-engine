@@ -173,9 +173,11 @@ class Evaluator
                     if (\is_float($value)) {
                         return new Column\FloatColumn(10, 2);
                     }
+
+                    return new Column\Varchar(10);
                 }
 
-                break;
+                return new Column\NullColumn();
         }
 
         return new Column\Varchar(10);
