@@ -131,7 +131,7 @@ class Evaluator
                         return new Column\Varchar(10);
 
                     case TokenType::NULL_CONSTANT:
-                        return new Column\Varchar(10);
+                        return new Column\NullColumn();
                 }
                 break;
 
@@ -172,6 +172,10 @@ class Evaluator
 
                     if (\is_float($value)) {
                         return new Column\FloatColumn(10, 2);
+                    }
+
+                    if ($value === null) {
+                        return new Column\NullColumn();
                     }
 
                     return new Column\Varchar(10);

@@ -9,7 +9,7 @@ abstract class Column
     public $isNullable = true;
 
     /**
-     * @return 'int'|'string'|'float'
+     * @return 'int'|'string'|'float'|'null'
      */
     abstract public function getPhpType() : string;
 }

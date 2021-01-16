@@ -8,6 +8,6 @@ class NullColumn extends \Vimeo\MysqlEngine\Schema\Column
 {
     public function getPhpType() : string
     {
-        return 'string';
+        return 'null';
     }
 }

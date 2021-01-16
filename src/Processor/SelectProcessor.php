@@ -209,29 +209,7 @@ final class SelectProcessor extends Processor
      */
     protected static function applySelect(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data) : array
     {
-        $columns = [];
-
-        foreach ($stmt->selectExpressions as $expr) {
-            if ($expr instanceof ColumnExpression && $expr->name === '*') {
-                foreach ($data[1] as $column_id => $existing_column) {
-                    $parts = \explode(".", $column_id);
-
-                    if ($expr_table_name = $expr->tableName()) {
-                        list($column_table_name, $column_name) = $parts;
-
-                        if ($column_table_name === $expr_table_name) {
-                            $columns[$column_id] = $existing_column;
-                        }
-                    } else {
-                        $col_name = \end($parts);
-
-                        $columns[$col_name] = $existing_column;
-                    }
-                }
-            } else {
-                $columns[$expr->name] = Expression\Evaluator::getColumnSchema($expr, $scope, $data[1]);
-            }
-        }
+        $columns = self::getSelectSchema($scope, $stmt, $data[1], []);
 
         $order_by_expressions = $stmt->orderBy ?? [];
 
@@ -318,6 +296,11 @@ final class SelectProcessor extends Processor
 
                 $out[$i][$name] = $val;
             }
+
+            if ($scope->variables) {
+                // fetch columns again if we have temp variables
+                $columns = self::getSelectSchema($scope, $stmt, $data[1], $columns);
+            }
         }
 
         foreach ($order_by_expressions as $order_by) {
@@ -356,6 +339,41 @@ final class SelectProcessor extends Processor
         }
 
         return [$out, $columns];
+    }
+
+    private static function getSelectSchema(
+        Scope $scope,
+        SelectQuery $stmt,
+        array $from_columns,
+        array $existing_columns
+    ) : array {
+        $columns = [];
+
+        foreach ($stmt->selectExpressions as $expr) {
+            if ($expr instanceof ColumnExpression && $expr->name === '*') {
+                foreach ($from_columns as $column_id => $from_column) {
+                    $parts = \explode(".", $column_id);
+
+                    if ($expr_table_name = $expr->tableName()) {
+                        list($column_table_name, $column_name) = $parts;
+
+                        if ($column_table_name === $expr_table_name) {
+                            $columns[$column_id] = $from_column;
+                        }
+                    } else {
+                        $col_name = \end($parts);
+
+                        $columns[$col_name] = $from_column;
+                    }
+                }
+            } elseif (!isset($existing_columns[$expr->name])
+                || $existing_columns[$expr->name] instanceof Column\NullColumn
+            ) {
+                $columns[$expr->name] = Expression\Evaluator::getColumnSchema($expr, $scope, $from_columns);
+            }
+        }
+
+        return \array_merge($existing_columns, $columns);
     }
 
     /**

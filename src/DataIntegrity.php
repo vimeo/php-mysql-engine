@@ -222,6 +222,9 @@ final class DataIntegrity
             case 'float':
                 return (float) $value;
 
+            case 'null':
+                return null;
+
             default:
                 throw new \Exception(
                     "DataIntegrity::coerceValueToSchema found unknown type for field: '{$php_type}'"
