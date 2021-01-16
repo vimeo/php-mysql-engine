@@ -105,6 +105,14 @@ class Evaluator
                 return BinaryOperatorEvaluator::getColumnSchema($expr, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression::class:
+                foreach ($expr->whenExpressions as $when) {
+                    $then_type = Evaluator::getColumnSchema($when['then'], $scope, $columns);
+
+                    if ($then_type->getPhpType() === 'string') {
+                        return $then_type;
+                    }
+                }
+
                 return Evaluator::getColumnSchema($expr->else, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\ColumnExpression::class:
