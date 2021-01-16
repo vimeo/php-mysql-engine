@@ -234,8 +234,8 @@ final class SelectProcessor extends Processor
 
         $out = [];
 
-        foreach ($stmt->selectExpressions as $expr) {
-            foreach ($data[0] as $i => $row) {
+        foreach ($data[0] as $i => $row) {
+            foreach ($stmt->selectExpressions as $expr) {
                 if ($expr instanceof ColumnExpression && $expr->name === '*') {
                     $formatted_row = [];
 

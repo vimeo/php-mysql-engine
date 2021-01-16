@@ -179,7 +179,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $query = $pdo->prepare(
             'SELECT `name`, (@var := @var + 2) AS `counter`
                 FROM `video_game_characters`
-                CROSS JOIN (SELECT @var := 0) as `vars` 
+                CROSS JOIN (SELECT @var := 0) as `vars`
                 WHERE `type` = \'hero\'
                 LIMIT 3'
         );
@@ -191,6 +191,32 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
                 ['name' => 'mario', 'counter' => 2],
                 ['name' => 'luigi', 'counter' => 4],
                 ['name' => 'sonic', 'counter' => 6],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testPreviousCurrentTempVariables()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'SELECT
+                    @previous AS `previous`,
+                    @previous := `e`.`name` AS `current`
+                FROM (SELECT @previous := NULL) AS `init`,
+                    `video_game_characters` AS `e`
+                ORDER BY `e`.`id`
+                LIMIT 3'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['previous' => null, 'current' => 'mario'],
+                ['previous' => 'mario', 'current' => 'luigi'],
+                ['previous' => 'luigi', 'current' => 'sonic'],
             ],
             $query->fetchAll(\PDO::FETCH_ASSOC)
         );

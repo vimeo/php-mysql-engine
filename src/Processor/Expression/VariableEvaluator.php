@@ -23,7 +23,7 @@ final class VariableEvaluator
     ) {
         if (\array_key_exists($expr->variableName, $scope->variables)) {
             return $scope->variables[$expr->variableName];
-        }        
+        }
 
         return null;
     }
