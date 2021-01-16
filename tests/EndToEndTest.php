@@ -222,6 +222,88 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testPreviousCurrentNextBackwardsTempVariables()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'SELECT
+                    @next AS `next`,
+                    @next := `current` AS `current`,
+                    `previous`
+                FROM
+                (
+                    SELECT @next := NULL
+                ) AS `init`,
+                (
+                    SELECT
+                        @previous AS `previous`,
+                        @previous := `e`.`name` AS `current`,
+                        `e`.`id`
+                    FROM (SELECT @previous := NULL) AS `init`,
+                        `video_game_characters` AS `e`
+                    ORDER BY `e`.`id`
+                ) AS `a`
+                ORDER BY `a`.`id` DESC
+                LIMIT 3'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['next' => null, 'current' => 'dude', 'previous' => 'link'],
+                ['next' => 'dude', 'current' => 'link', 'previous' => 'yoshi'],
+                ['next' => 'link', 'current' => 'yoshi', 'previous' => 'pac man'],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testPreviousCurrentNextTempVariables()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'SELECT `previous`, `current`, `next`
+                FROM
+                (
+                    SELECT
+                        @next AS `next`,
+                        @next := `current` AS `current`,
+                        `previous`,
+                        `id`
+                    FROM
+                    (
+                        SELECT @next := NULL
+                    ) AS `init`,
+                    (
+                    SELECT
+                        @previous AS `previous`,
+                        @previous := `e`.`name` AS `current`,
+                        `e`.`id`
+                    FROM (SELECT @previous := NULL) AS `init`,
+                        `video_game_characters` AS `e`
+                    ORDER BY `e`.`id`
+                    ) AS `a`
+                    ORDER BY `a`.`id` DESC
+                ) AS `b`
+                ORDER BY `id`
+                LIMIT 3'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['previous' => null, 'current' => 'mario', 'next' => 'luigi'],
+                ['previous' => 'mario', 'current' => 'luigi', 'next' => 'sonic'],
+                ['previous' => 'luigi', 'current' => 'sonic', 'next' => 'earthworm jim'],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
     {
         $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');

@@ -24,6 +24,59 @@ final class SelectProcessor extends Processor
         ?array $row = null,
         ?array $columns = null
     ) : array {
+        $from = self::applyFrom(
+            $conn,
+            $scope,
+            $stmt,
+            $row,
+            $columns
+        );
+
+        $where = self::applyWhere(
+            $conn,
+            $scope,
+            $stmt->whereClause,
+            $from
+        );
+
+        // apply preliminary ordering to match MySQL execcution order
+        if ($scope->variables) {
+            $where = self::applyOrderBy(
+                $conn,
+                $scope,
+                $stmt->orderBy,
+                $where
+            );
+        }
+
+        $group_by = self::applyGroupBy(
+            $conn,
+            $scope,
+            $stmt,
+            $where
+        );
+
+        $having = self::applyHaving(
+            $conn,
+            $scope,
+            $stmt,
+            $group_by
+        );
+
+        $select = self::applySelect(
+            $conn,
+            $scope,
+            $stmt,
+            $having
+        );
+
+        $order_by = self::applyOrderBy(
+            $conn,
+            $scope,
+            $stmt->orderBy,
+            $select
+        );
+
         return self::processMultiQuery(
             $conn,
             $scope,
@@ -33,32 +86,7 @@ final class SelectProcessor extends Processor
                 $stmt,
                 self::applyLimit(
                     $stmt->limitClause,
-                    self::applyOrderBy(
-                        $conn,
-                        $scope,
-                        $stmt->orderBy,
-                        self::applySelect(
-                            $conn,
-                            $scope,
-                            $stmt,
-                            self::applyHaving(
-                                $conn,
-                                $scope,
-                                $stmt,
-                                self::applyGroupBy(
-                                    $conn,
-                                    $scope,
-                                    $stmt,
-                                    self::applyWhere(
-                                        $conn,
-                                        $scope,
-                                        $stmt->whereClause,
-                                        self::applyFrom($conn, $scope, $stmt, $row, $columns)
-                                    )
-                                )
-                            )
-                        )
-                    )
+                    $order_by
                 )
             )
         );
