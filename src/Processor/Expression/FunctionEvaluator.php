@@ -134,7 +134,16 @@ final class FunctionEvaluator
 
             case 'IFNULL':
             case 'COALESCE':
-                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
+                $if = clone Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
+                $else = Evaluator::getColumnSchema($expr->args[1], $scope, $columns);
+
+                $if->isNullable = false;
+
+                if ($if->getPhpType() === 'string') {
+                    return $if;
+                }
+
+                return $else;
 
             case 'NULLIF':
                 break;
