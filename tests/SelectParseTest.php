@@ -1,6 +1,10 @@
 <?php
 namespace Vimeo\MysqlEngine\Tests;
 
+use Vimeo\MysqlEngine\Query\SelectQuery;
+use Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression;
+use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
+
 class SelectParseTest extends \PHPUnit\Framework\TestCase
 {
     public function testSimpleParse()
@@ -9,7 +13,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
     public function testCast()
@@ -18,7 +22,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
 
         $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
 
@@ -39,12 +43,12 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
 
         $this->assertCount(1, $select_query->selectExpressions);
 
         $this->assertInstanceOf(
-            \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class,
+            BinaryOperatorExpression::class,
             $select_query->selectExpressions[0]
         );
 
@@ -59,7 +63,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
 
         $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
 
@@ -80,7 +84,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
 
         $this->assertInstanceOf(
             \Vimeo\MysqlEngine\Query\Expression\FunctionExpression::class,
@@ -92,12 +96,12 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue(isset($sum_function->args[0]));
 
         $this->assertInstanceOf(
-            \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class,
+            BinaryOperatorExpression::class,
             $sum_function->args[0]
         );
 
         $this->assertInstanceOf(
-            \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class,
+            BinaryOperatorExpression::class,
             $sum_function->args[0]->left
         );
     }
@@ -107,7 +111,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $sql = 'SELECT * FROM (((SELECT 5))) AS all_parts';
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
     public function testSimpleCaseCase()
@@ -116,7 +120,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
     public function testCaseWhenNotExists()
@@ -125,7 +129,33 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+    }
+
+    public function testCaseIfPrecedence()
+    {
+        $sql = "SELECT CASE
+                    WHEN
+                        `a` > 0
+                    THEN
+                        `e` > 0
+                    WHEN
+                        TRUE
+                    THEN
+                        0
+                    ELSE
+                        1
+                END FROM `bam`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+
+        $this->assertInstanceOf(CaseOperatorExpression::class, $select_query->selectExpressions[0]);
+
+        $case = $select_query->selectExpressions[0];
+
+        $this->assertInstanceOf(BinaryOperatorExpression::class, $case->whenExpressions[0]['then']);
     }
 
     public function testNestedCase()
@@ -150,7 +180,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
     public function testCaseThenBoolean()
@@ -159,7 +189,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
     public function testInterval()
@@ -168,7 +198,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
     public function testUnionInSubquery()
@@ -178,7 +208,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
     public function testAndNotExists()
@@ -190,7 +220,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
     public function testSumCaseMultiplied()
@@ -200,7 +230,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
     public function testCaseNested()
@@ -215,7 +245,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
 
         $this->assertInstanceOf(
             \Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression::class,
@@ -233,7 +263,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
     public function testDateArithhmetic()
@@ -244,7 +274,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
 
         $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
 
@@ -265,7 +295,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
     public function testParseComplexJoin()
@@ -274,7 +304,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\SelectQuery::class, $select_query);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\FromClause::class, $select_query->fromClause);
         $this->assertCount(1, $select_query->fromClause->tables);
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class, $select_query->fromClause->tables[0]['subquery']);

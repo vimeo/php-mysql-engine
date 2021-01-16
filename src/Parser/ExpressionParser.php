@@ -421,6 +421,11 @@ final class ExpressionParser
                         if (!$this->expression instanceof CaseOperatorExpression) {
                             if ($this->expression instanceof BinaryOperatorExpression) {
                                 $this->pointer--;
+
+                                if ($this->expression->right) {
+                                    return $this->expression;
+                                }
+
                                 return $this->expression->left;
                             }
 
