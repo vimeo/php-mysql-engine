@@ -271,7 +271,8 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $query = 'SELECT DATE_SUB(\'2020-03-01 12:00:00\', INTERVAL 1 HOUR) as `a`,
                         DATE_ADD(\'2020-03-01 12:00:00\', INTERVAL 1 HOUR) as `b`,
                         DATEDIFF(\'2017-01-01\', \'2016-12-24\') AS `c`,
-                        DATE(DATE_SUB(\'2020-03-01 12:00:00\', INTERVAL 1 HOUR)) as `d`';
+                        DATE(\'2020-03-01 12:00:00\') as `d`,
+                        LAST_DAY(\'2020-03-01 12:00:00\') as `e`';
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
@@ -280,7 +281,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
 
         $this->assertSame(
-            [['a' => '2020-03-01 11:00:00', 'b' => '2020-03-01 13:00:00', 'c' => 8, 'd' => '2020-03-01']],
+            [['a' => '2020-03-01 11:00:00', 'b' => '2020-03-01 13:00:00', 'c' => 8, 'd' => '2020-03-01', 'e' => '2020-03-31']],
             \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
                 $conn,
                 new \Vimeo\MysqlEngine\Processor\Scope(),

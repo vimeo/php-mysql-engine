@@ -91,6 +91,8 @@ final class FunctionEvaluator
                 return self::sqlDateDiff($conn, $scope, $expr, $row, $columns);
             case 'DAY':
                 return self::sqlDay($conn, $scope, $expr, $row, $columns);
+            case 'LAST_DAY':
+                return self::sqlLastDay($conn, $scope, $expr, $row, $columns);
         }
 
         throw new SQLFakeRuntimeException("Function " . $expr->functionName . " not implemented yet");
@@ -162,6 +164,7 @@ final class FunctionEvaluator
             case 'NOW':
                 return new Column\DateTime();
             case 'DATE':
+            case 'LAST_DAY':
                 return new Column\Date();
             case 'DATE_FORMAT':
                 return new Column\Varchar(255);
@@ -946,6 +949,32 @@ final class FunctionEvaluator
         }
 
         return (new \DateTimeImmutable($subject))->format('Y-m-d');
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function sqlLastDay(
+        FakePdo $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        array $columns
+    ) : ?string {
+        $row = self::maybeUnrollGroupedDataset($row);
+        $args = $expr->args;
+
+        if (\count($args) !== 1) {
+            throw new SQLFakeRuntimeException("MySQL DATE() function must be called with one argument");
+        }
+
+        $subject = Evaluator::evaluate($conn, $scope, $args[0], $row, $columns);
+
+        if (!$subject || \strpos($subject, '0000-00-00') === 0) {
+            return null;
+        }
+
+        return (new \DateTimeImmutable($subject))->format('Y-m-t');
     }
 
     /**
