@@ -123,7 +123,14 @@ final class FunctionEvaluator
             case 'AVG':
                 return new Column\FloatColumn(10, 2);
             case 'IF':
-                break;
+                $if = Evaluator::getColumnSchema($expr->args[1], $scope, $columns);
+                $else = Evaluator::getColumnSchema($expr->args[2], $scope, $columns);
+
+                if ($if->getPhpType() === 'string') {
+                    return $if;
+                }
+
+                return $else;
 
             case 'IFNULL':
             case 'COALESCE':
