@@ -406,6 +406,25 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testEmptyStringEqualsZero()
+    {
+        $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare(
+            'SELECT (0 = \'\') as `t`'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [[
+                't' => 1,
+            ]],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     public function testDecimalArithhmetic()
     {
         $pdo = self::getConnectionToFullDB(false);

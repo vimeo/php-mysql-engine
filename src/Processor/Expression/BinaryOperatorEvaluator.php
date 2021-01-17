@@ -80,7 +80,7 @@ final class BinaryOperatorEvaluator
         $l_value = self::maybeUnrollGroupedDataset($l_value);
         $r_value = self::maybeUnrollGroupedDataset($r_value);
 
-        $as_string = $left->getType() === TokenType::STRING_CONSTANT || $right->getType() === TokenType::STRING_CONSTANT;
+        $as_string = false;
 
         if ($l_type->getPhpType() === 'string' && $r_type->getPhpType() === 'string') {
             if (\preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/', $l_value)
