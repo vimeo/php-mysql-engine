@@ -159,44 +159,71 @@ final class FunctionEvaluator
 
             case 'SUBSTRING_INDEX':
                 return new Column\Text();
+
             case 'LENGTH':
                 return new Column\IntColumn(true, 10);
+
             case 'LOWER':
                 return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
+
             case 'UPPER':
                 return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
+
             case 'CHAR_LENGTH':
             case 'CHARACTER_LENGTH':
                 return new Column\IntColumn(true, 10);
+
             case 'CONCAT_WS':
                 return new Column\Text();
+
             case 'CONCAT':
                 return new Column\Text();
+
             case 'FIELD':
                 return new Column\IntColumn(true, 10);
+
             case 'BINARY':
                 break;
+
             case 'FROM_UNIXTIME':
                 return new Column\DateTime();
+
             case 'GREATEST':
                 return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
+
             case 'VALUES':
                 break;
+
             case 'NOW':
                 return new Column\DateTime();
+
             case 'DATE':
             case 'LAST_DAY':
-                return new Column\Date();
+                $arg = Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
+
+                $date = new Column\Date();
+
+                if ($arg->isNullable) {
+                    $date->isNullable = true;
+                }
+
+                return $date;
+
             case 'DATE_FORMAT':
                 return new Column\Varchar(255);
+
             case 'ISNULL':
                 return new Column\TinyInt(true, 1);
+
             case 'DATE_SUB':
                 return new Column\DateTime();
+
             case 'DATE_ADD':
                 return new Column\DateTime();
+
             case 'ROUND':
                 return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
+
             case 'DATEDIFF':
             case 'DAY':
                 return new Column\IntColumn(false, 10);
@@ -946,8 +973,6 @@ final class FunctionEvaluator
 
     /**
      * @param array<string, mixed> $row
-     *
-     * @return mixed
      */
     private static function sqlDate(
         FakePdo $conn,
@@ -955,7 +980,7 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array $row,
         array $columns
-    ) {
+    ) : ?string {
         $row = self::maybeUnrollGroupedDataset($row);
         $args = $expr->args;
 
@@ -965,7 +990,11 @@ final class FunctionEvaluator
 
         $subject = Evaluator::evaluate($conn, $scope, $args[0], $row, $columns);
 
-        if (!$subject || \strpos($subject, '0000-00-00') === 0) {
+        if (!$subject) {
+            return null;
+        }
+
+        if (\strpos($subject, '0000-00-00') === 0) {
             return '0000-00-00';
         }
 
