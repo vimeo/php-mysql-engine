@@ -2,6 +2,7 @@
 namespace Vimeo\MysqlEngine\Tests;
 
 use Vimeo\MysqlEngine\Query\SelectQuery;
+use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 
@@ -23,6 +24,11 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
 
         $this->assertInstanceOf(SelectQuery::class, $select_query);
+
+        $this->assertInstanceOf(ColumnExpression::class, $select_query->selectExpressions[0]);
+
+        $this->assertSame('foo', $select_query->selectExpressions[0]->tableName);
+        $this->assertSame('bar', $select_query->selectExpressions[0]->columnName);
     }
 
     public function testCast()

@@ -210,6 +210,7 @@ final class SQLParser
                 if ($k !== null) {
                     $previous = $out[$k];
                     $previous->raw .= $token;
+                    $previous->value .= $trimmed_token;
                     $out[$k] = $previous;
                 }
                 continue;
@@ -245,6 +246,7 @@ final class SQLParser
                 }
 
                 $previous_key = \array_key_last($out);
+
                 if ($previous_key !== null
                     && $out[$previous_key]->type === TokenType::IDENTIFIER
                     && substr($out[$previous_key]->value, -1) === '.'
