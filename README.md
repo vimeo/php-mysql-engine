@@ -1,8 +1,8 @@
 # PHP MySQL Engine
 
-This is a PHP port of Slack's [Hack SQL Fake](https://github.com/slackhq/hack-sql-fake) created by [Scott Sandler](https://github.com/ssandler).
-
 PHP MySQL Engine is a unit testing library for PHP. It enables testing database-driven applications with an in-memory simulation of MySQL. This project extends the `PDO` class and allows you to call common PDO MySQL methods. It supports a wide variety of queries, and some PDO-specific functionality like transactions and different fetch modes.
+
+PHP MySQL Engine is based on Slack's [Hack SQL Fake](https://github.com/slackhq/hack-sql-fake) created by [Scott Sandler](https://github.com/ssandler).
 
 ## Motivation
 
