@@ -366,10 +366,13 @@ final class SelectProcessor extends Processor
                         $columns[$col_name] = $from_column;
                     }
                 }
-            } elseif (!isset($existing_columns[$expr->name])
-                || $existing_columns[$expr->name] instanceof Column\NullColumn
-            ) {
-                $columns[$expr->name] = Expression\Evaluator::getColumnSchema($expr, $scope, $from_columns);
+            } else {
+                if (!isset($existing_columns[$expr->name])) {
+                    $columns[$expr->name] = Expression\Evaluator::getColumnSchema($expr, $scope, $from_columns);
+                } elseif ($existing_columns[$expr->name] instanceof Column\NullColumn) {
+                    $columns[$expr->name] = clone Expression\Evaluator::getColumnSchema($expr, $scope, $from_columns);
+                    $columns[$expr->name]->isNullable = true;
+                }
             }
         }
 
