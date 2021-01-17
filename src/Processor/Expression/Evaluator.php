@@ -142,7 +142,7 @@ class Evaluator
                 return FunctionEvaluator::getColumnSchema($expr, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\InOperatorExpression::class:
-                break;
+                return new Column\TinyInt(true, 1);
 
             case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
                 throw new SQLFakeRuntimeException("Attempted to evaluate placeholder expression!");
