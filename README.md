@@ -32,7 +32,7 @@ This library supports a wide variety of query syntax, including:
 - column aliases, cross-database queries
 - `INSERT ... ON DUPLICATE KEY UPDATE`
 - A variety of SQL functions such as `COUNT(), NULLIF(), COALESCE(), CONCAT_WS()` and many others
-- Strict SQL mode can be enabled or disabled to throw exceptions for invalid data types and missing not-null fields
+- Temporary variables like `@previous_name := user.name`
 - Validating parser: the query parser will throw exceptions on most invalid SQL Queries, helping protect your production environment from accidental SQL syntax errors
 
 ## Installation
