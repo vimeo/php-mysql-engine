@@ -40,6 +40,10 @@ final class InOperatorEvaluator
 
         $value = Evaluator::evaluate($conn, $scope, $expr->left, $row, $columns);
 
+        if ($value === null) {
+            return $expr->negated;
+        }
+
         foreach ($inList as $in_expr) {
             if ($in_expr instanceof SubqueryExpression) {
                 $ret = Evaluator::evaluate($conn, $scope, $in_expr, $row, $columns);
