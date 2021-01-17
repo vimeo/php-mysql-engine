@@ -16,6 +16,15 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
+    public function testParseWithNewline()
+    {
+        $query = 'SELECT `foo`' . "\n" . '.`bar` FROM `bat` WHERE `id` = 1';
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+    }
+
     public function testCast()
     {
         $query = 'SELECT CAST(1 + 2 AS UNSIGNED) as `a`';

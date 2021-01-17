@@ -203,7 +203,9 @@ final class SQLParser
         $out = [];
         $count = \count($tokens);
         foreach ($tokens as $i => $token) {
-            if (\trim($token) === '') {
+            $trimmed_token = \trim($token);
+
+            if ($trimmed_token === '' || $trimmed_token === '.') {
                 $k = \array_key_last($out);
                 if ($k !== null) {
                     $previous = $out[$k];
