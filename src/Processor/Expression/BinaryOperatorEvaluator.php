@@ -80,7 +80,7 @@ final class BinaryOperatorEvaluator
         $l_value = self::maybeUnrollGroupedDataset($l_value);
         $r_value = self::maybeUnrollGroupedDataset($r_value);
 
-        $as_string = $left->getType() == TokenType::STRING_CONSTANT || $right->getType() == TokenType::STRING_CONSTANT;
+        $as_string = $left->getType() === TokenType::STRING_CONSTANT || $right->getType() === TokenType::STRING_CONSTANT;
 
         if ($l_type->getPhpType() === 'string' && $r_type->getPhpType() === 'string') {
             if (\preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/', $l_value)
@@ -125,12 +125,16 @@ final class BinaryOperatorEvaluator
 
                 switch ($expr->operator) {
                     case '=':
+                        if ($as_string) {
+                            return \strtolower((string) $l_value) === \strtolower((string) $r_value) ? 1 : 0 ^ $expr->negatedInt;
+                        }
+
                         return $l_value == $r_value ? 1 : 0 ^ $expr->negatedInt;
 
                     case '<>':
                     case '!=':
                         if ($as_string) {
-                            return (string) $l_value != (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                            return \strtolower((string) $l_value) !== \strtolower((string) $r_value) ? 1 : 0 ^ $expr->negatedInt;
                         }
 
                         return (float) $l_value != (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
