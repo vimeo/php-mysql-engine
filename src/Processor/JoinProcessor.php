@@ -56,8 +56,8 @@ final class JoinProcessor
                 $null_placeholder = [];
 
                 foreach ($right_dataset[1] as $name => $column) {
-                    $parts = explode('.', $name);
-                    $null_placeholder[$right_table_name . '.' . end($parts)] = null;
+                    $parts = explode('.%.', $name);
+                    $null_placeholder[$right_table_name . '.%.' . end($parts)] = null;
                     $column = clone $column;
                     $column->isNullable = true;
                     $right_dataset[1][$name] = $column;
@@ -88,8 +88,8 @@ final class JoinProcessor
                 $null_placeholder = [];
 
                 foreach ($right_dataset[1] as $name => $_) {
-                    $parts = explode('.', $name);
-                    $null_placeholder[$right_table_name . '.' . end($parts)] = null;
+                    $parts = explode('.%.', $name);
+                    $null_placeholder[$right_table_name . '.%.' . end($parts)] = null;
                 }
 
                 $joined_columns = array_merge($left_dataset[1], $right_dataset[1]);
@@ -164,10 +164,10 @@ final class JoinProcessor
         }
 
         foreach ($left as $column => $val) {
-            $name_parts = \explode('.', $column);
+            $name_parts = \explode('.%.', $column);
             $name = end($name_parts);
             foreach ($right as $col => $v) {
-                $col_parts = \explode('.', $col);
+                $col_parts = \explode('.%.', $col);
                 $colname = end($col_parts);
                 if ($colname === $name) {
                     $filter = self::addJoinFilterExpression($filter, $column, $col);

@@ -27,7 +27,7 @@ final class FromProcessor
                 $table_columns = [];
 
                 foreach ($subquery_columns as $column_name => $column) {
-                    $parts = \explode('.', $column_name);
+                    $parts = \explode('.%.', $column_name);
                     $table_columns[\end($parts)] = $column;
                 }
 
@@ -56,7 +56,7 @@ final class FromProcessor
             $new_columns = [];
 
             foreach ($table_columns as $column_name => $column) {
-                $new_columns[$name . '.' . $column_name] = $column;
+                $new_columns[$name . '.%.' . $column_name] = $column;
             }
 
             $new_dataset = [];
@@ -69,7 +69,7 @@ final class FromProcessor
                     if (!\array_key_exists($field, $row)) {
                         continue;
                     }
-                    $m["{$name}.{$field}"] = $row[$field];
+                    $m["{$name}.%.{$field}"] = $row[$field];
                 }
                 $new_dataset[] = $m;
             }

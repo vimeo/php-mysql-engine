@@ -252,7 +252,7 @@ final class SelectProcessor extends Processor
                     }
 
                     foreach ($row as $col => $val) {
-                        $parts = \explode(".", (string) $col);
+                        $parts = \explode(".%.", (string) $col);
 
                         if ($expr->tableName() !== null) {
                             list($col_table_name, $col_name) = $parts;

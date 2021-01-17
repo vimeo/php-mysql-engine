@@ -34,7 +34,7 @@ final class ColumnEvaluator
 
         if (($expr->tableName === null && $expr->columnName !== null) || $expr->allowFallthrough) {
             foreach ($row as $key => $col) {
-                $parts = \explode('.', $key);
+                $parts = \explode('.%.', $key);
                 if (\end($parts) === $expr->columnName) {
                     return $col;
                 }
@@ -45,8 +45,8 @@ final class ColumnEvaluator
             return $row[$expr->name];
         }
 
-        if (\array_key_exists($expr->tableName . '.' . $expr->columnName, $row)) {
-            return $row[$expr->tableName . '.' . $expr->columnName];
+        if (\array_key_exists($expr->tableName . '.%.' . $expr->columnName, $row)) {
+            return $row[$expr->tableName . '.%.' . $expr->columnName];
         }
 
         throw new SQLFakeRuntimeException(
@@ -74,7 +74,7 @@ final class ColumnEvaluator
 
         if (($expr->tableName === null && $expr->columnName !== null) || $expr->allowFallthrough) {
             foreach ($columns as $key => $col) {
-                $parts = \explode('.', $key);
+                $parts = \explode('.%.', $key);
                 if (\end($parts) === $expr->columnName) {
                     return $col;
                 }
@@ -85,8 +85,8 @@ final class ColumnEvaluator
             return $columns[$expr->name];
         }
 
-        if (\array_key_exists($expr->tableName . '.' . $expr->columnName, $columns)) {
-            return $columns[$expr->tableName . '.' . $expr->columnName];
+        if (\array_key_exists($expr->tableName . '.%.' . $expr->columnName, $columns)) {
+            return $columns[$expr->tableName . '.%.' . $expr->columnName];
         }
 
         throw new SQLFakeRuntimeException(

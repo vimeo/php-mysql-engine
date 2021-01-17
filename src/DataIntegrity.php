@@ -223,7 +223,11 @@ final class DataIntegrity
                 return (float) $value;
 
             case 'null':
-                return null;
+                if ($value === nulL) {
+                    return null;
+                }
+
+                return (string) $value;
 
             default:
                 throw new \Exception(
