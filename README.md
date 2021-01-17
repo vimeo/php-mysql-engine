@@ -35,10 +35,6 @@ This library supports a wide variety of query syntax, including:
 - Strict SQL mode can be enabled or disabled to throw exceptions for invalid data types and missing not-null fields
 - Validating parser: the query parser will throw exceptions on most invalid SQL Queries, helping protect your production environment from accidental SQL syntax errors
 
-### Currently unsupported
-
-- MySQL temporary variables (these will likely never be supported)
-
 ## Installation
 
 ```
