@@ -113,43 +113,56 @@ final class BinaryOperatorEvaluator
                 return (int) $expr->negated;
 
             case '=':
-                return $l_value == $r_value ? 1 : 0 ^ $expr->negatedInt;
-
             case '<>':
             case '!=':
-                if ($as_string) {
-                    return (string) $l_value != (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
-                }
-
-                return (float) $l_value != (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
-
             case '>':
-                if ($as_string) {
-                    return (string) $l_value > (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
-                }
-
-                return (float) $l_value > (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
-                // no break
             case '>=':
-                if ($as_string) {
-                    return (string) $l_value >= (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
-                }
-
-                return (float) $l_value >= (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
-
             case '<':
-                if ($as_string) {
-                    return (string) $l_value < (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
-                }
-
-                return (float) $l_value < (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
-
             case '<=':
-                if ($as_string) {
-                    return (string) $l_value <= (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                if ($l_value === null || $r_value === null) {
+                    return null;
                 }
 
-                return (float) $l_value <= (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                switch ($expr->operator) {
+                    case '=':
+                        return $l_value == $r_value ? 1 : 0 ^ $expr->negatedInt;
+
+                    case '<>':
+                    case '!=':
+                        if ($as_string) {
+                            return (string) $l_value != (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                        }
+
+                        return (float) $l_value != (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
+
+                    case '>':
+                        if ($as_string) {
+                            return (string) $l_value > (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                        }
+
+                        return (float) $l_value > (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                        // no break
+                    case '>=':
+                        if ($as_string) {
+                            return (string) $l_value >= (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                        }
+
+                        return (float) $l_value >= (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
+
+                    case '<':
+                        if ($as_string) {
+                            return (string) $l_value < (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                        }
+
+                        return (float) $l_value < (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
+
+                    case '<=':
+                        if ($as_string) {
+                            return (string) $l_value <= (string) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                        }
+
+                        return (float) $l_value <= (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                }
 
             case '*':
             case '%':
@@ -162,6 +175,10 @@ final class BinaryOperatorEvaluator
             case 'DIV':
             case '|':
             case '&':
+                if ($l_value === null || $r_value === null) {
+                    return null;
+                }
+
                 $left_number = self::extractNumericValue($l_value);
                 $right_number = self::extractNumericValue($r_value);
 
