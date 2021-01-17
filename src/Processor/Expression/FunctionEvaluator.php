@@ -216,10 +216,8 @@ final class FunctionEvaluator
                 return new Column\TinyInt(true, 1);
 
             case 'DATE_SUB':
-                return new Column\DateTime();
-
             case 'DATE_ADD':
-                return new Column\DateTime();
+                return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
 
             case 'ROUND':
                 return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
@@ -1090,7 +1088,7 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array $row,
         array $columns
-    ) : string {
+    ) : ?string {
         if (!$expr->hasAggregate()) {
             $row = self::maybeUnrollGroupedDataset($row);
         }
@@ -1105,11 +1103,32 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL DATE_SUB() arg 2 must be an interval");
         }
 
-        $firstArg = Evaluator::evaluate($conn, $scope, $args[0], $row, $columns);
+        $first_arg = Evaluator::evaluate($conn, $scope, $args[0], $row, $columns);
 
-        return (new \DateTimeImmutable($firstArg))
-            ->sub(self::getPhpIntervalFromExpression($conn, $scope, $args[1], $row, $columns))
-            ->format('Y-m-d H:i:s');
+        if ($first_arg === null) {
+            return null;
+        }
+
+        $first_arg = trim($first_arg);
+
+        $interval = self::getPhpIntervalFromExpression($conn, $scope, $args[1], $row, $columns);
+
+        $first_date = new \DateTimeImmutable($first_arg);
+
+        $candidate = $first_date->sub($interval);
+
+        // mimic behaviour of MySQL for leap years and other rollover dates
+        if (($interval->m || $interval->y)
+            && (int) $first_date->format('d') >=28
+            && ($candidate->format('d') !== $first_date->format('d'))
+        ) {
+            // remove a week
+            $candidate = $candidate->sub(new \DateInterval('P7D'));
+            // then get the last day
+            return $candidate->format(\strlen($first_arg) === 10 ? 'Y-m-t' : 'Y-m-t H:i:s');
+        }
+
+        return $candidate->format(\strlen($first_arg) === 10 ? 'Y-m-d' : 'Y-m-d H:i:s');
     }
 
     /**
@@ -1121,7 +1140,7 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array $row,
         array $columns
-    ) : string {
+    ) : ?string {
         if (!$expr->hasAggregate()) {
             $row = self::maybeUnrollGroupedDataset($row);
         }
@@ -1136,11 +1155,17 @@ final class FunctionEvaluator
             throw new SQLFakeRuntimeException("MySQL DATE_ADD() arg 2 must be an interval");
         }
 
-        $firstArg = Evaluator::evaluate($conn, $scope, $args[0], $row, $columns);
+        $first_arg = Evaluator::evaluate($conn, $scope, $args[0], $row, $columns);
+
+        if ($first_arg === null) {
+            return null;
+        }
+
+        $first_arg = trim($first_arg);
 
         $interval = self::getPhpIntervalFromExpression($conn, $scope, $args[1], $row, $columns);
 
-        $first_date = new \DateTimeImmutable($firstArg);
+        $first_date = new \DateTimeImmutable($first_arg);
 
         $candidate = $first_date->add($interval);
 
@@ -1152,10 +1177,10 @@ final class FunctionEvaluator
             // remove a week
             $candidate = $candidate->sub(new \DateInterval('P7D'));
             // then get the last day
-            return $candidate->format('Y-m-t H:i:s');
+            return $candidate->format(\strlen($first_arg) === 10 ? 'Y-m-t' : 'Y-m-t H:i:s');
         }
 
-        return $candidate->format('Y-m-d H:i:s');
+        return $candidate->format(\strlen($first_arg) === 10 ? 'Y-m-d' : 'Y-m-d H:i:s');
     }
 
     /**
