@@ -295,7 +295,7 @@ final class BinaryOperatorEvaluator
         BinaryOperatorExpression $expr,
         Scope $scope,
         array $columns
-    ) {
+    ) : Column {
         $left = $expr->left;
         $right = $expr->right;
 

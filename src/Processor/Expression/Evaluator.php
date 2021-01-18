@@ -121,7 +121,7 @@ class Evaluator
             case \Vimeo\MysqlEngine\Query\Expression\ConstantExpression::class:
                 switch ($expr->getType()) {
                     case TokenType::NUMERIC_CONSTANT:
-                        if (\strpos($expr->value, '.') !== false) {
+                        if (\strpos((string) $expr->value, '.') !== false) {
                             return new Column\FloatColumn(10, 2);
                         }
 
@@ -164,7 +164,7 @@ class Evaluator
                     return new Column\IntColumn(true, 10);
                 }
 
-                if ($expr->castType->type === 'UNSIGNED') {
+                if ($expr->castType->type === 'SIGNED') {
                     return new Column\IntColumn(false, 10);
                 }
 

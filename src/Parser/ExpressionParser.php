@@ -254,8 +254,6 @@ final class ExpressionParser
                         $as_type_tokens
                     );
 
-                    $create_column = new CreateColumn();
-
                     $type = CreateTableParser::parseFieldType($as_type_token_values, true);
 
                     $fn = new CastExpression($token, $expr, $type);

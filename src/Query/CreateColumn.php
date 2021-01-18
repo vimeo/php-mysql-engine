@@ -14,14 +14,23 @@ class CreateColumn
     public $type;
 
     /**
-     * @var string
+     * @var ?string
      */
     public $default;
 
     /**
-     * @var bool
+     * @var ?bool
      */
     public $auto_increment;
 
+    /**
+     * @var ?list<string>
+     */
     public $more;
+
+    public function __construct(string $name, MysqlColumnType $type)
+    {
+        $this->name = $name;
+        $this->type = $type;
+    }
 }

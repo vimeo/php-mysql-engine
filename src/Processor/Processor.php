@@ -163,23 +163,17 @@ abstract class Processor
         $set_clauses = [];
 
         foreach ($set_clause as $expression) {
-            $left = ($__tmp1__ = $expression->left) instanceof ColumnExpression ? $__tmp1__ : (function () {
+            if (!$expression->left instanceof ColumnExpression || !$expression->right instanceof ColumnExpression) {
                 throw new \TypeError('Failed assertion');
-            })();
-
-            $right = ($__tmp2__ = $expression->right) !== null ? $__tmp2__ : (function () {
-                throw new \TypeError('Failed assertion');
-            })();
-
-            $column = $left->name;
-
-            if ($valid_fields !== null) {
-                if (!isset($valid_fields[$column])) {
-                    throw new SQLFakeRuntimeException("Invalid update column {$column}");
-                }
             }
 
-            $set_clauses[] = ['column' => $column, 'expression' => $right];
+            $column = $expression->left->columnName;
+
+            if (!isset($valid_fields[$column])) {
+                throw new SQLFakeRuntimeException("Invalid update column {$column}");
+            }
+
+            $set_clauses[] = ['column' => $column, 'expression' => $expression->right];
         }
 
         $update_count = 0;

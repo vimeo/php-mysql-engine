@@ -305,9 +305,6 @@ final class SelectProcessor extends Processor
 
         foreach ($order_by_expressions as $order_by) {
             foreach ($data[0] as $i => $row) {
-                \is_array($row) ? $row : (function () {
-                    throw new \TypeError('Failed assertion');
-                })();
                 $val = Expression\Evaluator::evaluate($conn, $scope, $order_by['expression'], $row, $data[1]);
                 $name = $order_by['expression']->name;
                 $out[$i][$name] = $out[$i][$name] ?? $val;

@@ -433,14 +433,14 @@ final class CreateTableParser
     {
         $t = \array_shift($tokens);
 
-        $f = new CreateColumn();
-        $f->name = static::decodeIdentifier($t);
-
         if (!$tokens) {
             throw new SQLFakeParseException("Expecting more create type tokens");
         }
 
-        $f->type = self::parseFieldType($tokens);
+        $f = new CreateColumn(
+            static::decodeIdentifier($t),
+            self::parseFieldType($tokens)
+        );
 
         if (($tokens) && \strtoupper($tokens[0]) === 'DEFAULT') {
             $f->default = self::decodeValue($tokens[1]);
@@ -457,7 +457,7 @@ final class CreateTableParser
         if (\count($tokens)) {
             $f->more = $tokens;
         }
-        
+
         return $f;
     }
 
@@ -658,7 +658,7 @@ final class CreateTableParser
             'NOT NULL',
             'WITH PARSER'
         ];
-        
+
         $maps = [];
         foreach ($lists as $l) {
             $a = \explode(' ', $l);
@@ -667,7 +667,7 @@ final class CreateTableParser
             }
             $maps[$a[0]][] = $a;
         }
-        
+
         $out = [];
         $out_map = [];
         $i = 0;
