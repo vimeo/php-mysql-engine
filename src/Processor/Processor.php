@@ -163,7 +163,7 @@ abstract class Processor
         $set_clauses = [];
 
         foreach ($set_clause as $expression) {
-            if (!$expression->left instanceof ColumnExpression || !$expression->right instanceof ColumnExpression) {
+            if (!$expression->left instanceof ColumnExpression || $expression->right === null) {
                 throw new \TypeError('Failed assertion');
             }
 
