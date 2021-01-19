@@ -16,10 +16,6 @@ Currently there are two ways to test code that reads and writes to a database:
 
 PHP MySQL Engine takes a different approach - it parses and executes `SELECT`, `INSERT`, `UPDATE`, and `DELETE` queries against an in-memory "database" stored in PHP arrays. As long as the amount of data used for testing is small, this solves the problems mentioned above.
 
-## Caveat Emptor
-
-Unlike [Psalm](https://github.com/vimeo/psalm), this package is not designed with a wide audience in mind. For a project to really benefit from this library it should already have a large number of unit tests that require a database connection to complete, and the project maintainers must understand the tradeoffs associated with using an unofficial MySQL implementation in their test suite.
-
 ## SQL Syntax Supported
 
 This library supports a wide variety of query syntax, including:
@@ -34,6 +30,16 @@ This library supports a wide variety of query syntax, including:
 - A variety of SQL functions such as `COUNT(), NULLIF(), COALESCE(), CONCAT_WS()` and many others
 - Temporary variables like `@previous_name := user.name`
 - Validating parser: the query parser will throw exceptions on most invalid SQL Queries, helping protect your production environment from accidental SQL syntax errors
+
+## Caveat Emptor
+
+Unlike [Psalm](https://github.com/vimeo/psalm), this package is not designed with a wide audience in mind. For a project to really benefit from this library it should already have a large number of unit tests that require a database connection to complete, and the project maintainers must understand the tradeoffs associated with using an unofficial MySQL implementation in their test suite.
+
+## Known issues
+
+### Result types when not emulating prepares
+
+By default the engine returns all data formatted as a string. If `$pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false)` is called, the engine will instead infer column types and  (for example, `SUM(some_int_column)` will be given an `int` type). In some cases `php-mysql-engine` may do a better job of inferring correct column types than actual MySQL, which defaults to string when it can’t work out a column type. If you do strict type checks on the results you may see small discrepancies.
 
 ## Installation
 
