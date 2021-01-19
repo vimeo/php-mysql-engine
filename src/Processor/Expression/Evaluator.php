@@ -3,6 +3,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Expression;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\Schema\Column;
 use Vimeo\MysqlEngine\TokenType;
@@ -19,32 +20,32 @@ class Evaluator
         Scope $scope,
         \Vimeo\MysqlEngine\Query\Expression\Expression $expr,
         array $row,
-        array $columns
+        QueryResult $result
     ) {
         switch (get_class($expr)) {
             case \Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression::class:
-                return BetweenOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+                return BetweenOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class:
-                return BinaryOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+                return BinaryOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression::class:
-                return CaseOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+                return CaseOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\ColumnExpression::class:
-                return ColumnEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+                return ColumnEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\ConstantExpression::class:
                 return $expr->value;
 
             case \Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression::class:
-                return ExistsOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+                return ExistsOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\FunctionExpression::class:
-                return FunctionEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+                return FunctionEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\InOperatorExpression::class:
-                return InOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+                return InOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
                 throw new SQLFakeRuntimeException("Attempted to evaluate placeholder expression!");
@@ -53,35 +54,36 @@ class Evaluator
                 return PositionEvaluator::evaluate($expr, $row);
 
             case \Vimeo\MysqlEngine\Query\Expression\RowExpression::class:
-                return RowEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+                return RowEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class:
-                [$evaluated] = \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+                $subquery_result = \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
                     $conn,
                     $scope,
                     $expr->query,
                     $row,
-                    $columns
+                    $result->columns
                 );
 
-                $has_aggregate = \count($expr->query->selectExpressions) === 1
-                    && \count($evaluated) === 1
-                    && $expr->query->selectExpressions[0]->hasAggregate();
-
-                if ($has_aggregate) {
-                    return reset($evaluated[0]);
+                if (count($subquery_result->rows) > 1) {
+                    throw new SQLFakeRuntimeException('Subquery returns more than one row');
                 }
 
-                return $evaluated;
+                if ($subquery_result->rows) {
+                    $first_row = reset($subquery_result->rows);
+                    return reset($first_row);
+                }
+
+                return null;
 
             case \Vimeo\MysqlEngine\Query\Expression\UnaryExpression::class:
-                return UnaryEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+                return UnaryEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\CastExpression::class:
-                return CastEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+                return CastEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\VariableExpression::class:
-                return VariableEvaluator::evaluate($conn, $scope, $expr, $row, $columns);
+                return VariableEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             default:
                 throw new SQLFakeRuntimeException('Unsupported expression ' . get_class($expr));

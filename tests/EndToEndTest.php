@@ -69,6 +69,27 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testSelectCountFullResults()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare("SELECT COUNT(*) FROM `video_game_characters`");
+        $query->execute();
+
+        $this->assertSame([['COUNT(*)' => 16]], $query->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    public function testSelectCountEmptyResults()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare("SELECT COUNT(*) FROM `video_game_characters` WHERE `id` > :id");
+        $query->bindValue(':id', 100);
+        $query->execute();
+
+        $this->assertSame([['COUNT(*)' => 0]], $query->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
     public function testAliasWithType()
     {
         $pdo = self::getConnectionToFullDB(false);
@@ -101,7 +122,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testLeftJoin()
+    public function testLeftJoinWithSum()
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -441,6 +462,70 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
             [
                 ['diff' => '0.90'],
                 ['diff' => '1.80']
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testIsInFullSubquery()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare('SELECT 16 IN (SELECT `id` from `video_game_characters`) as `is_in`');
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['is_in' => 1]
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testIsNotInEmptySet()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare('SELECT 16 NOT IN (SELECT `id` from `video_game_characters` WHERE `id` > 16) as `isnt`');
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['isnt' => 1]
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testExistsEmptySubquery()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare('SELECT EXISTS(SELECT `id` from `video_game_characters` WHERE `id` > 16) as `does_exist`');
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['does_exist' => 0]
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testExistsNotEmptySubquery()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare('SELECT EXISTS(SELECT `id` from `video_game_characters` WHERE `id` > 5) as `does_exist`');
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['does_exist' => 1]
             ],
             $query->fetchAll(\PDO::FETCH_ASSOC)
         );

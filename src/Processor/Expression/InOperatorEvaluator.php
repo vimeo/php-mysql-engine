@@ -5,6 +5,7 @@ use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
 use Vimeo\MysqlEngine\Query\Expression\InOperatorExpression;
+use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\Schema\Column;
 
@@ -20,7 +21,7 @@ final class InOperatorEvaluator
         Scope $scope,
         InOperatorExpression $expr,
         array $row,
-        array $columns
+        QueryResult $result
     ) {
         $inList = $expr->inList;
 
@@ -28,17 +29,7 @@ final class InOperatorEvaluator
             throw new SQLFakeParseException("Parse error: empty IN list");
         }
 
-        if (\count($inList) === 1 && Evaluator::evaluate($conn, $scope, $inList[0], $row, $columns) === null) {
-            if (!$expr->negated) {
-                return false;
-            }
-
-            throw new SQLFakeRuntimeException(
-                "You're probably trying to use NOT IN with an empty array, but MySQL would evaluate this to false."
-            );
-        }
-
-        $value = Evaluator::evaluate($conn, $scope, $expr->left, $row, $columns);
+        $value = Evaluator::evaluate($conn, $scope, $expr->left, $row, $result);
 
         if ($value === null) {
             return $expr->negated;
@@ -46,9 +37,15 @@ final class InOperatorEvaluator
 
         foreach ($inList as $in_expr) {
             if ($in_expr instanceof SubqueryExpression) {
-                $ret = Evaluator::evaluate($conn, $scope, $in_expr, $row, $columns);
+                $subquery_result = \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+                    $conn,
+                    $scope,
+                    $in_expr->query,
+                    $row,
+                    $result->columns
+                );
 
-                foreach ($ret as $r) {
+                foreach ($subquery_result->rows as $r) {
                     if (\count($r) !== 1) {
                         throw new SQLFakeRuntimeException("Subquery result should contain 1 column");
                     }
@@ -60,7 +57,7 @@ final class InOperatorEvaluator
                     }
                 }
             } else {
-                if ($value == Evaluator::evaluate($conn, $scope, $in_expr, $row, $columns)) {
+                if ($value == Evaluator::evaluate($conn, $scope, $in_expr, $row, $result)) {
                     return !$expr->negated;
                 }
             }

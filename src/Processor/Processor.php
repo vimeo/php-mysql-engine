@@ -10,46 +10,38 @@ use Vimeo\MysqlEngine\Schema\Column;
 
 abstract class Processor
 {
-    /**
-     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
-     *
-     * @return array{array<int, array<string, mixed>>, array<string, Column>}
-     */
     protected static function applyWhere(
         \Vimeo\MysqlEngine\FakePdo $conn,
         Scope $scope,
         ?\Vimeo\MysqlEngine\Query\Expression\Expression $where,
-        array $data
-    ) {
+        QueryResult $result
+    ) : QueryResult {
         if (!$where) {
-            return $data;
+            return $result;
         }
 
-        return [
+        return new QueryResult(
             \array_filter(
-                $data[0],
-                function ($row) use ($conn, $scope, $where, $data) {
-                    return Expression\Evaluator::evaluate($conn, $scope, $where, $row, $data[1]);
+                $result->rows,
+                function ($row) use ($conn, $scope, $where, $result) {
+                    return Expression\Evaluator::evaluate($conn, $scope, $where, $row, $result);
                 }
             ),
-            $data[1]
-        ];
+            $result->columns
+        );
     }
 
     /**
-     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
      * @param ?array<int, array{expression: \Vimeo\MysqlEngine\Query\Expression\Expression, direction: string}> $orders
-     *
-     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
     protected static function applyOrderBy(
         \Vimeo\MysqlEngine\FakePdo $conn,
         Scope $scope,
         ?array $orders,
-        array $data
-    ) {
+        QueryResult $result
+    ) : QueryResult {
         if (!$orders) {
-            return $data;
+            return $result;
         }
 
         // allow all column expressions to fall through to the full row
@@ -61,10 +53,10 @@ abstract class Processor
             }
         }
 
-        $sort_fun = function (array $a, array $b) use ($conn, $scope, $orders, $data) {
+        $sort_fun = function (array $a, array $b) use ($conn, $scope, $orders, $result) {
             foreach ($orders as $rule) {
-                $value_a = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $a, $data[1]);
-                $value_b = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $b, $data[1]);
+                $value_a = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $a, $result);
+                $value_b = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $b, $result);
 
                 if ($value_a != $value_b) {
                     if ((\is_int($value_a) || \is_float($value_a)) && (\is_int($value_b) || \is_float($value_b))) {
@@ -80,7 +72,7 @@ abstract class Processor
             return 0;
         };
 
-        $rows = $data[0];
+        $rows = $result->rows;
 
         $rows_temp = [];
         foreach ($rows as $i => $item) {
@@ -100,25 +92,22 @@ abstract class Processor
             $rows[$item[0]] = $item[1];
         }
 
-        return [array_values($rows), $data[1]];
+        return new QueryResult(array_values($rows), $result->columns);
     }
 
     /**
      * @param array{rowcount:int, offset:int}|null $limit
-     * @param array{array<int, array<string, mixed>>, array<string, Column>}    $data
-     *
-     * @return array{array<int, array<string, mixed>>, array<string, Column>}
      */
-    protected static function applyLimit(?array $limit, array $data)
+    protected static function applyLimit(?array $limit, QueryResult $result) : QueryResult
     {
         if ($limit === null) {
-            return $data;
+            return $result;
         }
 
-        return [
-            \array_slice($data[0], $limit['offset'], $limit['rowcount'], true),
-            $data[1]
-        ];
+        return new QueryResult(
+            \array_slice($result->rows, $limit['offset'], $limit['rowcount'], true),
+            $result->columns
+        );
     }
 
     /**
@@ -133,10 +122,10 @@ abstract class Processor
             }
             list($database, $table_name) = $parts;
             return [$database, $table_name];
-        } else {
-            $database = $conn->databaseName;
-            return [$database, $table];
         }
+
+        $database = $conn->databaseName;
+        return [$database, $table];
     }
 
     /**
@@ -180,6 +169,8 @@ abstract class Processor
 
         $last_insert_id = null;
 
+        $original_result = new QueryResult($original_table, $table_definition->columns);
+
         if ($filtered_rows !== null) {
             foreach ($filtered_rows as $row_id => $row) {
                 $changes_found = false;
@@ -198,7 +189,7 @@ abstract class Processor
                         $scope,
                         $clause['expression'],
                         $update_row,
-                        $table_definition->columns
+                        $original_result
                     );
 
                     if ($new_value !== $existing_value) {
@@ -229,7 +220,7 @@ abstract class Processor
                     $scope,
                     $clause['expression'],
                     [],
-                    $table_definition->columns
+                    $original_result
                 );
             }
 
@@ -266,6 +257,6 @@ abstract class Processor
 
         $conn->lastInsertId = (string) $last_insert_id;
 
-        return [$update_count, $original_table, ];
+        return [$update_count, $original_table];
     }
 }

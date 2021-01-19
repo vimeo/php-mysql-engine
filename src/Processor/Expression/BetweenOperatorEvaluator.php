@@ -1,6 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
+use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression;
@@ -15,7 +16,7 @@ final class BetweenOperatorEvaluator
         Scope $scope,
         BetweenOperatorExpression $expr,
         array $row,
-        array $columns
+        QueryResult $result
     ) : bool {
         $start = $expr->start;
         $end = $expr->end;
@@ -24,9 +25,9 @@ final class BetweenOperatorEvaluator
             throw new SQLFakeRuntimeException("Attempted to evaluate incomplete BETWEEN expression");
         }
 
-        $subject = Evaluator::evaluate($conn, $scope, $expr->left, $row, $columns);
-        $start = Evaluator::evaluate($conn, $scope, $start, $row, $columns);
-        $end = Evaluator::evaluate($conn, $scope, $end, $row, $columns);
+        $subject = Evaluator::evaluate($conn, $scope, $expr->left, $row, $result);
+        $start = Evaluator::evaluate($conn, $scope, $start, $row, $result);
+        $end = Evaluator::evaluate($conn, $scope, $end, $row, $result);
         if (\is_int($__tmp__ = $subject) || \is_float($__tmp__)) {
             $subject = (int) $subject;
             $start = (int) $start;

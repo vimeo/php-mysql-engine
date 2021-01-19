@@ -3,6 +3,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\VariableExpression;
+use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\Schema\Column;
 
@@ -19,7 +20,7 @@ final class VariableEvaluator
         Scope $scope,
         VariableExpression $expr,
         array $row,
-        array $columns
+        QueryResult $result
     ) {
         if (\array_key_exists($expr->variableName, $scope->variables)) {
             return $scope->variables[$expr->variableName];

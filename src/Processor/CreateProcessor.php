@@ -46,7 +46,7 @@ final class CreateProcessor
                 $primary_key_columns = $columns;
             }
 
-            $indexes[$field->name ?: $index->type] = new \Vimeo\MysqlEngine\Schema\Index(
+            $indexes[$index->name ?: $index->type] = new \Vimeo\MysqlEngine\Schema\Index(
                 $index->type,
                 $columns
             );

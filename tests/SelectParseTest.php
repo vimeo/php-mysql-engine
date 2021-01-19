@@ -48,7 +48,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
                 new \Vimeo\MysqlEngine\Processor\Scope(),
                 $select_query,
                 null
-            )[0]
+            )->rows
         );
     }
 
@@ -89,7 +89,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
                 new \Vimeo\MysqlEngine\Processor\Scope(),
                 $select_query,
                 null
-            )[0]
+            )->rows
         );
     }
 

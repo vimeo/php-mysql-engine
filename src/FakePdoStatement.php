@@ -116,13 +116,13 @@ class FakePdoStatement extends \PDOStatement
 
         switch (get_class($parsed_query)) {
             case Query\SelectQuery::class:
-                [$raw_result, $result_columns]  = Processor\SelectProcessor::process(
+                $raw_result = Processor\SelectProcessor::process(
                     $this->conn,
                     new Processor\Scope(),
                     $parsed_query
                 );
 
-                $this->result = self::processResult($raw_result, $result_columns);
+                $this->result = self::processResult($raw_result);
 
                 if ($this->realStatement) {
                     $fake_result = $this->result;
@@ -218,14 +218,14 @@ class FakePdoStatement extends \PDOStatement
         return true;
     }
 
-    private static function processResult(array $raw_result, array $columns)
+    private static function processResult(Processor\QueryResult $raw_result)
     {
         $result = [];
 
-        foreach ($raw_result as $i => $row) {
+        foreach ($raw_result->rows as $i => $row) {
             foreach ($row as $key => $value) {
-                $result[$i][\substr($key, 0, 255)] = isset($columns[$key])
-                    ? DataIntegrity::coerceValueToColumn($columns[$key], $value)
+                $result[$i][\substr($key, 0, 255)] = isset($raw_result->columns[$key])
+                    ? DataIntegrity::coerceValueToColumn($raw_result->columns[$key], $value)
                     : $value;
             }
         }

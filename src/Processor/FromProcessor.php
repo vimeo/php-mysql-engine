@@ -6,27 +6,30 @@ use Vimeo\MysqlEngine\Schema\Column;
 
 final class FromProcessor
 {
-    /**
-     * @return array{array<int, array<string, mixed>>, array<string, Column>}
-     */
-    public static function process(\Vimeo\MysqlEngine\FakePdo $conn, Scope $scope, FromClause $stmt)
+    public static function process(\Vimeo\MysqlEngine\FakePdo $conn, Scope $scope, FromClause $stmt) : QueryResult
     {
-        $rows = [];
-        $columns = [];
         $is_first_table = true;
         $left_column_list = [];
 
+        $result = null;
+
+        if (!$stmt->tables) {
+            throw new SQLFakeRuntimeException('select tables should not be empty');
+        }
+
         foreach ($stmt->tables as $table) {
             if (\array_key_exists('subquery', $table)) {
-                [$res, $subquery_columns] = \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+                $subquery_result = \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
                     $conn,
                     $scope,
                     $table['subquery']->query
                 );
 
+                $res = $subquery_result->rows;
+
                 $table_columns = [];
 
-                foreach ($subquery_columns as $column_name => $column) {
+                foreach ($subquery_result->columns as $column_name => $column) {
                     $parts = \explode('.%.', $column_name);
                     $table_columns[\end($parts)] = $column;
                 }
@@ -74,28 +77,24 @@ final class FromProcessor
                 $new_dataset[] = $m;
             }
 
-            if ($rows || !$is_first_table) {
-                [$rows, $columns] = JoinProcessor::process(
+            $new_result = new QueryResult($new_dataset, $new_columns);
+
+            if ($result) {
+                $result = JoinProcessor::process(
                     $conn,
                     $scope,
-                    [$rows, $columns],
-                    [$new_dataset, $new_columns],
+                    $result,
+                    $new_result,
                     $name,
                     $table['join_type'],
                     $table['join_operator'] ?? null,
                     $table['join_expression'] ?? null
                 );
             } else {
-                $rows = $new_dataset;
-                $columns = array_merge($columns, $new_columns);
-            }
-
-            if ($is_first_table) {
-                //Metrics::trackQuery(QueryType::SELECT, $conn->getServer()->name, $name, $sql);
-                $is_first_table = false;
+                $result = $new_result;
             }
         }
 
-        return [$rows, $columns];
+        return $result;
     }
 }

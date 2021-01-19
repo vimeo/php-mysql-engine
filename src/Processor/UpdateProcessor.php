@@ -12,7 +12,7 @@ final class UpdateProcessor extends Processor
 
         $table_definition = $conn->getServer()->getTableDefinition($database, $table_name);
 
-        $data = [$conn->getServer()->getTable($database, $table_name) ?: [], $table_definition->columns ?? []];
+        $existing_rows = $conn->getServer()->getTable($database, $table_name) ?: [];
 
         //Metrics::trackQuery(QueryType::UPDATE, $conn->getServer()->name, $table_name, $this->sql);
 
@@ -33,11 +33,11 @@ final class UpdateProcessor extends Processor
                         $conn,
                         $scope,
                         $stmt->whereClause,
-                        $data
+                        new QueryResult($existing_rows, $table_definition->columns)
                     )
                 )
-            )[0],
-            $data[0],
+            )->rows,
+            $existing_rows,
             $stmt->setClause,
             $table_definition
         );

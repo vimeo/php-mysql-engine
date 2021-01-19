@@ -1,6 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
+use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\CastExpression;
 use Vimeo\MysqlEngine\Processor\Scope;
@@ -19,9 +20,9 @@ final class CastEvaluator
         Scope $scope,
         CastExpression $expr,
         array $row,
-        array $columns
+        QueryResult $result
     ) {
-        $val = Evaluator::evaluate($conn, $scope, $expr->expr, $row, $columns);
+        $val = Evaluator::evaluate($conn, $scope, $expr->expr, $row, $result);
 
         // TODO: more stuff
 

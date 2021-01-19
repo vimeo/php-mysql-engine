@@ -15,7 +15,7 @@ final class SelectProcessor extends Processor
      * @param array<string, mixed>|null $row
      * @param array<string, Column>|null $columns
      *
-     * @return array{array<int, array<string, mixed>>, array<string, Column>}
+     * @return QueryResult
      */
     public static function process(
         FakePdo $conn,
@@ -23,7 +23,7 @@ final class SelectProcessor extends Processor
         SelectQuery $stmt,
         ?array $row = null,
         ?array $columns = null
-    ) : array {
+    ) : QueryResult {
         $from = self::applyFrom(
             $conn,
             $scope,
@@ -92,53 +92,49 @@ final class SelectProcessor extends Processor
         );
     }
 
-    /**
-     * @return array{array<int, array<string, mixed>>, array<string, Column>}
-     */
     protected static function applyFrom(
         FakePdo $conn,
         Scope $scope,
         SelectQuery $stmt,
         ?array $row,
         ?array $columns
-    ) {
+    ) : QueryResult {
         $from = $stmt->fromClause;
 
         if (!$from) {
-            return [[], []];
+            return new QueryResult([], []);
         }
 
-        [$from_rows, $from_columns] = FromProcessor::process($conn, $scope, $stmt->fromClause);
+        $from_result = FromProcessor::process($conn, $scope, $stmt->fromClause);
 
         if ($row) {
-            $from_rows = \array_map(
+            $from_result->rows = \array_map(
                 function ($from_row) use ($row) {
                     return \array_merge($from_row, array_diff_key($row, $from_row));
                 },
-                $from_rows
+                $from_result->rows
             );
         }
 
         if ($columns) {
-            $from_columns = array_merge($columns, $from_columns);
+            $from_result->columns = array_merge($columns, $from_result->columns);
         }
 
-        return [$from_rows, $from_columns];
+        return $from_result;
     }
 
-    /**
-     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
-     *
-     * @return array{array<int, array<string, mixed>>, array<string, Column>}
-     */
-    protected static function applyGroupBy(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data)
-    {
+    protected static function applyGroupBy(
+        FakePdo $conn,
+        Scope $scope,
+        SelectQuery $stmt,
+        QueryResult $result
+    ) : QueryResult {
         $group_by = $stmt->groupBy;
 
         $select_expressions = $stmt->selectExpressions;
 
         if ($group_by !== null) {
-            $rows = $data[0];
+            $rows = $result->rows;
 
             $grouped_rows = [];
 
@@ -146,7 +142,7 @@ final class SelectProcessor extends Processor
                 $hashes = '';
 
                 foreach ($group_by as $expr) {
-                    $hashes .= \sha1((string) Expression\Evaluator::evaluate($conn, $scope, $expr, $row, $data[1]));
+                    $hashes .= \sha1((string) Expression\Evaluator::evaluate($conn, $scope, $expr, $row, $result));
                 }
 
                 $hash = \sha1($hashes);
@@ -159,57 +155,48 @@ final class SelectProcessor extends Processor
                 $grouped_rows[$hash][(string) $count] = $row;
             }
 
-            return [\array_values($grouped_rows), $data[1]];
+            return new QueryResult($rows, $result->columns, \array_values($grouped_rows));
         }
-
-        $found_aggregate = false;
 
         foreach ($select_expressions as $expr) {
             if ($expr->hasAggregate()) {
-                $found_aggregate = true;
-                break;
+                return new QueryResult($result->rows, $result->columns, [$result->rows]);
             }
         }
 
-        if ($found_aggregate) {
-            return [[$data[0]], $data[1]];
-        }
-
-        return $data;
+        return $result;
     }
 
-    /**
-     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
-     *
-     * @return array{array<int, array<string, mixed>>, array<string, Column>}
-     */
-    protected static function applyHaving(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data)
-    {
+    protected static function applyHaving(
+        FakePdo $conn,
+        Scope $scope,
+        SelectQuery $stmt,
+        QueryResult $result
+    ) : QueryResult {
         $havingClause = $stmt->havingClause;
 
         if ($havingClause !== null) {
-            return [
+            return new QueryResult(
                 \array_filter(
-                    $data[0],
-                    function ($row) use ($conn, $scope, $havingClause, $data) {
-                        return (bool) Expression\Evaluator::evaluate($conn, $scope, $havingClause, $row, $data[1]);
+                    $result->rows,
+                    function ($row) use ($conn, $scope, $havingClause, $result) {
+                        return (bool) Expression\Evaluator::evaluate($conn, $scope, $havingClause, $row, $result);
                     }
                 ),
-                $data[1]
-            ];
+                $result->columns
+            );
         }
 
-        return $data;
+        return $result;
     }
 
-    /**
-     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
-     *
-     * @return array{array<int, array<string, mixed>>, array<string, Column>}
-     */
-    protected static function applySelect(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data) : array
-    {
-        $columns = self::getSelectSchema($scope, $stmt, $data[1], []);
+    protected static function applySelect(
+        FakePdo $conn,
+        Scope $scope,
+        SelectQuery $stmt,
+        QueryResult $result
+    ) : QueryResult {
+        $columns = self::getSelectSchema($scope, $stmt, $result->columns, []);
 
         $order_by_expressions = $stmt->orderBy ?? [];
 
@@ -217,64 +204,124 @@ final class SelectProcessor extends Processor
             $columns[$order_by['expression']->name] = Expression\Evaluator::getColumnSchema(
                 $order_by['expression'],
                 $scope,
-                $data[1]
+                $result->columns
             );
         }
 
-        if (!$data[0]) {
-            if ($stmt->fromClause) {
-                return [[], $columns];
+        if (!$result->rows) {
+            if ($stmt->fromClause
+                && \array_filter(
+                    $stmt->selectExpressions,
+                    function ($expr) {
+                        return !$expr->hasAggregate();
+                    }
+                )
+            ) {
+                return new QueryResult([], $columns);
             }
 
             $formatted_row = [];
 
             foreach ($stmt->selectExpressions as $expr) {
-                $val = Expression\Evaluator::evaluate($conn, $scope, $expr, [], $data[1]);
+                $val = Expression\Evaluator::evaluate($conn, $scope, $expr, [], $result);
                 $name = $expr->name;
 
                 $formatted_row[$name] = $val;
             }
 
-            return [[$formatted_row], $columns];
+            return new QueryResult([$formatted_row], $columns);
         }
 
         $out = [];
 
-        foreach ($data[0] as $i => $row) {
-            foreach ($stmt->selectExpressions as $expr) {
-                if ($expr instanceof ColumnExpression && $expr->name === '*') {
-                    $formatted_row = [];
+        $i = 0;
 
-                    $first_value = \reset($row);
+        $grouped_rows = $result->grouped_rows !== null ? $result->grouped_rows : [$result->rows];
 
-                    if (\is_array($first_value)) {
-                        $row = $first_value;
+        foreach ($grouped_rows as $group_id => $rows) {
+            $group_result = $result->grouped_rows !== null
+                ? new QueryResult($rows, $result->columns)
+                : $result;
+
+            foreach ($rows as $row) {
+                $found_aggregate = false;
+
+                foreach ($stmt->selectExpressions as $expr) {
+                    if ($expr instanceof ColumnExpression && $expr->name === '*') {
+                        $formatted_row = [];
+
+                        $first_value = \reset($row);
+
+                        if (\is_array($first_value)) {
+                            $row = $first_value;
+                        }
+
+                        foreach ($row as $col => $val) {
+                            $parts = \explode(".%.", (string) $col);
+
+                            if ($expr->tableName() !== null) {
+                                list($col_table_name, $col_name) = $parts;
+                                if ($col_table_name == $expr->tableName()) {
+                                    if (!\array_key_exists($col, $formatted_row)) {
+                                        $formatted_row[$col_name] = $val;
+                                    }
+                                }
+                            } else {
+                                $col_name = \end($parts);
+                                $val = $formatted_row[$col_name] ?? $val;
+
+                                $formatted_row[$col_name] = $val;
+                            }
+                        }
+
+                        $out[$i] = $formatted_row;
+
+                        continue;
                     }
 
-                    foreach ($row as $col => $val) {
-                        $parts = \explode(".%.", (string) $col);
+                    $val = Expression\Evaluator::evaluate($conn, $scope, $expr, $row, $group_result);
+                    $name = $expr->name;
 
-                        if ($expr->tableName() !== null) {
-                            list($col_table_name, $col_name) = $parts;
-                            if ($col_table_name == $expr->tableName()) {
-                                if (!\array_key_exists($col, $formatted_row)) {
-                                    $formatted_row[$col_name] = $val;
-                                }
-                            }
+                    if ($expr instanceof SubqueryExpression) {
+                        assert(\is_array($val), 'subquery results must be KeyedContainer');
+                        if (\count($val) > 1) {
+                            throw new SQLFakeRuntimeException("Subquery returned more than one row");
+                        }
+                        if (\count($val) === 0) {
+                            $val = null;
                         } else {
-                            $col_name = \end($parts);
-                            $val = $formatted_row[$col_name] ?? $val;
-
-                            $formatted_row[$col_name] = $val;
+                            foreach ($val as $r) {
+                                if (\count($r) !== 1) {
+                                    throw new SQLFakeRuntimeException("Subquery result should contain 1 column");
+                                }
+                                $val = \reset($r);
+                            }
                         }
                     }
 
-                    $out[$i] = $formatted_row;
+                    $out[$i][$name] = $val;
 
-                    continue;
+                    if ($expr->hasAggregate()) {
+                        $found_aggregate = true;
+                    }
                 }
 
-                $val = Expression\Evaluator::evaluate($conn, $scope, $expr, $row, $data[1]);
+                if ($scope->variables) {
+                    // fetch columns again if we have temp variables
+                    $columns = self::getSelectSchema($scope, $stmt, $result->columns, $columns);
+                }
+
+                $i++;
+
+                if ($found_aggregate || $result->grouped_rows !== null) {
+                    break;
+                }
+            }
+        }
+
+        if ($i === 0 && $result->grouped_rows !== null) {
+            foreach ($stmt->selectExpressions as $expr) {
+                $val = Expression\Evaluator::evaluate($conn, $scope, $expr, [], $result);
                 $name = $expr->name;
 
                 if ($expr instanceof SubqueryExpression) {
@@ -295,19 +342,38 @@ final class SelectProcessor extends Processor
                 }
 
                 $out[$i][$name] = $val;
-            }
 
-            if ($scope->variables) {
-                // fetch columns again if we have temp variables
-                $columns = self::getSelectSchema($scope, $stmt, $data[1], $columns);
+                if ($expr->hasAggregate()) {
+                    $found_aggregate = true;
+                }
             }
         }
 
-        foreach ($order_by_expressions as $order_by) {
-            foreach ($data[0] as $i => $row) {
-                $val = Expression\Evaluator::evaluate($conn, $scope, $order_by['expression'], $row, $data[1]);
-                $name = $order_by['expression']->name;
-                $out[$i][$name] = $out[$i][$name] ?? $val;
+        $i = 0;
+
+        foreach ($grouped_rows as $group_id => $rows) {
+            $group_result = $result->grouped_rows !== null
+                ? new QueryResult($rows, $result->columns)
+                : $result;
+
+            foreach ($rows as $row) {
+                $found_aggregate = false;
+
+                foreach ($order_by_expressions as $order_by) {
+                    $val = Expression\Evaluator::evaluate($conn, $scope, $order_by['expression'], $row, $result);
+                    $name = $order_by['expression']->name;
+                    $out[$i][$name] = $out[$i][$name] ?? $val;
+
+                    if ($order_by['expression']->hasAggregate()) {
+                        $found_aggregate = true;
+                    }
+                }
+
+                $i++;
+
+                if ($found_aggregate || $result->grouped_rows !== null) {
+                    break;
+                }
             }
         }
 
@@ -332,10 +398,10 @@ final class SelectProcessor extends Processor
                 }
             }
 
-            return [array_values($new_out), $columns];
+            return new QueryResult(array_values($new_out), $columns);
         }
 
-        return [$out, $columns];
+        return new QueryResult($out, $columns);
     }
 
     private static function getSelectSchema(
@@ -376,17 +442,15 @@ final class SelectProcessor extends Processor
         return \array_merge($existing_columns, $columns);
     }
 
-    /**
-     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
-     *
-     * @return array{array<int, array<string, mixed>>, array<string, Column>}
-     */
-    protected static function removeOrderByExtras(FakePdo $_conn, SelectQuery $stmt, array $data)
-    {
+    protected static function removeOrderByExtras(
+        FakePdo $_conn,
+        SelectQuery $stmt,
+        QueryResult $result
+    ) : QueryResult {
         $order_by = $stmt->orderBy;
 
-        if ($order_by === null || \count($data[0]) === 0) {
-            return $data;
+        if ($order_by === null || \count($result->rows) === 0) {
+            return $result;
         }
 
         $order_by_names = [];
@@ -396,7 +460,7 @@ final class SelectProcessor extends Processor
             $name = $expr->name;
 
             if ($name == "*") {
-                return $data;
+                return $result;
             }
 
             if ($name !== null) {
@@ -415,10 +479,10 @@ final class SelectProcessor extends Processor
         $remove_fields = \array_diff_key($order_by_names, $select_field_names);
 
         if (0 === \count($remove_fields)) {
-            return $data;
+            return $result;
         }
 
-        return [
+        return new QueryResult(
             \array_map(
                 function ($row) use ($remove_fields) {
                     return \array_filter(
@@ -429,19 +493,18 @@ final class SelectProcessor extends Processor
                         \ARRAY_FILTER_USE_KEY
                     );
                 },
-                $data[0]
+                $result->rows
             ),
-            array_diff_key($data[1], $remove_fields)
-        ];
+            array_diff_key($result->columns, $remove_fields)
+        );
     }
 
-    /**
-     * @param array{array<int, array<string, mixed>>, array<string, Column>} $data
-     *
-     * @return array{array<int, array<string, mixed>>, array<string, Column>}
-     */
-    protected static function processMultiQuery(FakePdo $conn, Scope $scope, SelectQuery $stmt, array $data)
-    {
+    protected static function processMultiQuery(
+        FakePdo $conn,
+        Scope $scope,
+        SelectQuery $stmt,
+        QueryResult $result
+    ) {
         $row_encoder = function ($row) {
             return \implode(
                 '-',
@@ -454,28 +517,28 @@ final class SelectProcessor extends Processor
             );
         };
 
-        $rows = $data[0];
+        $rows = $result->rows;
 
         foreach ($stmt->multiQueries as $sub) {
-            [$subquery_results, $subquery_columns] = SelectProcessor::process($conn, $scope, $sub['query'], null);
+            $subquery_result = SelectProcessor::process($conn, $scope, $sub['query'], null);
 
             switch ($sub['type']) {
                 case MultiOperand::UNION:
                     $deduped_rows = [];
-                    foreach (\array_merge($subquery_results, $rows) as $row) {
+                    foreach (\array_merge($subquery_result->rows, $rows) as $row) {
                         $deduped_rows[$row_encoder($row)] = $row;
                     }
                     $rows = array_values($deduped_rows);
                     break;
 
                 case MultiOperand::UNION_ALL:
-                    $rows = \array_merge($subquery_results, $rows);
+                    $rows = \array_merge($subquery_result->rows, $rows);
                     break;
 
                 case MultiOperand::INTERSECT:
                     $encoded_rows = \array_map($row_encoder, $rows);
                     $rows = \array_filter(
-                        $subquery_results,
+                        $subquery_result->rows,
                         function ($row) use ($encoded_rows, $row_encoder) {
                             return \in_array($row_encoder($row), $encoded_rows);
                         }
@@ -483,7 +546,7 @@ final class SelectProcessor extends Processor
                     break;
 
                 case MultiOperand::EXCEPT:
-                    $encoded_subquery = \array_map($row_encoder, $subquery_results);
+                    $encoded_subquery = \array_map($row_encoder, $subquery_result->rows);
                     $rows = \array_filter(
                         $rows,
                         function ($row) use ($encoded_subquery, $row_encoder) {
@@ -494,6 +557,6 @@ final class SelectProcessor extends Processor
             }
         }
 
-        return [$rows, $data[1]];
+        return new QueryResult($rows, $result->columns);
     }
 }

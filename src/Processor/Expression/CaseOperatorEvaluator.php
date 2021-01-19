@@ -1,6 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
+use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression;
 use Vimeo\MysqlEngine\Processor\Scope;
@@ -19,27 +20,27 @@ final class CaseOperatorEvaluator
         Scope $scope,
         CaseOperatorExpression $expr,
         array $row,
-        array $columns
+        QueryResult $result
     ) {
         if (!$expr->wellFormed) {
             throw new SQLFakeRuntimeException("Attempted to evaluate incomplete CASE expression");
         }
 
         foreach ($expr->whenExpressions as $clause) {
-            $when = Evaluator::evaluate($conn, $scope, $clause['when'], $row, $columns);
+            $when = Evaluator::evaluate($conn, $scope, $clause['when'], $row, $result);
 
             if ($expr->case) {
-                $evaluated_case = Evaluator::evaluate($conn, $scope, $expr->case, $row, $columns);
+                $evaluated_case = Evaluator::evaluate($conn, $scope, $expr->case, $row, $result);
 
                 if ($evaluated_case == $when) {
-                    return Evaluator::evaluate($conn, $scope, $clause['then'], $row, $columns);
+                    return Evaluator::evaluate($conn, $scope, $clause['then'], $row, $result);
                 }
             } elseif ((bool) $when) {
-                return Evaluator::evaluate($conn, $scope, $clause['then'], $row, $columns);
+                return Evaluator::evaluate($conn, $scope, $clause['then'], $row, $result);
             }
         }
 
         \assert($expr->else !== null, 'must have else since wellFormed was true');
-        return Evaluator::evaluate($conn, $scope, $expr->else, $row, $columns);
+        return Evaluator::evaluate($conn, $scope, $expr->else, $row, $result);
     }
 }

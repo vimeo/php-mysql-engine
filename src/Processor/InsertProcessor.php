@@ -8,14 +8,11 @@ use Vimeo\MysqlEngine\Schema\Column\IntegerColumn;
 
 final class InsertProcessor extends Processor
 {
-    /**
-     * @return int
-     */
     public static function process(
         \Vimeo\MysqlEngine\FakePdo $conn,
         Scope $scope,
         InsertQuery $stmt
-    ) {
+    ) : int {
         list($database, $table_name) = self::parseTableName($conn, $stmt->table);
 
         $table = $conn->getServer()->getTable($database, $table_name) ?? [];
@@ -38,7 +35,13 @@ final class InsertProcessor extends Processor
             $row = [];
 
             foreach ($stmt->insertColumns as $key => $col) {
-                $row[$col] = Expression\Evaluator::evaluate($conn, $scope, $value_list[$key], [], []);
+                $row[$col] = Expression\Evaluator::evaluate(
+                    $conn,
+                    $scope,
+                    $value_list[$key],
+                    [],
+                    new QueryResult([], [])
+                );
             }
 
             $row = DataIntegrity::coerceToSchema($conn, $row, $table_definition);

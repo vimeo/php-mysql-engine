@@ -46,12 +46,11 @@ final class CreateTableParser
      */
     public function parse(string $sql) : array
     {
-        $this->lex($sql);
-        return self::walk($this->tokens, $sql, $this->sourceMap);
+        return self::walk($this->lex($sql), $sql, $this->sourceMap);
     }
 
     /**
-     * @var array<int, string>
+     * @var list<string>
      */
     private $tokens = [];
 
@@ -61,7 +60,7 @@ final class CreateTableParser
     private $sourceMap = [];
 
     /**
-     * @return array<int, string>
+     * @return non-empty-list<string>
      */
     private function lex(string $sql)
     {
@@ -149,7 +148,7 @@ final class CreateTableParser
     }
 
     /**
-     * @param list<string>                $tokens
+     * @param non-empty-list<string>                $tokens
      * @param array<int, array{int, int}> $source_map
      *
      * @return array<string, CreateQuery>
@@ -159,6 +158,7 @@ final class CreateTableParser
         $statements = [];
         $temp = [];
         $start = 0;
+
         foreach ($tokens as $i => $t) {
             $t = $tokens[$i];
             if ($t === ';') {
@@ -631,7 +631,7 @@ final class CreateTableParser
     /**
      * @param array<int, array{0:int, 1:int}> $source_map
      *
-     * @return array<int, string>
+     * @return non-empty-list<string>
      */
     private function extractTokens(string $sql, array $source_map)
     {

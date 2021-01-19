@@ -2,6 +2,7 @@
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Query\Expression\RowExpression;
+use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\Schema\Column;
 
@@ -17,12 +18,12 @@ final class RowEvaluator
         Scope $scope,
         RowExpression $expr,
         array $row,
-        array $columns
+        QueryResult $result
     ) {
-        $result = [];
+        $rows = [];
         foreach ($expr->elements as $expr) {
-            $result[] = Evaluator::evaluate($conn, $scope, $expr, $row, $columns);
+            $rows[] = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
         }
-        return $result;
+        return $rows;
     }
 }

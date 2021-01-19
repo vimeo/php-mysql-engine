@@ -3,6 +3,8 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
 use Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression;
+use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
+use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\Schema\Column;
 
@@ -19,13 +21,23 @@ final class ExistsOperatorEvaluator
         Scope $scope,
         ExistsOperatorExpression $expr,
         array $row,
-        array $columns
+        QueryResult $result
     ) {
         if (!$expr->isWellFormed()) {
             throw new SQLFakeParseException("Parse error: empty EXISTS subquery");
         }
 
-        $ret = Evaluator::evaluate($conn, $scope, $expr->exists, $row, $columns);
+        if ($expr->exists instanceof SubqueryExpression) {
+            $ret = \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+                $conn,
+                $scope,
+                $expr->exists->query,
+                $row,
+                $result->columns
+            )->rows;
+        } else {
+            $ret = Evaluator::evaluate($conn, $scope, $expr->exists, $row, $result);
+        }
 
         if ($expr->negated) {
             return $ret ? 0 : 1;

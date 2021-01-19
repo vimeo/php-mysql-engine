@@ -1,6 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
+use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
@@ -19,7 +20,7 @@ final class ColumnEvaluator
         Scope $scope,
         ColumnExpression $expr,
         array $row,
-        array $columns
+        QueryResult $result
     ) {
         if ($expr->name === '*') {
             return 1;
