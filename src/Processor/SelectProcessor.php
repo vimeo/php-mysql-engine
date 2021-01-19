@@ -175,15 +175,21 @@ final class SelectProcessor extends Processor
     ) : QueryResult {
         $havingClause = $stmt->havingClause;
 
-        if ($havingClause !== null) {
+        if ($havingClause !== null && $result->grouped_rows !== null) {
+            $out_groups = [];
+
+            foreach ($result->grouped_rows as $group_id => $rows) {
+                $group_result = new QueryResult($rows, $result->columns);
+
+                if (Expression\Evaluator::evaluate($conn, $scope, $havingClause, reset($rows), $group_result)) {
+                    $out_groups[] = $rows;
+                }
+            }
+
             return new QueryResult(
-                \array_filter(
-                    $result->rows,
-                    function ($row) use ($conn, $scope, $havingClause, $result) {
-                        return (bool) Expression\Evaluator::evaluate($conn, $scope, $havingClause, $row, $result);
-                    }
-                ),
-                $result->columns
+                $result->rows,
+                $result->columns,
+                $out_groups
             );
         }
 
