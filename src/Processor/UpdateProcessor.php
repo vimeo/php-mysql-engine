@@ -18,6 +18,12 @@ final class UpdateProcessor extends Processor
 
         $table_definition = $conn->getServer()->getTableDefinition($database, $table_name);
 
+        if ($table_definition === null) {
+            throw new SQLFakeRuntimeException(
+                "Table {$table_name} not found in schema and strict mode is enabled"
+            );
+        }
+
         list($rows_affected, $_) = self::applySet(
             $conn,
             $scope,

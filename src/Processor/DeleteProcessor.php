@@ -17,6 +17,12 @@ final class DeleteProcessor extends Processor
 
         $table_definition = $conn->getServer()->getTableDefinition($database, $table_name);
 
+        if ($table_definition === null) {
+            throw new SQLFakeRuntimeException(
+                "Table {$table_name} not found in schema and strict mode is enabled"
+            );
+        }
+
         $existing_rows = $conn->getServer()->getTable($database, $table_name) ?? [];
         $columns = $table_definition->columns;
         //Metrics::trackQuery(QueryType::DELETE, $conn->getServer()->name, $table_name, $stmt->sql);
