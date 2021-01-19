@@ -462,9 +462,6 @@ final class FunctionEvaluator
         array $row,
         QueryResult $result
     ) {
-        if (!$expr->hasAggregate()) {
-            }
-
         $args = $expr->args;
 
         if (\count($args) !== 3) {
@@ -740,9 +737,6 @@ final class FunctionEvaluator
         array $row,
         QueryResult $result
     ) {
-        if (!$expr->hasAggregate()) {
-            }
-
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -765,9 +759,6 @@ final class FunctionEvaluator
         array $row,
         QueryResult $result
     ) : int {
-        if (!$expr->hasAggregate()) {
-            }
-
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1036,9 +1027,6 @@ final class FunctionEvaluator
         array $row,
         QueryResult $result
     ) : ?string {
-        if (!$expr->hasAggregate()) {
-            }
-
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -1087,9 +1075,6 @@ final class FunctionEvaluator
         array $row,
         QueryResult $result
     ) : ?string {
-        if (!$expr->hasAggregate()) {
-            }
-
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -1138,9 +1123,6 @@ final class FunctionEvaluator
         array $row,
         QueryResult $result
     ) : int {
-        if (!$expr->hasAggregate()) {
-            }
-
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -1163,9 +1145,6 @@ final class FunctionEvaluator
         array $row,
         QueryResult $result
     ) : int {
-        if (!$expr->hasAggregate()) {
-            }
-
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1187,9 +1166,6 @@ final class FunctionEvaluator
         array $row,
         QueryResult $result
     ) : float {
-        if (!$expr->hasAggregate()) {
-            }
-
         $args = $expr->args;
 
         if (\count($args) !== 2) {
