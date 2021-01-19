@@ -274,7 +274,7 @@ final class SelectProcessor extends Processor
                             }
                         }
 
-                        $out[$i] = $formatted_row;
+                        $out[$i] = ($out[$i] ?? []) + $formatted_row;
 
                         continue;
                     }
