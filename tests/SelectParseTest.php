@@ -302,4 +302,13 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class, $select_query->fromClause->tables[0]['subquery']);
         $this->assertNotEmpty($select_query->fromClause->tables[0]['subquery']->query->multiQueries);
     }
+
+    public function testParseMoreComplex()
+    {
+        $sql = "SELECT `id` FROM `foo`
+                JOIN (SELECT @method := 'paypal' AS payout_method) AS d
+                JOIN `bar` ON `foo`.`id` = `bar`.`id`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+    }
 }

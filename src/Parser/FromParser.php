@@ -302,7 +302,8 @@ final class FromParser
         }
 
         if ($next->type !== TokenType::RESERVED || ($next->value !== 'ON' && $next->value !== 'USING')) {
-            throw new SQLFakeParseException("Expected ON or USING join condition");
+            $this->pointer--;
+            return $table;
         }
 
         if ($next->value === 'USING') {
