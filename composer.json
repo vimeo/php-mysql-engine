@@ -15,7 +15,8 @@
   "require": {
     "php": "^7.1|^8",
     "ext-pdo": "*",
-    "nyholm/dsn": "^2.0"
+    "nyholm/dsn": "^2.0",
+    "symfony/polyfill-php73": "^1.22"
   },
   "autoload": {
     "psr-4": {
