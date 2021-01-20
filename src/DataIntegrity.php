@@ -18,7 +18,7 @@ final class DataIntegrity
     ) {
         if ($default !== null) {
             if ($default === 'CURRENT_TIMESTAMP') {
-                $default = \date('Y-m-d H:i:s', time() + 5*60*60);
+                $default = \date('Y-m-d H:i:s', time());
             }
 
             switch ($php_type) {
