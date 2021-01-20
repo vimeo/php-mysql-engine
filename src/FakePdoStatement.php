@@ -148,9 +148,9 @@ class FakePdoStatement extends \PDOStatement
                         }
                     }
 
-                    if ($real_result !== $fake_result) {
+                    if ($real_result != $fake_result) {
                         var_dump($real_result, $fake_result);
-                        throw new \UnexpectedValueException('different');
+                        throw new \TypeError('different');
                     }
                 }
 
