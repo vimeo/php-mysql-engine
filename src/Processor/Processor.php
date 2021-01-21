@@ -48,7 +48,9 @@ abstract class Processor
         foreach ($orders as $rule) {
             $expr = $rule['expression'];
 
-            if ($expr instanceof ColumnExpression) {
+            if ($expr instanceof ColumnExpression
+                && !$expr->tableName
+            ) {
                 $expr->allowFallthrough();
             }
         }
