@@ -228,15 +228,7 @@ final class Server
             }
         }
 
-        $next = $table->autoIncrementCursors[$column_name];
-
-        do {
-            ++$next;
-        } while (\array_key_exists($next, $table->autoIncrementIndexes[$column_name] ?? []));
-
-        $table->autoIncrementCursors[$column_name] = $next;
-
-        return $next;
+        return $table->autoIncrementCursors[$column_name] + 1;
     }
 
     public function addAutoIncrementMinValue(
@@ -256,6 +248,9 @@ final class Server
             $table = $this->databases[$database_name][$table_name] = new TableData();
         }
 
-        $table->autoIncrementIndexes[$column_name][$value] = true;
+        $table->autoIncrementCursors[$column_name] = max(
+            $table->autoIncrementCursors[$column_name] ?? 0,
+            $value
+        );
     }
 }
