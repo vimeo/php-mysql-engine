@@ -35,8 +35,9 @@ final class ColumnEvaluator
 
         if (($expr->tableName === null && $expr->columnName !== null) || $expr->allowFallthrough) {
             foreach ($row as $key => $col) {
-                $parts = \explode('.%.', $key);
-                if (\end($parts) === $expr->columnName) {
+                $key_col = \preg_replace('/.*\.%\./', '', $key);
+
+                if ($expr->columnName === $key_col) {
                     return $col;
                 }
             }
