@@ -8,7 +8,10 @@ class Index
      */
     public $type;
 
-    public array $columns;
+    /**
+     * @var array
+     */
+    public $columns;
 
     public function __construct(
         string $type,
