@@ -141,12 +141,18 @@ final class SQLParser
         'TABLES' => true,
     ];
 
+    private static $cache = [];
+
     /**
      * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery
      */
     public static function parse(string $sql)
     {
-        return static::parseImpl($sql);
+        if (\array_key_exists($sql, self::$cache)) {
+            return self::$cache[$sql];
+        }
+
+        return self::$cache[$sql] = self::parseImpl($sql);
     }
 
     /**
@@ -553,5 +559,10 @@ final class SQLParser
             }
         }
         return $pointer;
+    }
+
+    public static function bustCache()
+    {
+        self::$cache = [];
     }
 }
