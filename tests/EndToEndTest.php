@@ -616,6 +616,29 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame("22", $pdo->lastInsertId());
     }
 
+    public function testOrderBySecondDimensionAliased()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'SELECT `id`, `console` AS `console_name`
+            FROM `video_game_characters`
+            ORDER BY `console`, `powerups`, `name`
+            LIMIT 4');
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['id' => 13, 'console_name' => 'atari'],
+                ['id' => 9, 'console_name' => 'gameboy'],
+                ['id' => 5, 'console_name' => 'nes'],
+                ['id' => 11, 'console_name' => 'nes'],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
     {
         $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');

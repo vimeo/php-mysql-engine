@@ -311,4 +311,12 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
     }
+
+    public function testBracketedFirstSelect()
+    {
+        $this->markTestSkipped('Broken');
+        $sql = "(SELECT * FROM `foo`) UNION ALL (SELECT * FROM `bar`)";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+    }
 }

@@ -207,7 +207,15 @@ final class SelectProcessor extends Processor
         $order_by_expressions = $stmt->orderBy ?? [];
 
         foreach ($order_by_expressions as $order_by) {
-            $columns[$order_by['expression']->name] = Expression\Evaluator::getColumnSchema(
+            $name = $order_by['expression']->name;
+
+            if ($order_by['expression'] instanceof ColumnExpression
+                && $order_by['expression']->tableName
+            ) {
+                $name = $order_by['expression']->tableName . '.%.' . $order_by['expression']->columnName;
+            }
+
+            $columns[$name] = Expression\Evaluator::getColumnSchema(
                 $order_by['expression'],
                 $scope,
                 $result->columns
@@ -366,8 +374,19 @@ final class SelectProcessor extends Processor
                 $found_aggregate = false;
 
                 foreach ($order_by_expressions as $order_by) {
-                    $val = Expression\Evaluator::evaluate($conn, $scope, $order_by['expression'], $row, $result);
                     $name = $order_by['expression']->name;
+
+                    if ($order_by['expression'] instanceof ColumnExpression
+                        && $order_by['expression']->tableName
+                    ) {
+                        $name = $order_by['expression']->tableName . '.%.' . $order_by['expression']->columnName;
+                    }
+
+                    if (\array_key_exists($name, $out[$i])) {
+                        continue;
+                    }
+
+                    $val = Expression\Evaluator::evaluate($conn, $scope, $order_by['expression'], $row, $result);
                     $out[$i][$name] = $out[$i][$name] ?? $val;
 
                     if ($order_by['expression']->hasAggregate()) {
@@ -476,6 +495,12 @@ final class SelectProcessor extends Processor
 
         foreach ($order_by as $o) {
             $name = $o['expression']->name;
+
+            if ($o['expression'] instanceof ColumnExpression
+                && $o['expression']->tableName
+            ) {
+                $name = $o['expression']->tableName . '.%.' . $o['expression']->columnName;
+            }
 
             if ($name !== null) {
                 $order_by_names[$name] = true;
