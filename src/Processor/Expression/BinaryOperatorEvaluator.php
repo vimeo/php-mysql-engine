@@ -72,9 +72,6 @@ final class BinaryOperatorEvaluator
             );
         }
 
-        $l_type = Evaluator::getColumnSchema($left, $scope, $result->columns);
-        $r_type = Evaluator::getColumnSchema($right, $scope, $result->columns);
-
         switch ($expr->operator) {
             case '':
                 throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
@@ -119,6 +116,9 @@ final class BinaryOperatorEvaluator
                 $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
 
                 $as_string = false;
+
+                $l_type = Evaluator::getColumnSchema($left, $scope, $result->columns);
+                $r_type = Evaluator::getColumnSchema($right, $scope, $result->columns);
 
                 if ($l_type->getPhpType() === 'string' && $r_type->getPhpType() === 'string') {
                     if (\preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/', $l_value)
@@ -351,9 +351,6 @@ final class BinaryOperatorEvaluator
             return new Column\Varchar(255);
         }
 
-        $l_type = Evaluator::getColumnSchema($left, $scope, $columns);
-        $r_type = Evaluator::getColumnSchema($right, $scope, $columns);
-
         switch ($expr->operator) {
             case '':
                 throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
@@ -376,6 +373,10 @@ final class BinaryOperatorEvaluator
             case '-':
             case '+':
             case '*':
+                $l_type = Evaluator::getColumnSchema($left, $scope, $columns);
+                $r_type = Evaluator::getColumnSchema($right, $scope, $columns);
+
+
                 if ($l_type instanceof Column\IntegerColumn && $r_type instanceof Column\IntegerColumn) {
                     return new Column\IntColumn(false, 11);
                 }
@@ -388,6 +389,8 @@ final class BinaryOperatorEvaluator
 
             case '%':
             case 'MOD':
+                $l_type = Evaluator::getColumnSchema($left, $scope, $columns);
+
                 if ($l_type instanceof Column\IntegerColumn) {
                     return new Column\IntColumn(true, 11);
                 }
@@ -407,6 +410,8 @@ final class BinaryOperatorEvaluator
                 return new Column\IntColumn(false, 11);
 
             case ':=':
+                $r_type = Evaluator::getColumnSchema($right, $scope, $columns);
+
                 return $r_type;
         }
 
