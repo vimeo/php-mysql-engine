@@ -38,6 +38,11 @@ abstract class Expression
     protected $evaluates_groups = false;
 
     /**
+     * @var ?\Vimeo\MysqlEngine\Schema\Column
+     */
+    public $column;
+
+    /**
      * @return void
      */
     public function negate()

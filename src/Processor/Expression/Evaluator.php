@@ -99,52 +99,56 @@ class Evaluator
         Scope $scope,
         array $columns
     ) : Column {
+        if (!$scope->variables && $expr->column) {
+            return $expr->column;
+        }
+
         switch (get_class($expr)) {
             case \Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression::class:
-                return new Column\TinyInt(true, 1);
+                return $expr->column = new Column\TinyInt(true, 1);
 
             case \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class:
-                return BinaryOperatorEvaluator::getColumnSchema($expr, $scope, $columns);
+                return $expr->column = BinaryOperatorEvaluator::getColumnSchema($expr, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression::class:
                 foreach ($expr->whenExpressions as $when) {
                     $then_type = Evaluator::getColumnSchema($when['then'], $scope, $columns);
 
                     if ($then_type->getPhpType() === 'string') {
-                        return $then_type;
+                        return $expr->column = $then_type;
                     }
                 }
 
-                return Evaluator::getColumnSchema($expr->else, $scope, $columns);
+                return $expr->column = Evaluator::getColumnSchema($expr->else, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\ColumnExpression::class:
-                return ColumnEvaluator::getColumnSchema($expr, $columns);
+                return $expr->column = ColumnEvaluator::getColumnSchema($expr, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\ConstantExpression::class:
                 switch ($expr->getType()) {
                     case TokenType::NUMERIC_CONSTANT:
                         if (\strpos((string) $expr->value, '.') !== false) {
-                            return new Column\FloatColumn(10, 2);
+                            return $expr->column = new Column\FloatColumn(10, 2);
                         }
 
-                        return new Column\IntColumn(false, 10);
+                        return $expr->column = new Column\IntColumn(false, 10);
 
                     case TokenType::STRING_CONSTANT:
-                        return new Column\Varchar(10);
+                        return $expr->column = new Column\Varchar(10);
 
                     case TokenType::NULL_CONSTANT:
-                        return new Column\NullColumn();
+                        return $expr->column = new Column\NullColumn();
                 }
                 break;
 
             case \Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression::class:
-                return new Column\TinyInt(true, 1);
+                return $expr->column = new Column\TinyInt(true, 1);
 
             case \Vimeo\MysqlEngine\Query\Expression\FunctionExpression::class:
-                return FunctionEvaluator::getColumnSchema($expr, $scope, $columns);
+                return $expr->column = FunctionEvaluator::getColumnSchema($expr, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\InOperatorExpression::class:
-                return new Column\TinyInt(true, 1);
+                return $expr->column = new Column\TinyInt(true, 1);
 
             case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
                 throw new SQLFakeRuntimeException("Attempted to evaluate placeholder expression!");
@@ -163,11 +167,11 @@ class Evaluator
 
             case \Vimeo\MysqlEngine\Query\Expression\CastExpression::class:
                 if ($expr->castType->type === 'UNSIGNED') {
-                    return new Column\IntColumn(true, 10);
+                    return $expr->column = new Column\IntColumn(true, 10);
                 }
 
                 if ($expr->castType->type === 'SIGNED') {
-                    return new Column\IntColumn(false, 10);
+                    return $expr->column = new Column\IntColumn(false, 10);
                 }
 
                 break;
@@ -196,6 +200,6 @@ class Evaluator
                 return new Column\Varchar(10);
         }
 
-        return new Column\Varchar(10);
+        return $expr->column = new Column\Varchar(10);
     }
 }

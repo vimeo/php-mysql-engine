@@ -72,42 +72,36 @@ final class BinaryOperatorEvaluator
             );
         }
 
-        $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $result);
-        $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
-
         $l_type = Evaluator::getColumnSchema($left, $scope, $result->columns);
         $r_type = Evaluator::getColumnSchema($right, $scope, $result->columns);
-
-        $as_string = false;
-
-        if ($l_type->getPhpType() === 'string' && $r_type->getPhpType() === 'string') {
-            if (\preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/', $l_value)
-                && \preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9]$/', $r_value)
-            ) {
-                $r_value .= ' 00:00:00';
-            } elseif (\preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/', $r_value)
-                && \preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9]$/', $l_value)
-            ) {
-                $l_value .= ' 00:00:00';
-            }
-
-            $as_string = true;
-        }
 
         switch ($expr->operator) {
             case '':
                 throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
 
             case 'AND':
-                if ((bool) $l_value && (bool) $r_value) {
+                $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $result);
+                $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
+
+                if ($l_value && $r_value) {
                     return (int) (!$expr->negated);
                 }
+
                 return (int) $expr->negated;
 
             case 'OR':
-                if ((bool) $l_value || (bool) $r_value) {
+                $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $result);
+
+                if ($l_value) {
                     return (int) (!$expr->negated);
                 }
+
+                $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
+
+                if ($r_value) {
+                    return (int) (!$expr->negated);
+                }
+
                 return (int) $expr->negated;
 
             case '=':
@@ -117,6 +111,25 @@ final class BinaryOperatorEvaluator
             case '>=':
             case '<':
             case '<=':
+                $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $result);
+                $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
+
+                $as_string = false;
+
+                if ($l_type->getPhpType() === 'string' && $r_type->getPhpType() === 'string') {
+                    if (\preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/', $l_value)
+                        && \preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9]$/', $r_value)
+                    ) {
+                        $r_value .= ' 00:00:00';
+                    } elseif (\preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/', $r_value)
+                        && \preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9]$/', $l_value)
+                    ) {
+                        $l_value .= ' 00:00:00';
+                    }
+
+                    $as_string = true;
+                }
+
                 if ($l_value === null || $r_value === null) {
                     return null;
                 }
@@ -177,6 +190,9 @@ final class BinaryOperatorEvaluator
             case 'DIV':
             case '|':
             case '&':
+                $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $result);
+                $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
+
                 if ($l_value === null || $r_value === null) {
                     return null;
                 }
@@ -211,6 +227,9 @@ final class BinaryOperatorEvaluator
                 throw new SQLFakeRuntimeException("Operator recognized but not implemented");
 
             case 'LIKE':
+                $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $result);
+                $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
+
                 $left_string = (string) Evaluator::evaluate($conn, $scope, $left, $row, $result);
 
                 if (!$right instanceof ConstantExpression) {
@@ -240,6 +259,8 @@ final class BinaryOperatorEvaluator
                 return ((bool) \preg_match($regex, $left_string) ? 1 : 0) ^ $expr->negatedInt;
 
             case 'IS':
+                $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
+
                 if (!$right instanceof ConstantExpression) {
                     throw new SQLFakeRuntimeException("Unsupported right operand for IS keyword");
                 }
@@ -252,6 +273,9 @@ final class BinaryOperatorEvaluator
 
             case 'RLIKE':
             case 'REGEXP':
+                $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
+
+
                 $left_string = (string) Evaluator::evaluate($conn, $scope, $left, $row, $result);
                 $case_insensitive = 'i';
                 if ($right instanceof FunctionExpression && $right->functionName() == 'BINARY') {
@@ -265,6 +289,8 @@ final class BinaryOperatorEvaluator
                 if (!$left instanceof VariableExpression) {
                     throw new SQLFakeRuntimeException("Unsupported left operand for variable assignment");
                 }
+
+                $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
 
                 $scope->variables[$left->variableName] = $r_value;
 
