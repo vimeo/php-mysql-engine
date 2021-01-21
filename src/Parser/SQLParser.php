@@ -216,17 +216,14 @@ final class SQLParser
                 continue;
             }
 
-            if (\filter_var($token, \FILTER_VALIDATE_INT) !== false) {
+            if (\preg_match('/^[0-9\.]+$/', $token)) {
                 $out[] = new Token(TokenType::NUMERIC_CONSTANT, $token, $token);
                 continue;
             }
 
-            if (\filter_var($token, \FILTER_VALIDATE_FLOAT) !== false) {
-                $out[] = new Token(TokenType::NUMERIC_CONSTANT, $token, $token);
-                continue;
-            }
+            $first_char = $token[0];
 
-            if ($token[0] === '\'' || $token[0] === '"') {
+            if ($first_char === '\'' || $first_char === '"') {
                 $raw = $token;
                 $token = \substr($token, 1, \strlen($token) - 2);
                 $token = \preg_replace("/\\\\0/", "\0", \preg_replace("/\\\\([^%_rntbZ0])/", '\\1', $token));
@@ -234,13 +231,13 @@ final class SQLParser
                 continue;
             }
 
-            if ($token[0] === '`') {
+            if ($first_char === '`') {
                 $raw = $token;
 
-                if (substr($token, -1) === '`') {
+                if (\substr($token, -1) === '`') {
                     $token = \substr($token, 1, -1);
                 } else {
-                    if (substr($token, -2) === '`.') {
+                    if (\substr($token, -2) === '`.') {
                         $token = \substr($token, 1, -2) . '.';
                     }
                 }
@@ -260,7 +257,7 @@ final class SQLParser
                 continue;
             }
 
-            if ($token[0] === '(') {
+            if ($first_char === '(') {
                 $out[] = new Token(TokenType::PAREN, $token, $token);
                 continue;
             }
