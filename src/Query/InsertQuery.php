@@ -37,9 +37,9 @@ final class InsertQuery
     public $values = [];
 
     /**
-     * @var array<int, BinaryOperatorExpression>
+     * @var array<int, BinaryOperatorExpression>|null
      */
-    public ?array $setClause = null;
+    public $setClause = null;
 
     public function __construct(string $table, string $sql, bool $ignoreDupes)
     {
