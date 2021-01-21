@@ -785,9 +785,8 @@ final class FunctionEvaluator
         }
 
         $column = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
-        $format = 'Y-m-d G:i:s';
 
-        return \date($format, (int) $column);
+        return \date('Y-m-d H:i:s', (int) $column);
     }
 
     /**

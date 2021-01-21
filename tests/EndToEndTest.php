@@ -590,14 +590,30 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
         $query = $pdo->prepare(
             "INSERT INTO `video_game_characters`
-                (`name`, `type`, `profession`, `console`, `is_alive`, `powerups`, `skills`, `created_on`)
-            VALUES
-                ('wario2','villain','plumber','nes','1','3','{\"magic\":0, \"speed\":0, \"strength\":0, \"weapons\":0}', NOW())"
+                SET `name` = 'wario2',
+                    `type` = 'villain',
+                    `profession` = 'plumber',
+                    `console` = 'nes',
+                    `is_alive` = '1',
+                    `powerups` = '3',
+                    `skills` = '{\"magic\":0, \"speed\":0, \"strength\":0, \"weapons\":0}',
+                    `created_on` = NOW()"
         );
 
         $query->execute();
 
         $this->assertSame("21", $pdo->lastInsertId());
+
+        $query = $pdo->prepare(
+            "INSERT INTO `video_game_characters`
+                (`name`, `type`, `profession`, `console`, `is_alive`, `powerups`, `skills`, `created_on`)
+            VALUES
+                ('wario3','villain','plumber','nes','1','3','{\"magic\":0, \"speed\":0, \"strength\":0, \"weapons\":0}', NOW())"
+        );
+
+        $query->execute();
+
+        $this->assertSame("22", $pdo->lastInsertId());
     }
 
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO

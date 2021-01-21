@@ -224,6 +224,8 @@ abstract class Processor
                 );
             }
 
+            $row = DataIntegrity::coerceToSchema($conn, $row, $table_definition);
+
             foreach ($row as $column_name => $value) {
                 $column = $table_definition->columns[$column_name];
 
@@ -236,8 +238,6 @@ abstract class Processor
                     );
                 }
             }
-
-            $row = DataIntegrity::coerceToSchema($conn, $row, $table_definition);
 
             if (\count($table_definition->primaryKeyColumns) === 1) {
                 $last_insert_id = $row[$table_definition->primaryKeyColumns[0]];
