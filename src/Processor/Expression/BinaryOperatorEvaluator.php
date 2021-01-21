@@ -81,10 +81,14 @@ final class BinaryOperatorEvaluator
 
             case 'AND':
                 $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $result);
-                $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
 
-                if ($l_value && $r_value) {
-                    return (int) (!$expr->negated);
+
+                if ($l_value) {
+                    $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
+
+                    if ($r_value) {
+                        return (int) (!$expr->negated);
+                    }
                 }
 
                 return (int) $expr->negated;
