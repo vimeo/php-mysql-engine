@@ -144,7 +144,7 @@ final class CaseOperatorExpression extends Expression
      */
     public function addRecursiveExpression(array $tokens, int $pointer, bool $negated = false) : int
     {
-        $p = new ExpressionParser($tokens, $pointer, new PlaceholderExpression(), 0, true);
+        $p = new ExpressionParser($tokens, $pointer, new StubExpression(), 0, true);
         list($pointer, $new_expression) = $p->buildWithPointer();
         if ($negated) {
             $new_expression->negate();

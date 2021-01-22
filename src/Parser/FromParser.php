@@ -8,7 +8,7 @@ use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression;
+use Vimeo\MysqlEngine\Query\Expression\StubExpression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
 use Vimeo\MysqlEngine\Query\FromClause;
 
@@ -185,7 +185,7 @@ final class FromParser
             throw new ParserException("Empty parentheses found");
         }
         $this->pointer = $close;
-        $expr = new PlaceholderExpression();
+        $expr = new StubExpression();
         $subquery_sql = \implode(
             ' ',
             \array_map(

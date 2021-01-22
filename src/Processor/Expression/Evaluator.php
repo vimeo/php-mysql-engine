@@ -47,7 +47,7 @@ class Evaluator
             case \Vimeo\MysqlEngine\Query\Expression\InOperatorExpression::class:
                 return InOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
+            case \Vimeo\MysqlEngine\Query\Expression\StubExpression::class:
                 throw new ProcessorException("Attempted to evaluate placeholder expression!");
 
             case \Vimeo\MysqlEngine\Query\Expression\PositionExpression::class:
@@ -150,7 +150,7 @@ class Evaluator
             case \Vimeo\MysqlEngine\Query\Expression\InOperatorExpression::class:
                 return $expr->column = new Column\TinyInt(true, 1);
 
-            case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
+            case \Vimeo\MysqlEngine\Query\Expression\StubExpression::class:
                 throw new ProcessorException("Attempted to evaluate placeholder expression!");
 
             case \Vimeo\MysqlEngine\Query\Expression\PositionExpression::class:

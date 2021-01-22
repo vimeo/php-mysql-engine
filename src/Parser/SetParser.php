@@ -2,7 +2,7 @@
 namespace Vimeo\MysqlEngine\Parser;
 
 use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression;
+use Vimeo\MysqlEngine\Query\Expression\StubExpression;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;

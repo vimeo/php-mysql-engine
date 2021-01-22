@@ -141,7 +141,7 @@ final class BinaryOperatorExpression extends Expression
      */
     public function addRecursiveExpression(array $tokens, int $pointer, bool $negated = false) : int
     {
-        $tmp = $this->right ? new BinaryOperatorExpression($this->right) : new PlaceholderExpression();
+        $tmp = $this->right ? new BinaryOperatorExpression($this->right) : new StubExpression();
         $p = new ExpressionParser($tokens, $pointer, $tmp, $this->precedence, true);
         list($pointer, $new_expression) = $p->buildWithPointer();
         if ($negated) {

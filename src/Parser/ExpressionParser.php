@@ -13,7 +13,7 @@ use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
 use Vimeo\MysqlEngine\Query\Expression\InOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression;
+use Vimeo\MysqlEngine\Query\Expression\StubExpression;
 use Vimeo\MysqlEngine\Query\Expression\PositionExpression;
 use Vimeo\MysqlEngine\Query\Expression\RowExpression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
@@ -117,7 +117,7 @@ final class ExpressionParser
     ) {
         $this->tokens = $tokens;
         $this->pointer = $pointer;
-        $this->expression = $expression ?: new PlaceholderExpression();
+        $this->expression = $expression ?: new StubExpression();
         $this->min_precedence = $min_precedence;
         $this->is_child = $is_child;
     }
@@ -289,7 +289,7 @@ final class ExpressionParser
                     }
 
                     $this->pointer = $close;
-                    $expr = new PlaceholderExpression();
+                    $expr = new StubExpression();
 
                     if ($arg_tokens[0]->value === 'SELECT') {
                         $subquery_sql = \implode(
@@ -346,7 +346,7 @@ final class ExpressionParser
                         }
                     }
 
-                    if ($this->expression instanceof PlaceholderExpression) {
+                    if ($this->expression instanceof StubExpression) {
                         $this->expression = new BinaryOperatorExpression($expr);
                     } else {
                         $this->expression->setNextChild($expr);
@@ -361,7 +361,7 @@ final class ExpressionParser
                 case TokenType::IDENTIFIER:
                     $expr = $this->tokenToExpression($token);
 
-                    if ($this->expression instanceof PlaceholderExpression) {
+                    if ($this->expression instanceof StubExpression) {
                         $this->expression = new BinaryOperatorExpression($expr);
                     } elseif ($this->expression instanceof IntervalOperatorExpression
                         && $token->type === TokenType::IDENTIFIER
@@ -393,7 +393,7 @@ final class ExpressionParser
 
                         $this->pointer = $close;
 
-                        if ($this->expression instanceof PlaceholderExpression) {
+                        if ($this->expression instanceof StubExpression) {
                             $this->expression = new BinaryOperatorExpression($expr);
                         } else {
                             $this->expression->setNextChild($expr);
@@ -403,7 +403,7 @@ final class ExpressionParser
                     }
 
                     if ($operator === 'INTERVAL') {
-                        if (!$this->expression instanceof PlaceholderExpression) {
+                        if (!$this->expression instanceof StubExpression) {
                             $this->pointer = $this->expression->addRecursiveExpression(
                                 $this->tokens,
                                 $this->pointer - 1
@@ -537,7 +537,7 @@ final class ExpressionParser
                             || $operator === '~'
                             || $operator === '!'
                         ) {
-                            if (!$this->expression instanceof PlaceholderExpression) {
+                            if (!$this->expression instanceof StubExpression) {
                                 throw new \TypeError('Failed assertion');
                             }
 

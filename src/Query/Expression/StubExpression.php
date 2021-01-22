@@ -4,7 +4,7 @@ namespace Vimeo\MysqlEngine\Query\Expression;
 use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Processor\ProcessorException;
 
-final class PlaceholderExpression extends Expression
+final class StubExpression extends Expression
 {
     public function __construct()
     {
