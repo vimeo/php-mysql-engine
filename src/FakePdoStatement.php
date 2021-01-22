@@ -124,12 +124,6 @@ class FakePdoStatement extends \PDOStatement
                 0,
                 $parse_exception
             );
-        } catch (Processor\ProcessorException $runtime_exception) {
-            throw new \UnexpectedValueException(
-                'The SQL code ' . $sql . ' could not be evaluated: ' . $runtime_exception->getMessage(),
-                0,
-                $runtime_exception
-            );
         }
 
         $this->result = null;
@@ -138,11 +132,19 @@ class FakePdoStatement extends \PDOStatement
 
         switch (get_class($parsed_query)) {
             case Query\SelectQuery::class:
-                $raw_result = Processor\SelectProcessor::process(
-                    $this->conn,
-                    new Processor\Scope($parameters),
-                    $parsed_query
-                );
+                try {
+                    $raw_result = Processor\SelectProcessor::process(
+                        $this->conn,
+                        new Processor\Scope($parameters),
+                        $parsed_query
+                    );
+                } catch (Processor\ProcessorException $runtime_exception) {
+                    throw new \UnexpectedValueException(
+                        'The SQL code ' . $sql . ' could not be evaluated: ' . $runtime_exception->getMessage(),
+                        0,
+                        $runtime_exception
+                    );
+                }
 
                 $this->result = self::processResult($raw_result);
 
