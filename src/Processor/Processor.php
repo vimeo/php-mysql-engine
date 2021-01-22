@@ -22,9 +22,9 @@ abstract class Processor
 
         $rows = [];
 
-        foreach ($result->rows as $row) {
+        foreach ($result->rows as $i => $row) {
             if (Expression\Evaluator::evaluate($conn, $scope, $where, $row, $result)) {
-                $rows[] = $row;
+                $rows[$i] = $row;
             }
         }
 
