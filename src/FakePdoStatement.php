@@ -533,8 +533,7 @@ class FakePdoStatement extends \PDOStatement
                     $replaced_values[] = $value;
                     return '?';
                 },
-                $sql,
-                1
+                $sql
             );
         }
 
