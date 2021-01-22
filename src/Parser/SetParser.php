@@ -35,7 +35,7 @@ final class SetParser
     public function parse(bool $skip_set = false)
     {
         if (!$skip_set && $this->tokens[$this->pointer]->value !== 'SET') {
-            throw new SQLFakeParseException("Parser error: expected SET");
+            throw new ParserException("Parser error: expected SET");
         }
         $expressions = [];
         $this->pointer++;
@@ -55,17 +55,17 @@ final class SetParser
                 case TokenType::IDENTIFIER:
                 case TokenType::PAREN:
                     if ($needs_comma) {
-                        throw new SQLFakeParseException("Expected , between expressions in SET clause");
+                        throw new ParserException("Expected , between expressions in SET clause");
                     }
                     $expression_parser = new ExpressionParser($this->tokens, $this->pointer - 1);
                     $start = $this->pointer;
                     list($this->pointer, $expression) = $expression_parser->buildWithPointer();
 
                     if (!$expression instanceof BinaryOperatorExpression || $expression->operator !== '=') {
-                        throw new SQLFakeParseException("Failed parsing SET clause: unexpected expression");
+                        throw new ParserException("Failed parsing SET clause: unexpected expression");
                     }
                     if (!$expression->left instanceof ColumnExpression) {
-                        throw new SQLFakeParseException("Left side of SET clause must be a column reference");
+                        throw new ParserException("Left side of SET clause must be a column reference");
                     }
                     $expressions[] = $expression;
                     $needs_comma = true;
@@ -73,18 +73,18 @@ final class SetParser
                 case TokenType::SEPARATOR:
                     if ($token->value === ',') {
                         if (!$needs_comma) {
-                            throw new SQLFakeParseException("Unexpected ,");
+                            throw new ParserException("Unexpected ,");
                         }
                         $needs_comma = false;
                     } else {
-                        throw new SQLFakeParseException("Unexpected {$token->value}");
+                        throw new ParserException("Unexpected {$token->value}");
                     }
                     break;
                 case TokenType::CLAUSE:
                     $end_of_set = true;
                     break;
                 default:
-                    throw new SQLFakeParseException("Unexpected {$token->value} in SET");
+                    throw new ParserException("Unexpected {$token->value} in SET");
             }
             if ($end_of_set) {
                 break;
@@ -92,7 +92,7 @@ final class SetParser
             $this->pointer++;
         }
         if (!\count($expressions)) {
-            throw new SQLFakeParseException("Empty SET clause");
+            throw new ParserException("Empty SET clause");
         }
         return [$this->pointer - 1, $expressions];
     }

@@ -99,7 +99,7 @@ final class Server
     public static function restoreSnapshot(string $name) : void
     {
         if (!\array_key_exists($name, static::$snapshot_names)) {
-            throw new Processor\SQLFakeRuntimeException("Snapshot {$name} not found, unable to restore");
+            throw new Processor\ProcessorException("Snapshot {$name} not found, unable to restore");
         }
 
         foreach (static::getAll() as $server) {

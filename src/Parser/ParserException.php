@@ -1,6 +1,6 @@
 <?php
 namespace Vimeo\MysqlEngine\Parser;
 
-class SQLFakeParseException extends \Exception
+class ParserException extends \Exception
 {
 }

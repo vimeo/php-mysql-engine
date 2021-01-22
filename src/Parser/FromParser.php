@@ -39,7 +39,7 @@ final class FromParser
     public function parse()
     {
         if ($this->tokens[$this->pointer]->value !== 'FROM') {
-            throw new SQLFakeParseException("Parser error: expected FROM");
+            throw new ParserException("Parser error: expected FROM");
         }
         $from = new FromClause();
         $this->pointer++;
@@ -54,7 +54,7 @@ final class FromParser
                         $from->aliasRecentExpression((string) $token->value);
                         $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
                     } else {
-                        throw new SQLFakeParseException("Unexpected string constant {$token->raw}");
+                        throw new ParserException("Unexpected string constant {$token->raw}");
                     }
 
                     break;
@@ -74,14 +74,14 @@ final class FromParser
 
                 case TokenType::SEPARATOR:
                     if ($token->value !== ',') {
-                        throw new SQLFakeParseException("Unexpected {$token->value}");
+                        throw new ParserException("Unexpected {$token->value}");
                     }
 
                     $this->pointer++;
                     $next = $this->tokens[$this->pointer] ?? null;
 
                     if ($next === null) {
-                        throw new SQLFakeParseException("Expected token after ,");
+                        throw new ParserException("Expected token after ,");
                     }
 
                     $table = $this->getTableOrSubquery($next);
@@ -99,7 +99,7 @@ final class FromParser
                             $this->pointer++;
                             $next = $this->tokens[$this->pointer] ?? null;
                             if ($next === null || $next->type !== TokenType::IDENTIFIER) {
-                                throw new SQLFakeParseException("Expected identifer after AS");
+                                throw new ParserException("Expected identifer after AS");
                             }
                             $from->aliasRecentExpression($next->value);
                             $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
@@ -115,7 +115,7 @@ final class FromParser
                             $last = \end($from->tables);
 
                             if ($last === null) {
-                                throw new SQLFakeParseException("Parser error: unexpected join keyword");
+                                throw new ParserException("Parser error: unexpected join keyword");
                             }
 
                             $join = $this->buildJoin($last['name'], $token);
@@ -123,7 +123,7 @@ final class FromParser
                             break;
 
                         default:
-                            throw new SQLFakeParseException("Unexpected {$token->value}");
+                            throw new ParserException("Unexpected {$token->value}");
                     }
                     break;
 
@@ -133,7 +133,7 @@ final class FromParser
                     break;
 
                 default:
-                    throw new SQLFakeParseException("Unexpected {$token->value}");
+                    throw new ParserException("Unexpected {$token->value}");
             }
 
             $this->pointer++;
@@ -160,7 +160,7 @@ final class FromParser
             case TokenType::PAREN:
                 return $this->getSubquery();
             default:
-                throw new SQLFakeParseException("Expected table name or subquery");
+                throw new ParserException("Expected table name or subquery");
         }
     }
 
@@ -182,7 +182,7 @@ final class FromParser
             $close - $this->pointer - 1
         );
         if (!\count($subquery_tokens)) {
-            throw new SQLFakeParseException("Empty parentheses found");
+            throw new ParserException("Empty parentheses found");
         }
         $this->pointer = $close;
         $expr = new PlaceholderExpression();
@@ -205,7 +205,7 @@ final class FromParser
             $next = $this->tokens[$this->pointer];
         }
         if ($next === null || $next->type !== TokenType::IDENTIFIER) {
-            throw new SQLFakeParseException("Every subquery must have an alias");
+            throw new ParserException("Every subquery must have an alias");
         }
         $name = $next->value;
         return [
@@ -238,7 +238,7 @@ final class FromParser
             $this->pointer++;
             $next = $this->tokens[$this->pointer] ?? null;
             if ($next === null || $next->value !== 'JOIN') {
-                throw new SQLFakeParseException("Expected keyword JOIN after {$token->value}");
+                throw new ParserException("Expected keyword JOIN after {$token->value}");
             }
         } else {
             if ($token_value === 'LEFT' || $token_value === 'RIGHT') {
@@ -249,7 +249,7 @@ final class FromParser
                     $next = $this->tokens[$this->pointer] ?? null;
                 }
                 if ($next === null || $next->value !== 'JOIN') {
-                    throw new SQLFakeParseException("Expected keyword JOIN after {$token->value}");
+                    throw new ParserException("Expected keyword JOIN after {$token->value}");
                 }
             }
         }
@@ -257,7 +257,7 @@ final class FromParser
         $next = $this->tokens[$this->pointer] ?? null;
 
         if ($next === null) {
-            throw new SQLFakeParseException("Expected table or subquery after join keyword");
+            throw new ParserException("Expected table or subquery after join keyword");
         }
         $table = $this->getTableOrSubquery($next);
         $table['join_type'] = $join_type;
@@ -284,7 +284,7 @@ final class FromParser
                 $this->pointer++;
                 $next = $this->tokens[$this->pointer] ?? null;
                 if ($next === null || $next->type !== TokenType::IDENTIFIER) {
-                    throw new SQLFakeParseException("Expected identifier after AS");
+                    throw new ParserException("Expected identifier after AS");
                 }
                 $table['alias'] = $next->value;
                 $this->pointer++;
@@ -311,12 +311,12 @@ final class FromParser
             $this->pointer++;
             $next = $this->tokens[$this->pointer] ?? null;
             if ($next === null || $next->type !== TokenType::PAREN) {
-                throw new SQLFakeParseException("Expected ( after USING clause");
+                throw new ParserException("Expected ( after USING clause");
             }
             $closing_paren_pointer = SQLParser::findMatchingParen($this->pointer, $this->tokens);
             $arg_tokens = \array_slice($this->tokens, $this->pointer + 1, $closing_paren_pointer - $this->pointer - 1);
             if (!\count($arg_tokens)) {
-                throw new SQLFakeParseException("Expected at least one argument to USING() clause");
+                throw new ParserException("Expected at least one argument to USING() clause");
             }
             $count = 0;
             $filter = null;
@@ -324,12 +324,12 @@ final class FromParser
                 $count++;
                 if ($count % 2 === 1) {
                     if ($arg->type !== TokenType::IDENTIFIER) {
-                        throw new SQLFakeParseException("Expected identifier in USING clause");
+                        throw new ParserException("Expected identifier in USING clause");
                     }
                     $filter = self::addJoinFilterExpression($filter, $left_table, $table['name'], $arg->value);
                 } else {
                     if ($arg->value !== ',') {
-                        throw new SQLFakeParseException("Expected , after argument in USING clause");
+                        throw new ParserException("Expected , after argument in USING clause");
                     }
                 }
             }

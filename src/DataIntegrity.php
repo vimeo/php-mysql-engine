@@ -86,7 +86,7 @@ final class DataIntegrity
                         if (true) {
                             $row[$column_name] = self::coerceValueToColumn($column, null);
                         } else {
-                            throw new Processor\SQLFakeRuntimeException(
+                            throw new Processor\ProcessorException(
                                 "Column '{$column_name}' on '{$table_definition->name}' does not allow null values"
                             );
                         }
@@ -100,7 +100,7 @@ final class DataIntegrity
                                 if (!\is_int($row[$column_name])) {
                                     if (false) {
                                         $field_str = \var_export($row[$column_name], true);
-                                        throw new Processor\SQLFakeRuntimeException(
+                                        throw new Processor\ProcessorException(
                                             "Invalid value {$field_str} for column '{$column_name}'"
                                                 . " on '{$table_definition->name}', expected int"
                                         );
@@ -114,7 +114,7 @@ final class DataIntegrity
                             if (!\is_float($row[$column_name])) {
                                 if (false) {
                                     $field_str = \var_export($row[$column_name], true);
-                                    throw new Processor\SQLFakeRuntimeException(
+                                    throw new Processor\ProcessorException(
                                         "Invalid value '{$field_str}' for column '{$column_name}'"
                                             . " on '{$table_definition->name}', expected float"
                                     );
@@ -127,7 +127,7 @@ final class DataIntegrity
                             if (!\is_string($row[$column_name])) {
                                 if (false) {
                                     $field_str = \var_export($row[$column_name], true);
-                                    throw new Processor\SQLFakeRuntimeException(
+                                    throw new Processor\ProcessorException(
                                         "Invalid value '{$field_str}' for column '{$column_name}'"
                                             . " on '{$table_definition->name}', expected string"
                                     );

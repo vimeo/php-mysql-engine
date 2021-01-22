@@ -64,7 +64,7 @@ final class SelectParser
         }
 
         if ($this->tokens[$this->pointer]->value !== 'SELECT') {
-            throw new SQLFakeParseException("Parser error: expected SELECT");
+            throw new ParserException("Parser error: expected SELECT");
         }
 
         $query = $this->parseMainSelect();
@@ -114,7 +114,7 @@ final class SelectParser
                 case TokenType::IDENTIFIER:
                 case TokenType::PAREN:
                     if ($this->currentClause !== 'SELECT') {
-                        throw new SQLFakeParseException("Unexpected {$token->value}");
+                        throw new ParserException("Unexpected {$token->value}");
                     }
 
                     if ($query->needsSeparator) {
@@ -125,7 +125,7 @@ final class SelectParser
                             break;
                         }
 
-                        throw new SQLFakeParseException("Expected comma between expressions near {$token->value}");
+                        throw new ParserException("Expected comma between expressions near {$token->value}");
                     }
 
                     $expression_parser = new ExpressionParser($this->tokens, $this->pointer - 1);
@@ -144,17 +144,17 @@ final class SelectParser
                 case TokenType::SEPARATOR:
                     if ($token->value === ',') {
                         if (!$query->needsSeparator) {
-                            throw new SQLFakeParseException("Unexpected ,");
+                            throw new ParserException("Unexpected ,");
                         }
                         $query->needsSeparator = false;
                     } else {
                         if ($token->value === ';') {
                             if ($this->pointer !== $count - 1) {
-                                throw new SQLFakeParseException("Unexpected tokens after semicolon");
+                                throw new ParserException("Unexpected tokens after semicolon");
                             }
                             return $query;
                         } else {
-                            throw new SQLFakeParseException("Unexpected {$token->value}");
+                            throw new ParserException("Unexpected {$token->value}");
                         }
                     }
                     break;
@@ -162,7 +162,7 @@ final class SelectParser
                     if (\array_key_exists($token->value, self::CLAUSE_ORDER)
                     && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token->value]
                     ) {
-                        throw new SQLFakeParseException("Unexpected {$token->value}");
+                        throw new ParserException("Unexpected {$token->value}");
                     }
                     $this->currentClause = $token->value;
                     switch ($token->value) {
@@ -182,7 +182,7 @@ final class SelectParser
                             $expressions = [];
                             $sort_directions = [];
                             if ($next === null || $next->value !== 'BY') {
-                                throw new SQLFakeParseException("Expected BY after GROUP");
+                                throw new ParserException("Expected BY after GROUP");
                             }
                             while (true) {
                                 $expression_parser = new ExpressionParser($this->tokens, $this->pointer);
@@ -192,7 +192,7 @@ final class SelectParser
                                     $position = (int) $expression->value - 1;
                                     $expression = $query->selectExpressions[$position] ?? null;
                                     if ($expression === null) {
-                                        throw new SQLFakeParseException(
+                                        throw new ParserException(
                                             "Invalid positional reference {$position} in GROUP BY"
                                         );
                                     }
@@ -226,7 +226,7 @@ final class SelectParser
                             return $query;
                         break;
                         default:
-                            throw new SQLFakeParseException("Unexpected {$token->value}");
+                            throw new ParserException("Unexpected {$token->value}");
                     }
                     $this->pointer = SQLParser::skipLockHints($this->pointer, $this->tokens);
                     break;
@@ -239,7 +239,7 @@ final class SelectParser
                                 || ($next->type !== TokenType::IDENTIFIER
                                     && $next->type !== TokenType::STRING_CONSTANT)
                             ) {
-                                throw new SQLFakeParseException("Expected alias name after AS");
+                                throw new ParserException("Expected alias name after AS");
                             }
                             $query->aliasRecentExpression($next->value);
                             break;
@@ -259,7 +259,7 @@ final class SelectParser
                             $query->addOption($token->value);
                             break;
                         default:
-                            throw new SQLFakeParseException("Unexpected {$token->value}");
+                            throw new ParserException("Unexpected {$token->value}");
                     }
                     break;
             }

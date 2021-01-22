@@ -36,13 +36,13 @@ final class DropParser
     public function parse() : DropTableQuery
     {
         if ($this->tokens[$this->pointer]->value !== 'DROP') {
-            throw new SQLFakeParseException("Parser error: expected DROP");
+            throw new ParserException("Parser error: expected DROP");
         }
 
         $this->pointer++;
 
         if ($this->tokens[$this->pointer]->value !== 'TABLE') {
-            throw new SQLFakeParseException("Parser error: expected DROP TABLE");
+            throw new ParserException("Parser error: expected DROP TABLE");
         }
 
         $this->pointer++;
@@ -53,7 +53,7 @@ final class DropParser
             $this->pointer++;
 
             if ($this->tokens[$this->pointer]->value !== 'EXISTS') {
-                throw new SQLFakeParseException("Parser error: expected IF EXISTS");
+                throw new ParserException("Parser error: expected IF EXISTS");
             }
 
             $this->pointer++;
@@ -64,7 +64,7 @@ final class DropParser
         $token = $this->tokens[$this->pointer];
 
         if ($token === null || $token->type !== TokenType::IDENTIFIER) {
-            throw new SQLFakeParseException("Expected table name after TRUNCATE");
+            throw new ParserException("Expected table name after TRUNCATE");
         }
 
         return new DropTableQuery($token->value, $if_exists, $this->sql);

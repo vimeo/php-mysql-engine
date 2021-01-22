@@ -1,6 +1,6 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor;
 
-class SQLFakeRuntimeException extends \Exception
+class ProcessorException extends \Exception
 {
 }

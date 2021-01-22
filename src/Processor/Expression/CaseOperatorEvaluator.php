@@ -2,7 +2,7 @@
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Processor\QueryResult;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression;
 use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\Schema\Column;
@@ -23,7 +23,7 @@ final class CaseOperatorEvaluator
         QueryResult $result
     ) {
         if (!$expr->wellFormed) {
-            throw new SQLFakeRuntimeException("Attempted to evaluate incomplete CASE expression");
+            throw new ProcessorException("Attempted to evaluate incomplete CASE expression");
         }
 
         foreach ($expr->whenExpressions as $clause) {

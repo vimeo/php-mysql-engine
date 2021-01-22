@@ -120,7 +120,7 @@ abstract class Processor
         if (\strpos($table, '.')) {
             $parts = \explode('.', $table);
             if (\count($parts) !== 2) {
-                throw new SQLFakeRuntimeException("Table name {$table} has too many parts");
+                throw new ProcessorException("Table name {$table} has too many parts");
             }
             list($database, $table_name) = $parts;
             return [$database, $table_name];
@@ -161,7 +161,7 @@ abstract class Processor
             $column = $expression->left->columnName;
 
             if (!isset($valid_fields[$column])) {
-                throw new SQLFakeRuntimeException("Invalid update column {$column}");
+                throw new ProcessorException("Invalid update column {$column}");
             }
 
             $set_clauses[] = ['column' => $column, 'expression' => $expression->right];

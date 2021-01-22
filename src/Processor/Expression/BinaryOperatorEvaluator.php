@@ -2,7 +2,7 @@
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Processor\QueryResult;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\RowExpression;
@@ -31,14 +31,14 @@ final class BinaryOperatorEvaluator
 
         if ($left instanceof RowExpression) {
             if (!$right instanceof RowExpression) {
-                throw new SQLFakeRuntimeException("Expected row expression on RHS of {$expr->operator} operand");
+                throw new ProcessorException("Expected row expression on RHS of {$expr->operator} operand");
             }
 
             return (int) self::evaluateRowComparison($conn, $scope, $expr, $left, $right, $row, $result);
         }
 
         if ($right === null) {
-            throw new SQLFakeRuntimeException("Attempted to evaluate BinaryOperatorExpression with no right operand");
+            throw new ProcessorException("Attempted to evaluate BinaryOperatorExpression with no right operand");
         }
 
         if ($expr->operator === 'COLLATE') {
@@ -74,7 +74,7 @@ final class BinaryOperatorEvaluator
 
         switch ($expr->operator) {
             case '':
-                throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
+                throw new ProcessorException('Attempted to evaluate BinaryOperatorExpression with empty operator');
 
             case 'AND':
                 $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $result);
@@ -228,7 +228,7 @@ final class BinaryOperatorEvaluator
                         return (int) $left_number & (int) $right_number;
                 }
 
-                throw new SQLFakeRuntimeException("Operator recognized but not implemented");
+                throw new ProcessorException("Operator recognized but not implemented");
 
             case 'LIKE':
                 $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $result);
@@ -237,7 +237,7 @@ final class BinaryOperatorEvaluator
                 $left_string = (string) Evaluator::evaluate($conn, $scope, $left, $row, $result);
 
                 if (!$right instanceof ConstantExpression) {
-                    throw new SQLFakeRuntimeException("LIKE pattern should be a constant string");
+                    throw new ProcessorException("LIKE pattern should be a constant string");
                 }
 
                 $pattern = (string) $r_value;
@@ -266,14 +266,14 @@ final class BinaryOperatorEvaluator
                 $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
 
                 if (!$right instanceof ConstantExpression) {
-                    throw new SQLFakeRuntimeException("Unsupported right operand for IS keyword");
+                    throw new ProcessorException("Unsupported right operand for IS keyword");
                 }
                 $val = Evaluator::evaluate($conn, $scope, $left, $row, $result);
                 $r = $r_value;
                 if ($r === null) {
                     return ($val === null ? 1 : 0) ^ $expr->negatedInt;
                 }
-                throw new SQLFakeRuntimeException("Unsupported right operand for IS keyword");
+                throw new ProcessorException("Unsupported right operand for IS keyword");
 
             case 'RLIKE':
             case 'REGEXP':
@@ -291,7 +291,7 @@ final class BinaryOperatorEvaluator
 
             case ':=':
                 if (!$left instanceof VariableExpression) {
-                    throw new SQLFakeRuntimeException("Unsupported left operand for variable assignment");
+                    throw new ProcessorException("Unsupported left operand for variable assignment");
                 }
 
                 $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
@@ -311,7 +311,7 @@ final class BinaryOperatorEvaluator
             case 'ANY':
             case 'SOME':
             default:
-                throw new SQLFakeRuntimeException("Operator {$expr->operator} not implemented in SQLFake");
+                throw new ProcessorException("Operator {$expr->operator} not implemented in SQLFake");
         }
     }
 
@@ -329,14 +329,14 @@ final class BinaryOperatorEvaluator
 
         if ($left instanceof RowExpression) {
             if (!$right instanceof RowExpression) {
-                throw new SQLFakeRuntimeException("Expected row expression on RHS of {$expr->operator} operand");
+                throw new ProcessorException("Expected row expression on RHS of {$expr->operator} operand");
             }
 
             return new Column\TinyInt(true, 1);
         }
 
         if ($right === null) {
-            throw new SQLFakeRuntimeException("Attempted to evaluate BinaryOperatorExpression with no right operand");
+            throw new ProcessorException("Attempted to evaluate BinaryOperatorExpression with no right operand");
         }
 
         if ($right instanceof IntervalOperatorExpression
@@ -353,7 +353,7 @@ final class BinaryOperatorEvaluator
 
         switch ($expr->operator) {
             case '':
-                throw new SQLFakeRuntimeException('Attempted to evaluate BinaryOperatorExpression with empty operator');
+                throw new ProcessorException('Attempted to evaluate BinaryOperatorExpression with empty operator');
 
             case 'AND':
             case 'OR':
@@ -375,7 +375,6 @@ final class BinaryOperatorEvaluator
             case '*':
                 $l_type = Evaluator::getColumnSchema($left, $scope, $columns);
                 $r_type = Evaluator::getColumnSchema($right, $scope, $columns);
-
 
                 if ($l_type instanceof Column\IntegerColumn && $r_type instanceof Column\IntegerColumn) {
                     return new Column\IntColumn(false, 11);
@@ -438,13 +437,13 @@ final class BinaryOperatorEvaluator
                         return reset($data);
                     }
 
-                    throw new SQLFakeRuntimeException("Subquery should return a single column");
+                    throw new ProcessorException("Subquery should return a single column");
                 }
 
                 return reset($data);
             }
 
-            throw new SQLFakeRuntimeException("Subquery should return a single column");
+            throw new ProcessorException("Subquery should return a single column");
         }
 
         return $data;
@@ -470,7 +469,7 @@ final class BinaryOperatorEvaluator
         $right_elems = Evaluator::evaluate($conn, $scope, $right, $row, $result);
         assert(\is_array($right_elems), "RowExpression must return vec");
         if (\count($left_elems) !== \count($right_elems)) {
-            throw new SQLFakeRuntimeException("Mismatched column count in row comparison expression");
+            throw new ProcessorException("Mismatched column count in row comparison expression");
         }
         $last_index = \array_key_last($left_elems);
         $match = true;
@@ -494,7 +493,7 @@ final class BinaryOperatorEvaluator
                 case '<=':
                     return $le <= $re;
                 default:
-                    throw new SQLFakeRuntimeException("Operand {$expr->operator} should contain 1 column(s)");
+                    throw new ProcessorException("Operand {$expr->operator} should contain 1 column(s)");
             }
         }
         return false;

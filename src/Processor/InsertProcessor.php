@@ -20,7 +20,7 @@ final class InsertProcessor extends Processor
         $table_definition = $conn->getServer()->getTableDefinition($database, $table_name);
 
         if ($table_definition === null) {
-            throw new SQLFakeRuntimeException("Table {$table_name} not found in schema");
+            throw new ProcessorException("Table {$table_name} not found in schema");
         }
 
         $rows_affected = 0;

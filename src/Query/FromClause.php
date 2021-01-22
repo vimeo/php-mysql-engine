@@ -4,7 +4,7 @@ namespace Vimeo\MysqlEngine\Query;
 use Vimeo\MysqlEngine\JoinType;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
+use Vimeo\MysqlEngine\Parser\ParserException;
 
 final class FromClause
 {
@@ -22,7 +22,7 @@ final class FromClause
      *  >
      */
     public $tables = [];
-    
+
     /**
      * @var bool
      */
@@ -53,7 +53,7 @@ final class FromClause
     {
         $k = \array_key_last($this->tables);
         if ($k === null || $this->mostRecentHasAlias) {
-            throw new SQLFakeParseException("Unexpected AS");
+            throw new ParserException("Unexpected AS");
         }
         $this->tables[$k]['alias'] = $name;
         $this->mostRecentHasAlias = true;

@@ -3,7 +3,7 @@ namespace Vimeo\MysqlEngine\Query\Expression;
 
 use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Query\MysqlColumnType;
 
 final class CastExpression extends Expression

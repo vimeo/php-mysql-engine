@@ -48,7 +48,7 @@ final class UpdateParser
     public function parse()
     {
         if ($this->tokens[$this->pointer]->value !== 'UPDATE') {
-            throw new SQLFakeParseException("Parser error: expected UPDATE");
+            throw new ParserException("Parser error: expected UPDATE");
         }
 
         $this->pointer++;
@@ -56,7 +56,7 @@ final class UpdateParser
         $token = $this->tokens[$this->pointer];
 
         if ($token === null || $token->type !== TokenType::IDENTIFIER) {
-            throw new SQLFakeParseException("Expected table name after UPDATE");
+            throw new ParserException("Expected table name after UPDATE");
         }
 
         $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
@@ -70,7 +70,7 @@ final class UpdateParser
                     if (\array_key_exists($token->value, self::CLAUSE_ORDER)
                     && self::CLAUSE_ORDER[$this->current_clause] >= self::CLAUSE_ORDER[$token->value]
                     ) {
-                        throw new SQLFakeParseException("Unexpected clause {$token->value}");
+                        throw new ParserException("Unexpected clause {$token->value}");
                     }
 
                     $this->current_clause = $token->value;
@@ -94,16 +94,16 @@ final class UpdateParser
                             list($this->pointer, $query->setClause) = $p->parse();
                             break;
                         default:
-                            throw new SQLFakeParseException("Unexpected clause {$token->value}");
+                            throw new ParserException("Unexpected clause {$token->value}");
                     }
                     break;
                 case TokenType::SEPARATOR:
                     if ($token->value !== ';') {
-                        throw new SQLFakeParseException("Unexpected {$token->value}");
+                        throw new ParserException("Unexpected {$token->value}");
                     }
                     break;
                 default:
-                    throw new SQLFakeParseException("Unexpected token {$token->value}");
+                    throw new ParserException("Unexpected token {$token->value}");
             }
             $this->pointer++;
         }

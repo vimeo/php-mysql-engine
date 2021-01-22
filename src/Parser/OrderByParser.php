@@ -40,13 +40,13 @@ final class OrderByParser
     public function parse()
     {
         if ($this->tokens[$this->pointer]->value !== 'ORDER') {
-            throw new SQLFakeParseException("Parser error: expected ORDER");
+            throw new ParserException("Parser error: expected ORDER");
         }
         $this->pointer++;
         $next = $this->tokens[$this->pointer] ?? null;
         $expressions = [];
         if ($next === null || $next->value !== 'BY') {
-            throw new SQLFakeParseException("Expected BY after ORDER");
+            throw new ParserException("Expected BY after ORDER");
         }
         while (true) {
             $expression_parser = new ExpressionParser($this->tokens, $this->pointer);

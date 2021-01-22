@@ -299,14 +299,14 @@ final class SelectProcessor extends Processor
                     if ($expr instanceof SubqueryExpression) {
                         assert(\is_array($val), 'subquery results must be KeyedContainer');
                         if (\count($val) > 1) {
-                            throw new SQLFakeRuntimeException("Subquery returned more than one row");
+                            throw new ProcessorException("Subquery returned more than one row");
                         }
                         if (\count($val) === 0) {
                             $val = null;
                         } else {
                             foreach ($val as $r) {
                                 if (\count($r) !== 1) {
-                                    throw new SQLFakeRuntimeException("Subquery result should contain 1 column");
+                                    throw new ProcessorException("Subquery result should contain 1 column");
                                 }
                                 $val = \reset($r);
                             }
@@ -341,14 +341,14 @@ final class SelectProcessor extends Processor
                 if ($expr instanceof SubqueryExpression) {
                     assert(\is_array($val), 'subquery results must be KeyedContainer');
                     if (\count($val) > 1) {
-                        throw new SQLFakeRuntimeException("Subquery returned more than one row");
+                        throw new ProcessorException("Subquery returned more than one row");
                     }
                     if (\count($val) === 0) {
                         $val = null;
                     } else {
                         foreach ($val as $r) {
                             if (\count($r) !== 1) {
-                                throw new SQLFakeRuntimeException("Subquery result should contain 1 column");
+                                throw new ProcessorException("Subquery result should contain 1 column");
                             }
                             $val = \reset($r);
                         }

@@ -1,7 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
+use Vimeo\MysqlEngine\Parser\ParserException;
 use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Parser\Token;
 
@@ -47,7 +47,7 @@ abstract class Expression
      */
     public function negate()
     {
-        throw new SQLFakeParseException("Parse error: unexpected NOT for expression {$this->type}");
+        throw new ParserException("Parse error: unexpected NOT for expression {$this->type}");
     }
 
     /**
@@ -65,7 +65,7 @@ abstract class Expression
 
     public function setNextChild(self $expr, bool $overwrite = false) : void
     {
-        throw new SQLFakeParseException("Parse error: unexpected expression");
+        throw new ParserException("Parse error: unexpected expression");
     }
 
     /**
@@ -75,7 +75,7 @@ abstract class Expression
      */
     public function addRecursiveExpression(array $tokens, int $pointer, bool $negated = false) : int
     {
-        throw new SQLFakeParseException("Parse error: unexpected recursive expression");
+        throw new ParserException("Parse error: unexpected recursive expression");
     }
 
     public function hasAggregate() : bool

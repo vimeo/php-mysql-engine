@@ -4,8 +4,8 @@ namespace Vimeo\MysqlEngine\Query\Expression;
 use Vimeo\MysqlEngine\Parser\ExpressionParser;
 use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Parser\ParserException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 
 final class CaseOperatorExpression extends Expression
 {
@@ -68,7 +68,7 @@ final class CaseOperatorExpression extends Expression
         switch ($keyword) {
             case 'WHEN':
                 if ($this->lastKeyword !== 'CASE' && $this->lastKeyword !== 'THEN') {
-                    throw new SQLFakeParseException("Unexpected WHEN in CASE statement");
+                    throw new ParserException("Unexpected WHEN in CASE statement");
                 }
                 $this->lastKeyword = 'WHEN';
                 $this->when = null;
@@ -76,13 +76,13 @@ final class CaseOperatorExpression extends Expression
                 break;
             case 'THEN':
                 if ($this->lastKeyword !== 'WHEN' || !$this->when) {
-                    throw new SQLFakeParseException("Unexpected THEN in CASE statement");
+                    throw new ParserException("Unexpected THEN in CASE statement");
                 }
                 $this->lastKeyword = 'THEN';
                 break;
             case 'ELSE':
                 if ($this->lastKeyword !== 'THEN' || !$this->then) {
-                    throw new SQLFakeParseException("Unexpected ELSE in CASE statement");
+                    throw new ParserException("Unexpected ELSE in CASE statement");
                 }
                 $this->lastKeyword = 'ELSE';
                 break;
@@ -93,14 +93,14 @@ final class CaseOperatorExpression extends Expression
                     );
                 } else {
                     if ($this->lastKeyword !== 'ELSE' || !$this->else) {
-                        throw new SQLFakeParseException("Unexpected END in CASE statement");
+                        throw new ParserException("Unexpected END in CASE statement");
                     }
                 }
                 $this->lastKeyword = 'END';
                 $this->wellFormed = true;
                 break;
             default:
-                throw new SQLFakeParseException("Unexpected keyword {$keyword} in CASE statement");
+                throw new ParserException("Unexpected keyword {$keyword} in CASE statement");
         }
     }
 
@@ -109,19 +109,19 @@ final class CaseOperatorExpression extends Expression
         switch ($this->lastKeyword) {
             case 'CASE':
                 if ($this->case && !$overwrite) {
-                    throw new SQLFakeParseException("Unexpected token near CASE");
+                    throw new ParserException("Unexpected token near CASE");
                 }
                 $this->case = $expr;
                 break;
             case 'WHEN':
                 if ($this->when && !$overwrite) {
-                    throw new SQLFakeParseException("Unexpected token near WHEN");
+                    throw new ParserException("Unexpected token near WHEN");
                 }
                 $this->when = $expr;
                 break;
             case 'THEN':
                 if ($this->then && !$overwrite) {
-                    throw new SQLFakeParseException("Unexpected token near THEN");
+                    throw new ParserException("Unexpected token near THEN");
                 }
                 $this->then = $expr;
                 $this->whenExpressions[] = ['when' => ($__tmp1__ = $this->when) !== null ? $__tmp1__ : (function () {
@@ -130,12 +130,12 @@ final class CaseOperatorExpression extends Expression
                 break;
             case 'ELSE':
                 if ($this->else && !$overwrite) {
-                    throw new SQLFakeParseException("Unexpected token near ELSE");
+                    throw new ParserException("Unexpected token near ELSE");
                 }
                 $this->else = $expr;
                 break;
             case 'END':
-                throw new SQLFakeParseException("Unexpected token near END");
+                throw new ParserException("Unexpected token near END");
         }
     }
 

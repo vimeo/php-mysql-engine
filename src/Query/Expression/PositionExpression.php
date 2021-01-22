@@ -1,7 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\TokenType;
 
 final class PositionExpression extends Expression

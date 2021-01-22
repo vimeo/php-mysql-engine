@@ -1,8 +1,8 @@
 <?php
 namespace Vimeo\MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Parser\ParserException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\TokenType;
 
 final class UnaryExpression extends Expression
@@ -28,7 +28,7 @@ final class UnaryExpression extends Expression
     public function setNextChild(Expression $expr, bool $overwrite = false) : void
     {
         if ($this->subject !== null && !$overwrite) {
-            throw new SQLFakeParseException("Unexpected expression after unary operand");
+            throw new ParserException("Unexpected expression after unary operand");
         }
 
         $this->subject = $expr;

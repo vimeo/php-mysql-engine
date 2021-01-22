@@ -3,8 +3,8 @@ namespace Vimeo\MysqlEngine\Query\Expression;
 
 use Vimeo\MysqlEngine\Parser\ExpressionParser;
 use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
+use Vimeo\MysqlEngine\Parser\ParserException;
 
 final class InOperatorExpression extends Expression
 {

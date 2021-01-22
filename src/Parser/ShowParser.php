@@ -36,19 +36,19 @@ final class ShowParser
     public function parse() : ShowTablesQuery
     {
         if ($this->tokens[$this->pointer]->value !== 'SHOW') {
-            throw new SQLFakeParseException("Parser error: expected SHOW");
+            throw new ParserException("Parser error: expected SHOW");
         }
 
         $this->pointer++;
 
         if ($this->tokens[$this->pointer]->value !== 'TABLES') {
-            throw new SQLFakeParseException("Parser error: expected SHOW TABLES");
+            throw new ParserException("Parser error: expected SHOW TABLES");
         }
 
         $this->pointer++;
 
         if ($this->tokens[$this->pointer]->value !== 'LIKE') {
-            throw new SQLFakeParseException("Parser error: expected SHOW TABLES LIKE");
+            throw new ParserException("Parser error: expected SHOW TABLES LIKE");
         }
 
         $this->pointer++;
@@ -56,7 +56,7 @@ final class ShowParser
         $token = $this->tokens[$this->pointer] ?? null;
 
         if ($token === null || $token->type !== TokenType::STRING_CONSTANT) {
-            throw new SQLFakeParseException("Expected string after LIKE");
+            throw new ParserException("Expected string after LIKE");
         }
 
         return new ShowTablesQuery($token->value, $this->sql);

@@ -2,7 +2,7 @@
 namespace Vimeo\MysqlEngine\Query;
 
 use Vimeo\MysqlEngine\MultiOperand;
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
+use Vimeo\MysqlEngine\Parser\ParserException;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 
 final class SelectQuery
@@ -78,7 +78,7 @@ final class SelectQuery
     public function addSelectExpression(Expression $expr)
     {
         if ($this->needsSeparator) {
-            throw new SQLFakeParseException("Unexpected expression!");
+            throw new ParserException("Unexpected expression!");
         }
         $this->selectExpressions[] = $expr;
         $this->needsSeparator = true;
@@ -100,7 +100,7 @@ final class SelectQuery
     {
         $k = \array_key_last($this->selectExpressions);
         if ($k === null || $this->mostRecentHasAlias) {
-            throw new SQLFakeParseException("Unexpected AS");
+            throw new ParserException("Unexpected AS");
         }
         $this->selectExpressions[$k]->name = $name;
         $this->mostRecentHasAlias = true;

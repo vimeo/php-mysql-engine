@@ -3,7 +3,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Schema\Column;
 
@@ -51,7 +51,7 @@ final class ColumnEvaluator
             return $row[$expr->tableName . '.%.' . $expr->columnName];
         }
 
-        throw new SQLFakeRuntimeException(
+        throw new ProcessorException(
             'Column with index ' . $expr->columnExpression . ' not found in row'
         );
     }
@@ -65,7 +65,7 @@ final class ColumnEvaluator
         array $columns
     ) : Column {
         if ($expr->name === '*') {
-            throw new SQLFakeRuntimeException(
+            throw new ProcessorException(
                 'Column with index ' . $expr->name . ' not found in row'
             );
         }
@@ -92,7 +92,7 @@ final class ColumnEvaluator
             return $columns[$expr->tableName . '.%.' . $expr->columnName];
         }
 
-        throw new SQLFakeRuntimeException(
+        throw new ProcessorException(
             'Column with index ' . $expr->columnExpression . ' not found in row'
         );
     }

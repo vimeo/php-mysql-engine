@@ -2,7 +2,7 @@
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Expression;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\Schema\Column;
@@ -48,7 +48,7 @@ class Evaluator
                 return InOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
-                throw new SQLFakeRuntimeException("Attempted to evaluate placeholder expression!");
+                throw new ProcessorException("Attempted to evaluate placeholder expression!");
 
             case \Vimeo\MysqlEngine\Query\Expression\PositionExpression::class:
                 return PositionEvaluator::evaluate($expr, $row);
@@ -66,7 +66,7 @@ class Evaluator
                 );
 
                 if (count($subquery_result->rows) > 1) {
-                    throw new SQLFakeRuntimeException('Subquery returns more than one row');
+                    throw new ProcessorException('Subquery returns more than one row');
                 }
 
                 if ($subquery_result->rows) {
@@ -86,7 +86,7 @@ class Evaluator
                 return VariableEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             default:
-                throw new SQLFakeRuntimeException('Unsupported expression ' . get_class($expr));
+                throw new ProcessorException('Unsupported expression ' . get_class($expr));
         }
     }
 
@@ -151,7 +151,7 @@ class Evaluator
                 return $expr->column = new Column\TinyInt(true, 1);
 
             case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
-                throw new SQLFakeRuntimeException("Attempted to evaluate placeholder expression!");
+                throw new ProcessorException("Attempted to evaluate placeholder expression!");
 
             case \Vimeo\MysqlEngine\Query\Expression\PositionExpression::class:
                 break;

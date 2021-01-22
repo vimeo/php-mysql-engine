@@ -145,7 +145,7 @@ final class ExpressionParser
                     $pos++;
                     continue;
                 } else {
-                    throw new SQLFakeParseException("Unexpected comma in SQL query");
+                    throw new ParserException("Unexpected comma in SQL query");
                 }
             }
 
@@ -181,7 +181,7 @@ final class ExpressionParser
                     $pos++;
                     continue;
                 } else {
-                    throw new SQLFakeParseException("Unexpected AS in SQL query");
+                    throw new ParserException("Unexpected AS in SQL query");
                 }
             }
 
@@ -197,7 +197,7 @@ final class ExpressionParser
         }
 
         if (!$expr || !$as_type_tokens) {
-            throw new SQLFakeParseException("Expecting two parts to CAST query");
+            throw new ParserException("Expecting two parts to CAST query");
         }
 
         return [$expr, $as_type_tokens];
@@ -285,7 +285,7 @@ final class ExpressionParser
                     $arg_tokens = \array_slice($this->tokens, $this->pointer + 1, $close - $this->pointer - 1);
 
                     if (!\count($arg_tokens)) {
-                        throw new SQLFakeParseException("Empty parentheses found");
+                        throw new ParserException("Empty parentheses found");
                     }
 
                     $this->pointer = $close;
@@ -321,7 +321,7 @@ final class ExpressionParser
                                 $pointer++;
                                 $next = $arg_tokens[$pointer];
                                 if ($next->value !== ',') {
-                                    throw new SQLFakeParseException("Expected , in IN () list");
+                                    throw new ParserException("Expected , in IN () list");
                                 }
                             }
 
@@ -337,7 +337,7 @@ final class ExpressionParser
                         if ($second_token !== null && $second_token->type === TokenType::SEPARATOR) {
                             list($distinct, $elements) = $this->getListExpression($arg_tokens);
                             if ($distinct) {
-                                throw new SQLFakeParseException("Unexpected DISTINCT in row expression");
+                                throw new ParserException("Unexpected DISTINCT in row expression");
                             }
                             $expr = new RowExpression($elements);
                         } else {
@@ -427,7 +427,7 @@ final class ExpressionParser
                                 return $this->expression->left;
                             }
 
-                            throw new SQLFakeParseException("Unexpected {$operator}");
+                            throw new ParserException("Unexpected {$operator}");
                         }
 
                         $this->expression->setKeyword($operator);
@@ -470,7 +470,7 @@ final class ExpressionParser
                                         break;
                                     }
 
-                                    throw new SQLFakeParseException("Unexpected NOT");
+                                    throw new ParserException("Unexpected NOT");
                                 }
 
                                 $this->expression->negate();
@@ -513,7 +513,7 @@ final class ExpressionParser
                     } else {
                         if ($operator === 'BETWEEN') {
                             if (!$this->expression instanceof BinaryOperatorExpression) {
-                                throw new SQLFakeParseException('Unexpected keyword BETWEEN');
+                                throw new ParserException('Unexpected keyword BETWEEN');
                             }
 
                             $this->expression = new BetweenOperatorExpression($this->expression->left);
@@ -521,7 +521,7 @@ final class ExpressionParser
                             $this->expression->negate();
                         } elseif ($operator === 'IN' || $operator === 'NOT IN') {
                             if (!$this->expression instanceof BinaryOperatorExpression) {
-                                throw new SQLFakeParseException('Unexpected keyword IN');
+                                throw new ParserException('Unexpected keyword IN');
                             }
 
                             $this->expression = new InOperatorExpression(
@@ -555,7 +555,7 @@ final class ExpressionParser
                     break;
 
                 default:
-                    throw new SQLFakeParseException("Expression parse error: unexpected {$token->value}");
+                    throw new ParserException("Expression parse error: unexpected {$token->value}");
             }
 
             $nextToken = $this->peekNext();
@@ -586,7 +586,7 @@ final class ExpressionParser
                     break;
                 }
                 if ($nextToken->type !== TokenType::OPERATOR) {
-                    throw new SQLFakeParseException("Unexpected token {$nextToken->value}");
+                    throw new ParserException("Unexpected token {$nextToken->value}");
                 }
                 if ($this->is_child) {
                     $next_operator_precedence = $this->getPrecedence($nextToken->value);
@@ -603,7 +603,7 @@ final class ExpressionParser
             if ($this->expression instanceof BinaryOperatorExpression && $this->expression->operator === '') {
                 return $this->expression->left;
             }
-            throw new SQLFakeParseException('Parse error, unexpected end of input for ' . \get_class($this->expression));
+            throw new ParserException('Parse error, unexpected end of input for ' . \get_class($this->expression));
         }
 
         return $this->expression;

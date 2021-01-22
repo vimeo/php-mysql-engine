@@ -4,8 +4,8 @@ namespace Vimeo\MysqlEngine\Query\Expression;
 use Vimeo\MysqlEngine\Parser\ExpressionParser;
 use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Parser\ParserException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 
 final class BetweenOperatorExpression extends Expression
 {
@@ -86,7 +86,7 @@ final class BetweenOperatorExpression extends Expression
     public function foundAnd()
     {
         if ($this->and || !$this->start) {
-            throw new SQLFakeParseException("Unexpected AND");
+            throw new ParserException("Unexpected AND");
         }
         $this->and = true;
     }
@@ -111,7 +111,7 @@ final class BetweenOperatorExpression extends Expression
             if ($this->and && !$this->end) {
                 $this->end = $expr;
             } else {
-                throw new SQLFakeParseException("Parse error: unexpected token in BETWEEN statement");
+                throw new ParserException("Parse error: unexpected token in BETWEEN statement");
             }
         }
     }

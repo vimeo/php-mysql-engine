@@ -434,7 +434,7 @@ final class CreateTableParser
         $t = \array_shift($tokens);
 
         if (!$tokens) {
-            throw new SQLFakeParseException("Expecting more create type tokens");
+            throw new ParserException("Expecting more create type tokens");
         }
 
         $f = new CreateColumn(
@@ -539,7 +539,7 @@ final class CreateTableParser
                 break;
             default:
                 if (!$allowArbitaryType) {
-                    throw new SQLFakeParseException("Unsupported field type: {$first_token}");
+                    throw new ParserException("Unsupported field type: {$first_token}");
                 }
         }
 

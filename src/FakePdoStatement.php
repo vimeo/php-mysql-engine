@@ -108,7 +108,27 @@ class FakePdoStatement extends \PDOStatement
 
         //echo "\n" . $sql . "\n";
 
-        $parsed_query = Parser\SQLParser::parse($sql);
+        try {
+            $parsed_query = Parser\SQLParser::parse($sql);
+        } catch (Parser\LexerException $parse_exception) {
+            throw new \UnexpectedValueException(
+                'The SQL code ' . $sql . ' could not be converted to parser tokens: ' . $parse_exception->getMessage(),
+                0,
+                $parse_exception
+            );
+        } catch (Parser\ParserException $parse_exception) {
+            throw new \UnexpectedValueException(
+                'The SQL code ' . $sql . ' could not be parsed: ' . $parse_exception->getMessage(),
+                0,
+                $parse_exception
+            );
+        } catch (Processor\ProcessorException $runtime_exception) {
+            throw new \UnexpectedValueException(
+                'The SQL code ' . $sql . ' could not be evaluated: ' . $runtime_exception->getMessage(),
+                0,
+                $runtime_exception
+            );
+        }
 
         $this->result = null;
         $this->resultCursor = 0;

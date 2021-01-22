@@ -1,7 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Query\Expression\UnaryExpression;
 use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
@@ -22,7 +22,7 @@ final class UnaryEvaluator
         QueryResult $result
     ) {
         if ($expr->subject === null) {
-            throw new SQLFakeRuntimeException("Attempted to evaluate unary operation with no operand");
+            throw new ProcessorException("Attempted to evaluate unary operation with no operand");
         }
 
         $val = Evaluator::evaluate($conn, $scope, $expr->subject, $row, $result);
@@ -37,7 +37,7 @@ final class UnaryEvaluator
             case '!':
                 return (int) !$val;
             default:
-                throw new SQLFakeRuntimeException("Unimplemented unary operand {$expr->name}");
+                throw new ProcessorException("Unimplemented unary operand {$expr->name}");
         }
 
         return $val;

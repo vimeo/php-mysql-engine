@@ -1,8 +1,8 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Parser\ParserException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
 use Vimeo\MysqlEngine\Query\Expression\InOperatorExpression;
 use Vimeo\MysqlEngine\Processor\QueryResult;
@@ -26,7 +26,7 @@ final class InOperatorEvaluator
         $inList = $expr->inList;
 
         if ($inList === null || \count($inList) === 0) {
-            throw new SQLFakeParseException("Parse error: empty IN list");
+            throw new ParserException("Parse error: empty IN list");
         }
 
         $value = Evaluator::evaluate($conn, $scope, $expr->left, $row, $result);
@@ -47,7 +47,7 @@ final class InOperatorEvaluator
 
                 foreach ($subquery_result->rows as $r) {
                     if (\count($r) !== 1) {
-                        throw new SQLFakeRuntimeException("Subquery result should contain 1 column");
+                        throw new ProcessorException("Subquery result should contain 1 column");
                     }
 
                     foreach ($r as $val) {

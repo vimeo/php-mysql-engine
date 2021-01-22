@@ -157,7 +157,7 @@ final class SQLLexer
                 }
 
                 if (!$found_match) {
-                    throw new SQLFakeParseException("Unbalanced quote {$quote}");
+                    throw new LexerException("Unbalanced quote {$quote}");
                 }
 
                 $tokens[$quote_start] = $token;

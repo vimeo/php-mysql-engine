@@ -2,7 +2,7 @@
 namespace Vimeo\MysqlEngine\Processor;
 
 use Vimeo\MysqlEngine\JoinType;
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
+use Vimeo\MysqlEngine\Parser\ParserException;
 use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\Processor\Expression\Evaluator as ExpressionEvaluator;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
@@ -170,7 +170,7 @@ final class JoinProcessor
         $right = reset($right_dataset);
 
         if ($left === null || $right === null) {
-            throw new SQLFakeParseException("Attempted NATURAL join with no data present");
+            throw new ParserException("Attempted NATURAL join with no data present");
         }
 
         foreach ($left as $column => $val) {
@@ -186,7 +186,7 @@ final class JoinProcessor
         }
 
         if ($filter === null) {
-            throw new SQLFakeParseException(
+            throw new ParserException(
                 "NATURAL join keyword was used with tables that do not share any column names"
             );
         }

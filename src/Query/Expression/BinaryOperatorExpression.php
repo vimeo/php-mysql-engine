@@ -4,8 +4,8 @@ namespace Vimeo\MysqlEngine\Query\Expression;
 use Vimeo\MysqlEngine\Parser\ExpressionParser;
 use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Parser\ParserException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 
 final class BinaryOperatorExpression extends Expression
 {
@@ -83,7 +83,7 @@ final class BinaryOperatorExpression extends Expression
     public function setNextChild(Expression $expr, bool $overwrite = false) : void
     {
         if (!$this->operator || ($this->right && !$overwrite)) {
-            throw new SQLFakeParseException("Parse error");
+            throw new ParserException("Parse error");
         }
         $this->right = $expr;
     }
@@ -108,7 +108,7 @@ final class BinaryOperatorExpression extends Expression
     public function getRightOrThrow()
     {
         if ($this->right === null) {
-            throw new SQLFakeParseException("Parse error: attempted to resolve unbound expression");
+            throw new ParserException("Parse error: attempted to resolve unbound expression");
         }
         return $this->right;
     }

@@ -3,7 +3,7 @@ namespace Vimeo\MysqlEngine\Query\Expression;
 
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Parser\ExpressionParser;
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
+use Vimeo\MysqlEngine\Parser\ParserException;
 use Vimeo\MysqlEngine\TokenType;
 
 final class IntervalOperatorExpression extends Expression
@@ -63,7 +63,7 @@ final class IntervalOperatorExpression extends Expression
         $unit = \strtoupper($unit);
 
         if (!\array_key_exists($unit, self::UNIT_VALUES)) {
-            throw new SQLFakeParseException("Unexpected unit");
+            throw new ParserException("Unexpected unit");
         }
 
         $this->unit = $unit;

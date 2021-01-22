@@ -44,7 +44,7 @@ final class InsertParser
     public function parse()
     {
         if ($this->tokens[$this->pointer]->value !== 'INSERT') {
-            throw new SQLFakeParseException("Parser error: expected INSERT");
+            throw new ParserException("Parser error: expected INSERT");
         }
 
         $this->pointer++;
@@ -69,7 +69,7 @@ final class InsertParser
         $token = $this->tokens[$this->pointer];
 
         if ($token === null || $token->type !== TokenType::IDENTIFIER) {
-            throw new SQLFakeParseException("Expected table name after INSERT");
+            throw new ParserException("Expected table name after INSERT");
         }
 
         $this->pointer++;
@@ -91,7 +91,7 @@ final class InsertParser
                     if (\array_key_exists($token->value, self::CLAUSE_ORDER)
                     && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token->value]
                     ) {
-                        throw new SQLFakeParseException("Unexpected clause {$token->value}");
+                        throw new ParserException("Unexpected clause {$token->value}");
                     }
 
                     switch ($token->value) {
@@ -101,7 +101,7 @@ final class InsertParser
                                 $token = $this->tokens[$this->pointer];
 
                                 if ($token === null || $token->value !== '(') {
-                                    throw new SQLFakeParseException("Expected ( after VALUES");
+                                    throw new ParserException("Expected ( after VALUES");
                                 }
 
                                 $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
@@ -112,7 +112,7 @@ final class InsertParser
                                 );
                                 $values = $this->parseValues($values_tokens);
                                 if (\count($values) !== \count($query->insertColumns)) {
-                                    throw new SQLFakeParseException(
+                                    throw new ParserException(
                                         "Insert list contains "
                                         . \count($query->insertColumns)
                                         . ' fields, but values clause contains '
@@ -132,7 +132,7 @@ final class InsertParser
                             break;
 
                         default:
-                            throw new SQLFakeParseException("Unexpected clause {$token->value}");
+                            throw new ParserException("Unexpected clause {$token->value}");
                     }
 
                     $this->currentClause = $token->value;
@@ -140,11 +140,11 @@ final class InsertParser
 
                 case TokenType::IDENTIFIER:
                     if ($needs_comma) {
-                        throw new SQLFakeParseException("Expected , between expressions in INSERT");
+                        throw new ParserException("Expected , between expressions in INSERT");
                     }
 
                     if ($this->currentClause !== 'COLUMN_LIST') {
-                        throw new SQLFakeParseException("Unexpected token {$token->value} in INSERT");
+                        throw new ParserException("Unexpected token {$token->value} in INSERT");
                     }
 
                     $query->insertColumns[] = $token->value;
@@ -157,12 +157,12 @@ final class InsertParser
                         break;
                     }
 
-                    throw new SQLFakeParseException("Unexpected (");
+                    throw new ParserException("Unexpected (");
 
                 case TokenType::SEPARATOR:
                     if ($token->value === ',') {
                         if (!$needs_comma) {
-                            throw new SQLFakeParseException("Unexpected ,");
+                            throw new ParserException("Unexpected ,");
                         }
 
                         $needs_comma = false;
@@ -170,12 +170,12 @@ final class InsertParser
                         if ($this->currentClause === 'COLUMN_LIST' && $needs_comma && $token->value === ')') {
                             $needs_comma = false;
                             if (($this->tokens[$this->pointer + 1]->value ?? null) !== 'VALUES') {
-                                throw new SQLFakeParseException("Expected VALUES after insert column list");
+                                throw new ParserException("Expected VALUES after insert column list");
                             }
                             break;
                         }
 
-                        throw new SQLFakeParseException("Unexpected {$token->value}");
+                        throw new ParserException("Unexpected {$token->value}");
                     }
 
                     break;
@@ -187,7 +187,7 @@ final class InsertParser
                         foreach ($expected as $index => $keyword) {
                             $next = $this->tokens[$next_pointer + $index] ?? null;
                             if ($next === null || $next->value !== $keyword) {
-                                throw new SQLFakeParseException("Unexpected keyword near ON");
+                                throw new ParserException("Unexpected keyword near ON");
                             }
                         }
                         $this->pointer += 3;
@@ -196,16 +196,16 @@ final class InsertParser
                         break;
                     }
 
-                    throw new SQLFakeParseException("Unexpected {$token->value}");
+                    throw new ParserException("Unexpected {$token->value}");
 
                 default:
-                    throw new SQLFakeParseException("Unexpected token {$token->value}");
+                    throw new ParserException("Unexpected token {$token->value}");
             }
 
             $this->pointer++;
         }
         if ((!$query->insertColumns || !$query->values) && !$query->setClause) {
-            throw new SQLFakeParseException("Missing values to insert");
+            throw new ParserException("Missing values to insert");
         }
         return $query;
     }
@@ -233,7 +233,7 @@ final class InsertParser
                 case TokenType::SQLFUNCTION:
                 case TokenType::PAREN:
                     if ($needs_comma) {
-                        throw new SQLFakeParseException(
+                        throw new ParserException(
                             "Expected , between expressions in SET clause near {$token->value}"
                         );
                     }
@@ -247,15 +247,15 @@ final class InsertParser
                     if ($token->value === ',') {
                         if (!$needs_comma) {
                             echo "le comma one";
-                            throw new SQLFakeParseException("Unexpected ,");
+                            throw new ParserException("Unexpected ,");
                         }
                         $needs_comma = false;
                     } else {
-                        throw new SQLFakeParseException("Unexpected {$token->value}");
+                        throw new ParserException("Unexpected {$token->value}");
                     }
                     break;
                 default:
-                    throw new SQLFakeParseException("Unexpected token {$token->value}");
+                    throw new ParserException("Unexpected token {$token->value}");
             }
             $pointer++;
         }

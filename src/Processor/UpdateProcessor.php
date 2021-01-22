@@ -19,7 +19,7 @@ final class UpdateProcessor extends Processor
         $table_definition = $conn->getServer()->getTableDefinition($database, $table_name);
 
         if ($table_definition === null) {
-            throw new SQLFakeRuntimeException(
+            throw new ProcessorException(
                 "Table {$table_name} not found in schema and strict mode is enabled"
             );
         }

@@ -1,7 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Query\Expression\VariableExpression;
 use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;

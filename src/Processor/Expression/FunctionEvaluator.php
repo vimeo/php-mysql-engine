@@ -4,7 +4,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 use Vimeo\MysqlEngine\FakePdo;
 use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
@@ -96,7 +96,7 @@ final class FunctionEvaluator
                 return self::sqlLastDay($conn, $scope, $expr, $row, $result);
         }
 
-        throw new SQLFakeRuntimeException("Function " . $expr->functionName . " not implemented yet");
+        throw new ProcessorException("Function " . $expr->functionName . " not implemented yet");
     }
 
     /**
@@ -405,7 +405,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 2) {
-            throw new SQLFakeRuntimeException("MySQL MOD() function must be called with two arguments");
+            throw new ProcessorException("MySQL MOD() function must be called with two arguments");
         }
 
         $n = $args[0];
@@ -465,7 +465,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 3) {
-            throw new SQLFakeRuntimeException("MySQL IF() function must be called with three arguments");
+            throw new ProcessorException("MySQL IF() function must be called with three arguments");
         }
 
         $condition = $args[0];
@@ -495,7 +495,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 2 && \count($args) !== 3) {
-            throw new SQLFakeRuntimeException("MySQL SUBSTRING() function must be called with two or three arguments");
+            throw new ProcessorException("MySQL SUBSTRING() function must be called with two or three arguments");
         }
 
         $subject = $args[0];
@@ -529,7 +529,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 3) {
-            throw new SQLFakeRuntimeException("MySQL SUBSTRING_INDEX() function must be called with three arguments");
+            throw new ProcessorException("MySQL SUBSTRING_INDEX() function must be called with three arguments");
         }
 
         $subject = $args[0];
@@ -570,7 +570,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 1) {
-            throw new SQLFakeRuntimeException("MySQL LOWER() function must be called with one argument");
+            throw new ProcessorException("MySQL LOWER() function must be called with one argument");
         }
 
         $subject = $args[0];
@@ -594,7 +594,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 1) {
-            throw new SQLFakeRuntimeException("MySQL UPPER() function must be called with one argument");
+            throw new ProcessorException("MySQL UPPER() function must be called with one argument");
         }
 
         $subject = $args[0];
@@ -617,7 +617,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 1) {
-            throw new SQLFakeRuntimeException("MySQL LENGTH() function must be called with one argument");
+            throw new ProcessorException("MySQL LENGTH() function must be called with one argument");
         }
 
         $subject = $args[0];
@@ -640,7 +640,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 1) {
-            throw new SQLFakeRuntimeException("MySQL BINARY() function must be called with one argument");
+            throw new ProcessorException("MySQL BINARY() function must be called with one argument");
         }
 
         $subject = $args[0];
@@ -662,7 +662,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 1) {
-            throw new SQLFakeRuntimeException("MySQL CHAR_LENGTH() function must be called with one argument");
+            throw new ProcessorException("MySQL CHAR_LENGTH() function must be called with one argument");
         }
 
         $subject = $args[0];
@@ -684,7 +684,7 @@ final class FunctionEvaluator
         QueryResult $result
     ) {
         if (!\count($expr->args)) {
-            throw new SQLFakeRuntimeException("MySQL COALESCE() function must be called with at least one argument");
+            throw new ProcessorException("MySQL COALESCE() function must be called with at least one argument");
         }
 
         foreach ($expr->args as $arg) {
@@ -713,7 +713,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) < 2) {
-            throw new SQLFakeRuntimeException("MySQL GREATEST() function must be called with at two arguments");
+            throw new ProcessorException("MySQL GREATEST() function must be called with at two arguments");
         }
 
         $values = [];
@@ -740,7 +740,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 2) {
-            throw new SQLFakeRuntimeException("MySQL NULLIF() function must be called with two arguments");
+            throw new ProcessorException("MySQL NULLIF() function must be called with two arguments");
         }
 
         $left = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
@@ -762,7 +762,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 1) {
-            throw new SQLFakeRuntimeException("MySQL ISNULL() function must be called with one arguments");
+            throw new ProcessorException("MySQL ISNULL() function must be called with one arguments");
         }
 
         return Evaluator::evaluate($conn, $scope, $args[0], $row, $result) === null ? 1 : 0;
@@ -781,7 +781,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 1) {
-            throw new SQLFakeRuntimeException("MySQL FROM_UNIXTIME() SQLFake only implemented for 1 argument");
+            throw new ProcessorException("MySQL FROM_UNIXTIME() SQLFake only implemented for 1 argument");
         }
 
         $column = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
@@ -804,7 +804,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) < 2) {
-            throw new SQLFakeRuntimeException("MySQL CONCAT() function must be called with at least two arguments");
+            throw new ProcessorException("MySQL CONCAT() function must be called with at least two arguments");
         }
 
         $final_concat = "";
@@ -831,12 +831,12 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) < 2) {
-            throw new SQLFakeRuntimeException("MySQL CONCAT_WS() function must be called with at least two arguments");
+            throw new ProcessorException("MySQL CONCAT_WS() function must be called with at least two arguments");
         }
 
         $separator = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
         if ($separator === null) {
-            throw new SQLFakeRuntimeException("MySQL CONCAT_WS() function required non null separator");
+            throw new ProcessorException("MySQL CONCAT_WS() function required non null separator");
         }
 
         $separator = (string) $separator;
@@ -875,7 +875,7 @@ final class FunctionEvaluator
         $num_args = \count($args);
 
         if ($num_args < 2) {
-            throw new SQLFakeRuntimeException("MySQL FIELD() function must be called with at least two arguments");
+            throw new ProcessorException("MySQL FIELD() function must be called with at least two arguments");
         }
 
         $value = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
@@ -909,12 +909,12 @@ final class FunctionEvaluator
         $num_args = \count($args);
 
         if ($num_args !== 1) {
-            throw new SQLFakeRuntimeException("MySQL VALUES() function must be called with one argument");
+            throw new ProcessorException("MySQL VALUES() function must be called with one argument");
         }
 
         $arg = $args[0];
         if (!$arg instanceof ColumnExpression) {
-            throw new SQLFakeRuntimeException("MySQL VALUES() function should be called with a column name");
+            throw new ProcessorException("MySQL VALUES() function should be called with a column name");
         }
 
         if (\substr($arg->columnExpression, 0, 16) !== 'sql_fake_values.') {
@@ -937,7 +937,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 1) {
-            throw new SQLFakeRuntimeException("MySQL DATE() function must be called with one argument");
+            throw new ProcessorException("MySQL DATE() function must be called with one argument");
         }
 
         $subject = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
@@ -966,7 +966,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 1) {
-            throw new SQLFakeRuntimeException("MySQL DATE() function must be called with one argument");
+            throw new ProcessorException("MySQL DATE() function must be called with one argument");
         }
 
         $subject = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
@@ -993,7 +993,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 2) {
-            throw new SQLFakeRuntimeException("MySQL DATE_FORMAT() function must be called with one argument");
+            throw new ProcessorException("MySQL DATE_FORMAT() function must be called with one argument");
         }
 
         $subject = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
@@ -1029,11 +1029,11 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 2) {
-            throw new SQLFakeRuntimeException("MySQL DATE_SUB() function must be called with one arguments");
+            throw new ProcessorException("MySQL DATE_SUB() function must be called with one arguments");
         }
 
         if (!$args[1] instanceof IntervalOperatorExpression) {
-            throw new SQLFakeRuntimeException("MySQL DATE_SUB() arg 2 must be an interval");
+            throw new ProcessorException("MySQL DATE_SUB() arg 2 must be an interval");
         }
 
         $first_arg = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
@@ -1077,11 +1077,11 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 2) {
-            throw new SQLFakeRuntimeException("MySQL DATE_ADD() function must be called with one arguments");
+            throw new ProcessorException("MySQL DATE_ADD() function must be called with one arguments");
         }
 
         if (!$args[1] instanceof IntervalOperatorExpression) {
-            throw new SQLFakeRuntimeException("MySQL DATE_ADD() arg 2 must be an interval");
+            throw new ProcessorException("MySQL DATE_ADD() arg 2 must be an interval");
         }
 
         $first_arg = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
@@ -1125,7 +1125,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 2) {
-            throw new SQLFakeRuntimeException("MySQL DATE_ADD() function must be called with one arguments");
+            throw new ProcessorException("MySQL DATE_ADD() function must be called with one arguments");
         }
 
         $first_arg = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
@@ -1147,7 +1147,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 1) {
-            throw new SQLFakeRuntimeException("MySQL DATE_ADD() function must be called with one arguments");
+            throw new ProcessorException("MySQL DATE_ADD() function must be called with one arguments");
         }
 
         $first_arg = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
@@ -1168,7 +1168,7 @@ final class FunctionEvaluator
         $args = $expr->args;
 
         if (\count($args) !== 2) {
-            throw new SQLFakeRuntimeException("MySQL ROUND() function must be called with one arguments");
+            throw new ProcessorException("MySQL ROUND() function must be called with one arguments");
         }
 
         $first = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
@@ -1209,7 +1209,7 @@ final class FunctionEvaluator
                 return new \DateInterval('PT' . $number . 'S');
 
             default:
-                throw new SQLFakeRuntimeException('MySQL INTERVAL unit ' . $expr->unit . ' not supported yet');
+                throw new ProcessorException('MySQL INTERVAL unit ' . $expr->unit . ' not supported yet');
         }
     }
 }

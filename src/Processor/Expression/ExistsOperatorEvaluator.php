@@ -1,7 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Parser\SQLFakeParseException;
+use Vimeo\MysqlEngine\Parser\ParserException;
 use Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
 use Vimeo\MysqlEngine\Processor\QueryResult;
@@ -24,7 +24,7 @@ final class ExistsOperatorEvaluator
         QueryResult $result
     ) {
         if (!$expr->isWellFormed()) {
-            throw new SQLFakeParseException("Parse error: empty EXISTS subquery");
+            throw new ParserException("Parse error: empty EXISTS subquery");
         }
 
         if ($expr->exists instanceof SubqueryExpression) {

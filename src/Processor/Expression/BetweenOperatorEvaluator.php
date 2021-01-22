@@ -3,7 +3,7 @@ namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Processor\SQLFakeRuntimeException;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression;
 
 final class BetweenOperatorEvaluator
@@ -22,7 +22,7 @@ final class BetweenOperatorEvaluator
         $end = $expr->end;
 
         if ($start === null || $end === null) {
-            throw new SQLFakeRuntimeException("Attempted to evaluate incomplete BETWEEN expression");
+            throw new ProcessorException("Attempted to evaluate incomplete BETWEEN expression");
         }
 
         $subject = Evaluator::evaluate($conn, $scope, $expr->left, $row, $result);

@@ -33,7 +33,7 @@ final class TruncateParser
     public function parse() : TruncateQuery
     {
         if ($this->tokens[$this->pointer]->value !== 'TRUNCATE') {
-            throw new SQLFakeParseException("Parser error: expected TRUNCATE");
+            throw new ParserException("Parser error: expected TRUNCATE");
         }
 
         $this->pointer++;
@@ -41,7 +41,7 @@ final class TruncateParser
         $token = $this->tokens[$this->pointer];
 
         if ($token === null || $token->type !== TokenType::IDENTIFIER) {
-            throw new SQLFakeParseException("Expected table name after TRUNCATE");
+            throw new ParserException("Expected table name after TRUNCATE");
         }
 
         return new TruncateQuery($token->value, $this->sql);

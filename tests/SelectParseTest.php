@@ -17,6 +17,17 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
+    public function testParseInvalid()
+    {
+        $query = 'SELECT `foo` FROM `bar` WHERE `id = 1';
+
+        $this->expectException(\Vimeo\MysqlEngine\Parser\LexerException::class);
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+    }
+
     public function testParseWithNewline()
     {
         $query = 'SELECT `foo`' . "\n" . '.`bar` FROM `bat` WHERE `id` = 1';

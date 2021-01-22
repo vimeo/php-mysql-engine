@@ -30,12 +30,12 @@ final class LimitParser
     public function parse()
     {
         if ($this->tokens[$this->pointer]->value !== 'LIMIT') {
-            throw new SQLFakeParseException("Parser error: expected LIMIT");
+            throw new ParserException("Parser error: expected LIMIT");
         }
         $this->pointer++;
         $next = $this->tokens[$this->pointer] ?? null;
         if ($next === null || $next->type !== TokenType::NUMERIC_CONSTANT) {
-            throw new SQLFakeParseException("Expected integer after LIMIT");
+            throw new ParserException("Expected integer after LIMIT");
         }
         $limit = (int) $next->value;
         $offset = 0;
@@ -45,7 +45,7 @@ final class LimitParser
                 $this->pointer += 2;
                 $next = $this->tokens[$this->pointer] ?? null;
                 if ($next === null || $next->type !== TokenType::NUMERIC_CONSTANT) {
-                    throw new SQLFakeParseException("Expected integer after OFFSET");
+                    throw new ParserException("Expected integer after OFFSET");
                 }
                 $offset = (int) $next->value;
             } else {
@@ -53,7 +53,7 @@ final class LimitParser
                     $this->pointer += 2;
                     $next = $this->tokens[$this->pointer] ?? null;
                     if ($next === null || $next->type !== TokenType::NUMERIC_CONSTANT) {
-                        throw new SQLFakeParseException("Expected integer after OFFSET");
+                        throw new ParserException("Expected integer after OFFSET");
                     }
                     $offset = $limit;
                     $limit = (int) $next->value;

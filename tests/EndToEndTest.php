@@ -19,6 +19,19 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame([], $query->fetchAll(\PDO::FETCH_ASSOC));
     }
 
+    public function testInvalidQuery()
+    {
+        $pdo = self::getConnectionToFullDB();
+
+        $this->expectException(\UnexpectedValueException::class);
+
+        $query = $pdo->prepare("SELECT id FROM `video_game_characters` WHERE `id > :id");
+        $query->bindValue(':id', 100);
+        $query->execute();
+
+        $this->assertSame([], $query->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
     public function testSelectFetchAssoc()
     {
         $pdo = self::getConnectionToFullDB();

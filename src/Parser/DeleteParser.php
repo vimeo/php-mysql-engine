@@ -47,7 +47,7 @@ final class DeleteParser
     public function parse()
     {
         if ($this->tokens[$this->pointer]->value !== 'DELETE') {
-            throw new SQLFakeParseException("Parser error: expected DELETE");
+            throw new ParserException("Parser error: expected DELETE");
         }
         $this->pointer++;
         $count = \count($this->tokens);
@@ -60,7 +60,7 @@ final class DeleteParser
                     if (\array_key_exists($token->value, self::CLAUSE_ORDER)
                         && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token->value]
                     ) {
-                        throw new SQLFakeParseException("Unexpected clause {$token->value}");
+                        throw new ParserException("Unexpected clause {$token->value}");
                     }
 
                     $this->currentClause = $token->value;
@@ -70,7 +70,7 @@ final class DeleteParser
                             $this->pointer++;
                             $token = $this->tokens[$this->pointer];
                             if ($token === null || $token->type !== TokenType::IDENTIFIER) {
-                                throw new SQLFakeParseException("Expected table name after FROM");
+                                throw new ParserException("Expected table name after FROM");
                             }
                             $table = ['name' => $token->value, 'join_type' => JoinType::JOIN];
                             $query->fromClause = $table;
@@ -90,7 +90,7 @@ final class DeleteParser
                             list($this->pointer, $query->limitClause) = $p->parse();
                             break;
                         default:
-                            throw new SQLFakeParseException("Unexpected clause {$token->value}");
+                            throw new ParserException("Unexpected clause {$token->value}");
                     }
                     break;
 
@@ -112,22 +112,22 @@ final class DeleteParser
                         break;
                     }
 
-                    throw new SQLFakeParseException("Unexpected token {$token->value}");
+                    throw new ParserException("Unexpected token {$token->value}");
 
                 case TokenType::SEPARATOR:
                     if ($token->value !== ';') {
-                        throw new SQLFakeParseException("Unexpected {$token->value}");
+                        throw new ParserException("Unexpected {$token->value}");
                     }
                     break;
 
                 default:
-                    throw new SQLFakeParseException("Unexpected token {$token->value}");
+                    throw new ParserException("Unexpected token {$token->value}");
             }
             $this->pointer++;
         }
 
         if ($query->fromClause === null) {
-            throw new SQLFakeParseException("Expected FROM in DELETE statement");
+            throw new ParserException("Expected FROM in DELETE statement");
         }
 
         return $query;
