@@ -20,15 +20,15 @@ abstract class Processor
             return $result;
         }
 
-        return new QueryResult(
-            \array_filter(
-                $result->rows,
-                function ($row) use ($conn, $scope, $where, $result) {
-                    return Expression\Evaluator::evaluate($conn, $scope, $where, $row, $result);
-                }
-            ),
-            $result->columns
-        );
+        $rows = [];
+
+        foreach ($result->rows as $row) {
+            if (Expression\Evaluator::evaluate($conn, $scope, $where, $row, $result)) {
+                $rows[] = $row;
+            }
+        }
+
+        return new QueryResult($rows, $result->columns);
     }
 
     /**
