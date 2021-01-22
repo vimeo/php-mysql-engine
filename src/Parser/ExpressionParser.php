@@ -14,6 +14,7 @@ use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
 use Vimeo\MysqlEngine\Query\Expression\InOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\StubExpression;
+use Vimeo\MysqlEngine\Query\Expression\ParameterExpression;
 use Vimeo\MysqlEngine\Query\Expression\PositionExpression;
 use Vimeo\MysqlEngine\Query\Expression\RowExpression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
@@ -223,6 +224,14 @@ final class ExpressionParser
                             return $expr;
                         }
                     }
+                }
+
+                if ($token->value === '?') {
+                    if ($token->parameter_offset === null) {
+                        throw new ParserException('? encountered with unknown offset');
+                    }
+
+                    return new ParameterExpression($token, $token->parameter_offset);
                 }
 
                 if ($token->value[0] === '@') {

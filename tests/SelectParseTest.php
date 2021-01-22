@@ -56,7 +56,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
             [['a' => 3]],
             \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
                 $conn,
-                new \Vimeo\MysqlEngine\Processor\Scope(),
+                new \Vimeo\MysqlEngine\Processor\Scope([]),
                 $select_query,
                 null
             )->rows
@@ -97,7 +97,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
             [['a' => 5]],
             \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
                 $conn,
-                new \Vimeo\MysqlEngine\Processor\Scope(),
+                new \Vimeo\MysqlEngine\Processor\Scope([]),
                 $select_query,
                 null
             )->rows

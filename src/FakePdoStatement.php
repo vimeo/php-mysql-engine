@@ -87,7 +87,9 @@ class FakePdoStatement extends \PDOStatement
      */
     public function execute($params = null)
     {
-        $sql = $this->getExecutedSql($this->boundValues ?: $params);
+        $parameters = [];
+
+        $sql = $this->getExecutedSql($this->boundValues ?: $params, $parameters);
 
         if ($this->realStatement) {
             if ($this->realStatement->execute($params) === false) {
@@ -138,7 +140,7 @@ class FakePdoStatement extends \PDOStatement
             case Query\SelectQuery::class:
                 $raw_result = Processor\SelectProcessor::process(
                     $this->conn,
-                    new Processor\Scope(),
+                    new Processor\Scope($parameters),
                     $parsed_query
                 );
 
@@ -179,7 +181,7 @@ class FakePdoStatement extends \PDOStatement
             case Query\InsertQuery::class:
                 $this->affectedRows = Processor\InsertProcessor::process(
                     $this->conn,
-                    new Processor\Scope(),
+                    new Processor\Scope($parameters),
                     $parsed_query
                 );
 
@@ -188,7 +190,7 @@ class FakePdoStatement extends \PDOStatement
             case Query\UpdateQuery::class:
                 $this->affectedRows = Processor\UpdateProcessor::process(
                     $this->conn,
-                    new Processor\Scope(),
+                    new Processor\Scope($parameters),
                     $parsed_query
                 );
 
@@ -197,7 +199,7 @@ class FakePdoStatement extends \PDOStatement
             case Query\DeleteQuery::class:
                 $this->affectedRows = Processor\DeleteProcessor::process(
                     $this->conn,
-                    new Processor\Scope(),
+                    new Processor\Scope($parameters),
                     $parsed_query
                 );
 
@@ -510,7 +512,7 @@ class FakePdoStatement extends \PDOStatement
         throw new \Exception('not implemented');
     }
 
-    private function getExecutedSql(?array $params) : string
+    private function getExecutedSql(?array $params, array &$replaced_values = []) : string
     {
         if (!$params) {
             return $this->sql;
@@ -523,21 +525,14 @@ class FakePdoStatement extends \PDOStatement
                 $key = \substr($key, 1);
             }
 
-            $sql = preg_replace(
+            $sql = preg_replace_callback(
                 '/:' . $key . '(?![a-z_A-Z0-9])/',
-                \is_string($value) || \is_object($value)
-                    ? "'" . str_replace("'", "\\'", (string) $value) . "'"
-                    : ($value === null
-                        ? 'NULL'
-                        : ($value === true
-                            ? 'TRUE'
-                            : ($value === false
-                                ? 'FALSE'
-                                : (string) $value
-                            )
-                        )
-                    ),
-                $sql
+                function ($matches) use (&$replaced_values, $value): string {
+                    $replaced_values[] = $value;
+                    return '?';
+                },
+                $sql,
+                1
             );
         }
 
