@@ -205,6 +205,33 @@ class Evaluator
                 // When MySQL can't figure out a variable column's type
                 // it defaults to string
                 return new Column\Varchar(10);
+
+            case \Vimeo\MysqlEngine\Query\Expression\ParameterExpression::class:
+                if (\array_key_exists($expr->offset, $scope->parameters)) {
+                    $value = $scope->parameters[$expr->offset];
+
+                    if (\is_int($value)) {
+                        return $expr->column = new Column\IntColumn(false, 10);
+                    }
+
+                    if (\is_float($value)) {
+                        return $expr->column = new Column\FloatColumn(10, 2);
+                    }
+
+                    if (\is_bool($value)) {
+                        return $expr->column = new Column\TinyInt(1);
+                    }
+
+                    if ($value === null) {
+                        return $expr->column = new Column\NullColumn();
+                    }
+
+                    return new Column\Varchar(10);
+                }
+
+                // When MySQL can't figure out a variable column's type
+                // it defaults to string
+                return new Column\Varchar(10);
         }
 
         return $expr->column = new Column\Varchar(10);

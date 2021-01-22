@@ -527,14 +527,24 @@ class FakePdoStatement extends \PDOStatement
                 $key = \substr($key, 1);
             }
 
+            $count = 0;
+
             $sql = preg_replace_callback(
                 '/:' . $key . '(?![a-z_A-Z0-9])/',
                 function ($matches) use (&$replaced_values, $value): string {
-                    $replaced_values[] = $value;
+                    $replaced_values[reset($matches)[1]] = $value;
                     return '?';
                 },
-                $sql
+                $sql,
+                -1,
+                $count,
+                \PREG_OFFSET_CAPTURE
             );
+        }
+
+        if ($replaced_values) {
+            \ksort($replaced_values);
+            $replaced_values = array_values($replaced_values);
         }
 
         return $sql;
