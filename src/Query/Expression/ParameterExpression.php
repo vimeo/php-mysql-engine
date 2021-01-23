@@ -7,18 +7,18 @@ use Vimeo\MysqlEngine\TokenType;
 final class ParameterExpression extends Expression
 {
     /**
-     * @var int
+     * @var string
      */
-    public $offset;
+    public $parameterName;
 
     /**
      * @param Token $token
      */
-    public function __construct(Token $token, int $offset)
+    public function __construct(Token $token)
     {
         $this->type = $token->type;
         $this->precedence = 0;
-        $this->offset = $offset;
+        $this->parameterName = \trim(\substr($token->raw, 1));
         $this->name = '?';
     }
 

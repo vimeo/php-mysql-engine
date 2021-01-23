@@ -227,11 +227,7 @@ final class ExpressionParser
                 }
 
                 if ($token->value === '?') {
-                    if ($token->parameter_offset === null) {
-                        throw new ParserException('? encountered with unknown offset');
-                    }
-
-                    return new ParameterExpression($token, $token->parameter_offset);
+                    return new ParameterExpression($token);
                 }
 
                 if ($token->value[0] === '@') {

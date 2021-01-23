@@ -73,6 +73,10 @@ class FakePdoStatement extends \PDOStatement
      */
     public function bindValue($key, $value, $type = \PDO::PARAM_STR) : void
     {
+        if ($key[0] === ':') {
+            $key = \substr($key, 1);
+        }
+
         $this->boundValues[$key] = $value;
 
         if ($this->realStatement) {
@@ -89,7 +93,7 @@ class FakePdoStatement extends \PDOStatement
     {
         $parameters = [];
 
-        $sql = $this->getExecutedSql($this->boundValues ?: $params, $parameters);
+        $sql = $this->sql;
 
         if ($this->realStatement) {
             if ($this->realStatement->execute($params) === false) {
@@ -135,7 +139,7 @@ class FakePdoStatement extends \PDOStatement
                 try {
                     $raw_result = Processor\SelectProcessor::process(
                         $this->conn,
-                        new Processor\Scope($parameters),
+                        new Processor\Scope($this->boundValues),
                         $parsed_query
                     );
                 } catch (Processor\ProcessorException $runtime_exception) {
@@ -183,7 +187,7 @@ class FakePdoStatement extends \PDOStatement
             case Query\InsertQuery::class:
                 $this->affectedRows = Processor\InsertProcessor::process(
                     $this->conn,
-                    new Processor\Scope($parameters),
+                    new Processor\Scope($this->boundValues),
                     $parsed_query
                 );
 
@@ -192,7 +196,7 @@ class FakePdoStatement extends \PDOStatement
             case Query\UpdateQuery::class:
                 $this->affectedRows = Processor\UpdateProcessor::process(
                     $this->conn,
-                    new Processor\Scope($parameters),
+                    new Processor\Scope($this->boundValues),
                     $parsed_query
                 );
 
@@ -201,7 +205,7 @@ class FakePdoStatement extends \PDOStatement
             case Query\DeleteQuery::class:
                 $this->affectedRows = Processor\DeleteProcessor::process(
                     $this->conn,
-                    new Processor\Scope($parameters),
+                    new Processor\Scope($this->boundValues),
                     $parsed_query
                 );
 
@@ -512,41 +516,5 @@ class FakePdoStatement extends \PDOStatement
     public function fetchObject($class = \stdClass::class, $ctorArgs = null)
     {
         throw new \Exception('not implemented');
-    }
-
-    private function getExecutedSql(?array $params, array &$replaced_values = []) : string
-    {
-        if (!$params) {
-            return $this->sql;
-        }
-
-        $sql = $this->sql;
-
-        foreach ($params as $key => $value) {
-            if ($key[0] === ':') {
-                $key = \substr($key, 1);
-            }
-
-            $count = 0;
-
-            $sql = preg_replace_callback(
-                '/:' . $key . '(?![a-z_A-Z0-9])/',
-                function ($matches) use (&$replaced_values, $value): string {
-                    $replaced_values[reset($matches)[1]] = $value;
-                    return '?';
-                },
-                $sql,
-                -1,
-                $count,
-                \PREG_OFFSET_CAPTURE
-            );
-        }
-
-        if ($replaced_values) {
-            \ksort($replaced_values);
-            $replaced_values = array_values($replaced_values);
-        }
-
-        return $sql;
     }
 }

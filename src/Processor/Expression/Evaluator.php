@@ -86,11 +86,11 @@ class Evaluator
                 return VariableEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\ParameterExpression::class:
-                if (\array_key_exists($expr->offset, $scope->parameters)) {
-                    return $scope->parameters[$expr->offset];
+                if (\array_key_exists($expr->parameterName, $scope->parameters)) {
+                    return $scope->parameters[$expr->parameterName];
                 }
 
-                throw new ProcessorException('Parameter offset ' . $expr->offset . ' out of range');
+                throw new ProcessorException('Parameter offset ' . $expr->parameterName . ' out of range');
 
             default:
                 throw new ProcessorException('Unsupported expression ' . get_class($expr));
@@ -207,8 +207,8 @@ class Evaluator
                 return new Column\Varchar(10);
 
             case \Vimeo\MysqlEngine\Query\Expression\ParameterExpression::class:
-                if (\array_key_exists($expr->offset, $scope->parameters)) {
-                    $value = $scope->parameters[$expr->offset];
+                if (\array_key_exists($expr->parameterName, $scope->parameters)) {
+                    $value = $scope->parameters[$expr->parameterName];
 
                     if (\is_int($value)) {
                         return $expr->column = new Column\IntColumn(false, 10);

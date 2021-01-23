@@ -343,12 +343,7 @@ final class SQLParser
                 }
             }
 
-            if ($token_upper === '?') {
-                $token_obj = new Token(TokenType::IDENTIFIER, $token, $token);
-                $token_obj->parameter_offset = $parameter_offset;
-                $out[] = $token_obj;
-                $parameter_offset++;
-            } elseif ($token_upper === 'NULL') {
+            if ($token_upper === 'NULL') {
                 $out[] = new Token(TokenType::NULL_CONSTANT, $token, $token);
             } elseif ($token_upper === 'TRUE') {
                 $out[] = new Token(TokenType::NUMERIC_CONSTANT, '1', $token);
@@ -368,6 +363,10 @@ final class SQLParser
                 $out[] = new Token(TokenType::SEPARATOR, $token_upper, $token);
             } elseif ($i < $count - 1 && $tokens[$i + 1] === '(') {
                 $out[] = new Token(TokenType::SQLFUNCTION, $token_upper, $token);
+            } elseif ($first_char === ':') {
+                $token_obj = new Token(TokenType::IDENTIFIER, '?', $token);
+                $out[] = $token_obj;
+                $parameter_offset++;
             } else {
                 $previous_key = \array_key_last($out);
                 if ($previous_key !== null && $out[$previous_key]->type === TokenType::IDENTIFIER
