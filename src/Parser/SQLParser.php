@@ -207,7 +207,6 @@ final class SQLParser
     private static function buildTokenListFromLexemes(array $tokens)
     {
         $out = [];
-        $parameter_offset = 0;
         $count = \count($tokens);
         foreach ($tokens as $i => $token) {
             $trimmed_token = \trim($token);
@@ -364,9 +363,8 @@ final class SQLParser
             } elseif ($i < $count - 1 && $tokens[$i + 1] === '(') {
                 $out[] = new Token(TokenType::SQLFUNCTION, $token_upper, $token);
             } elseif ($first_char === ':') {
-                $token_obj = new Token(TokenType::IDENTIFIER, '?', $token);
-                $out[] = $token_obj;
-                $parameter_offset++;
+                $out[] = $token_obj = new Token(TokenType::IDENTIFIER, '?', '?');
+                $token_obj->parameterName = \trim($token);
             } else {
                 $previous_key = \array_key_last($out);
                 if ($previous_key !== null && $out[$previous_key]->type === TokenType::IDENTIFIER

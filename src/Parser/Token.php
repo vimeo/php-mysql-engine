@@ -21,9 +21,9 @@ class Token
     public $raw;
 
     /**
-     * @var ?int
+     * @var ?string
      */
-    public $parameter_offset;
+    public $parameterName;
 
     /**
      * @param TokenType::* $type

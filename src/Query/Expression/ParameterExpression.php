@@ -14,11 +14,11 @@ final class ParameterExpression extends Expression
     /**
      * @param Token $token
      */
-    public function __construct(Token $token)
+    public function __construct(Token $token, string $parameter_name)
     {
         $this->type = $token->type;
         $this->precedence = 0;
-        $this->parameterName = \trim($token->raw);
+        $this->parameterName = $parameter_name;
         $this->name = '?';
     }
 
