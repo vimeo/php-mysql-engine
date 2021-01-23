@@ -140,6 +140,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $case = $select_query->selectExpressions[0];
 
         $this->assertInstanceOf(BinaryOperatorExpression::class, $case->whenExpressions[0]['then']);
+        $this->assertSame(118, $case->whenExpressions[0]['then']->start);
     }
 
     public function testNestedCase()
@@ -259,6 +260,32 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertInstanceOf(SelectQuery::class, $select_query);
     }
 
+    public function testParametersHaveCorrectStarts()
+    {
+        $query = "SELECT :foo, :barr, 'hello', 1 FROM `baz`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+
+        $this->assertCount(4, $select_query->selectExpressions);
+        $this->assertSame(7, $select_query->selectExpressions[0]->start);
+        $this->assertSame(13, $select_query->selectExpressions[1]->start);
+        $this->assertSame(20, $select_query->selectExpressions[2]->start);
+        $this->assertSame(29, $select_query->selectExpressions[3]->start);
+    }
+
+    public function testSelectWithCommentBeforeOffset()
+    {
+        $query = "/* SOME COMMENT */SELECT * FROM `baz`";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+
+        $this->assertSame(18, $select_query->start);
+    }
+
     public function testParseComplexJoin()
     {
         $sql = "SELECT * FROM (SELECT * FROM `foo` UNION ALL SELECT * FROM `bar`) AS `baz`";
@@ -270,6 +297,7 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertCount(1, $select_query->fromClause->tables);
         $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class, $select_query->fromClause->tables[0]['subquery']);
         $this->assertNotEmpty($select_query->fromClause->tables[0]['subquery']->query->multiQueries);
+        $this->assertSame(15, $select_query->fromClause->tables[0]['subquery']->query->start);
     }
 
     public function testParseMoreComplex()

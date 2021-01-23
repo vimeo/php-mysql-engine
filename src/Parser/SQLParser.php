@@ -200,7 +200,7 @@ final class SQLParser
     }
 
     /**
-     * @param array<int, string> $tokens
+     * @param list<array{string,int}> $tokens
      *
      * @return array<int, Token>
      */
@@ -208,11 +208,7 @@ final class SQLParser
     {
         $out = [];
         $count = \count($tokens);
-        $start = 0;
-        $end = 0;
-        foreach ($tokens as $i => $token) {
-            $start = $end;
-            $end = $start + \strlen($token);
+        foreach ($tokens as $i => [$token, $start]) {
             $trimmed_token = \trim($token);
 
             if ($trimmed_token === '' || $trimmed_token === '.') {
@@ -355,16 +351,19 @@ final class SQLParser
             } elseif (\array_key_exists($token_upper, self::CLAUSES)) {
                 $out[] = new Token(TokenType::CLAUSE, $token_upper, $token, $start);
             } elseif (\array_key_exists($token_upper, self::OPERATORS)
-                && !self::isFunctionVersionOfOperator($token_upper, $i, $count, $tokens)
+                && ($token_upper !== 'MOD'
+                    || $i >= $count - 1
+                    || $tokens[$i + 1][0] !== '('
+                )
             ) {
                 $out[] = new Token(TokenType::OPERATOR, $token_upper, $token, $start);
             } elseif (\array_key_exists($token_upper, self::RESERVED_WORDS)) {
                 $out[] = new Token(TokenType::RESERVED, $token_upper, $token, $start);
-            } elseif ($token_upper === 'IF' && $i < $count - 1 && $tokens[$i + 1] !== '(') {
+            } elseif ($token_upper === 'IF' && $i < $count - 1 && $tokens[$i + 1][0] !== '(') {
                 $out[] = new Token(TokenType::RESERVED, $token_upper, $token, $start);
             } elseif (\array_key_exists($token_upper, self::SEPARATORS)) {
                 $out[] = new Token(TokenType::SEPARATOR, $token_upper, $token, $start);
-            } elseif ($i < $count - 1 && $tokens[$i + 1] === '(') {
+            } elseif ($i < $count - 1 && $tokens[$i + 1][0] === '(') {
                 $out[] = new Token(TokenType::SQLFUNCTION, $token_upper, $token, $start);
             } elseif ($first_char === ':') {
                 $out[] = $token_obj = new Token(TokenType::IDENTIFIER, '?', '?', $start);
@@ -381,16 +380,6 @@ final class SQLParser
             }
         }
         return $out;
-    }
-
-    /**
-     * @param array<int, string> $tokens
-     *
-     * @return bool
-     */
-    private static function isFunctionVersionOfOperator(string $token_upper, int $i, int $count, array $tokens)
-    {
-        return $token_upper === 'MOD' && $i < $count - 1 && $tokens[$i + 1] === '(';
     }
 
     /**
