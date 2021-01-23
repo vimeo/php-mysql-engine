@@ -18,7 +18,7 @@ final class ParameterExpression extends Expression
     {
         $this->type = $token->type;
         $this->precedence = 0;
-        $this->parameterName = \trim(\substr($token->raw, 1));
+        $this->parameterName = \trim($token->raw);
         $this->name = '?';
     }
 

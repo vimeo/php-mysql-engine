@@ -73,8 +73,8 @@ class FakePdoStatement extends \PDOStatement
      */
     public function bindValue($key, $value, $type = \PDO::PARAM_STR) : void
     {
-        if ($key[0] === ':') {
-            $key = \substr($key, 1);
+        if ($key[0] !== ':') {
+            $key = ':' . $key;
         }
 
         $this->boundValues[$key] = $value;
