@@ -12,7 +12,7 @@ final class BetweenOperatorExpression extends Expression
     /**
      * @var Expression|null
      */
-    public $start = null;
+    public $beginning = null;
 
     /**
      * @var Expression|null
@@ -46,6 +46,7 @@ final class BetweenOperatorExpression extends Expression
         $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE['BETWEEN'];
         $this->operator = 'BETWEEN';
         $this->type = TokenType::OPERATOR;
+        $this->start = $left->start;
     }
 
     /**
@@ -61,7 +62,7 @@ final class BetweenOperatorExpression extends Expression
      */
     public function isWellFormed()
     {
-        return $this->start && $this->end;
+        return $this->beginning && $this->end;
     }
 
     /**
@@ -69,7 +70,7 @@ final class BetweenOperatorExpression extends Expression
      */
     public function setStart(Expression $expr)
     {
-        $this->start = $expr;
+        $this->beginning = $expr;
     }
 
     /**
@@ -85,7 +86,7 @@ final class BetweenOperatorExpression extends Expression
      */
     public function foundAnd()
     {
-        if ($this->and || !$this->start) {
+        if ($this->and || !$this->beginning) {
             throw new ParserException("Unexpected AND");
         }
         $this->and = true;
@@ -97,16 +98,16 @@ final class BetweenOperatorExpression extends Expression
             if ($this->end) {
                 $this->end = $expr;
             } else {
-                if ($this->start) {
-                    $this->start = $expr;
+                if ($this->beginning) {
+                    $this->beginning = $expr;
                 } else {
                     $this->left = $expr;
                 }
             }
             return;
         }
-        if (!$this->start) {
-            $this->start = $expr;
+        if (!$this->beginning) {
+            $this->beginning = $expr;
         } else {
             if ($this->and && !$this->end) {
                 $this->end = $expr;
@@ -124,8 +125,8 @@ final class BetweenOperatorExpression extends Expression
         if ($this->end) {
             return $this->end;
         }
-        if ($this->start) {
-            return $this->start;
+        if ($this->beginning) {
+            return $this->beginning;
         }
         return $this->left;
     }

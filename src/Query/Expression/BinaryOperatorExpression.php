@@ -61,6 +61,7 @@ final class BinaryOperatorExpression extends Expression
             $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE[$operator];
         }
         $this->negatedInt = $this->negated ? 1 : 0;
+        $this->start = $left->start;
     }
 
     /**

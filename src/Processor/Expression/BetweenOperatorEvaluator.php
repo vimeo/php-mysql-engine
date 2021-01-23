@@ -18,26 +18,26 @@ final class BetweenOperatorEvaluator
         array $row,
         QueryResult $result
     ) : bool {
-        $start = $expr->start;
+        $beginning = $expr->beginning;
         $end = $expr->end;
 
-        if ($start === null || $end === null) {
+        if ($beginning === null || $end === null) {
             throw new ProcessorException("Attempted to evaluate incomplete BETWEEN expression");
         }
 
         $subject = Evaluator::evaluate($conn, $scope, $expr->left, $row, $result);
-        $start = Evaluator::evaluate($conn, $scope, $start, $row, $result);
+        $beginning = Evaluator::evaluate($conn, $scope, $beginning, $row, $result);
         $end = Evaluator::evaluate($conn, $scope, $end, $row, $result);
         if (\is_int($__tmp__ = $subject) || \is_float($__tmp__)) {
             $subject = (int) $subject;
-            $start = (int) $start;
+            $beginning = (int) $beginning;
             $end = (int) $end;
-            $eval = $subject >= $start && $subject <= $end;
+            $eval = $subject >= $beginning && $subject <= $end;
         } else {
             $subject = (string) $subject;
-            $start = (string) $start;
+            $beginning = (string) $beginning;
             $end = (string) $end;
-            $eval = $subject >= $start && $subject <= $end;
+            $eval = $subject >= $beginning && $subject <= $end;
         }
         return $expr->negated ? !$eval : !!$eval;
     }

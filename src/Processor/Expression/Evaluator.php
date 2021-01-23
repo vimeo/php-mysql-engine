@@ -219,7 +219,7 @@ class Evaluator
                     }
 
                     if (\is_bool($value)) {
-                        return $expr->column = new Column\TinyInt(1);
+                        return $expr->column = new Column\TinyInt(true, 1);
                     }
 
                     if ($value === null) {

@@ -4,6 +4,7 @@ namespace Vimeo\MysqlEngine\Query\Expression;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Parser\ExpressionParser;
 use Vimeo\MysqlEngine\Parser\ParserException;
+use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\TokenType;
 
 final class ExistsOperatorExpression extends Expression
@@ -18,13 +19,14 @@ final class ExistsOperatorExpression extends Expression
      */
     public $negated = false;
 
-    public function __construct(bool $negated = false)
+    public function __construct(bool $negated = false, Token $token)
     {
         $this->negated = $negated;
         $this->name = '';
         $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE['EXISTS'];
         $this->operator = 'EXISTS';
         $this->type = TokenType::OPERATOR;
+        $this->start = $token->start;
     }
 
     /**

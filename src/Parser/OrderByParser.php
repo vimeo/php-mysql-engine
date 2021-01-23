@@ -56,7 +56,7 @@ final class OrderByParser
             list($this->pointer, $expression) = $expression_parser->buildWithPointer();
             if ($expression instanceof ConstantExpression) {
                 $position = (int) $expression->value;
-                $expression = new PositionExpression($position);
+                $expression = new PositionExpression($position, $next);
             }
             $next = $this->tokens[$this->pointer + 1] ?? null;
             $sort_direction = 'ASC';

@@ -43,6 +43,12 @@ abstract class Expression
     public $column;
 
     /**
+     * @var int
+     * @readonly
+     */
+    public $start;
+
+    /**
      * @return void
      */
     public function negate()

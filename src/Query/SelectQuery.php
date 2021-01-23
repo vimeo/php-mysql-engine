@@ -67,9 +67,15 @@ final class SelectQuery
      */
     public $sql;
 
-    public function __construct(string $sql)
+    /**
+     * @var int
+     */
+    public $start;
+
+    public function __construct(string $sql, int $start)
     {
         $this->sql = $sql;
+        $this->start = $start;
     }
 
     /**

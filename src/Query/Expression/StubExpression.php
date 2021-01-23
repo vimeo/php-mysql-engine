@@ -11,6 +11,7 @@ final class StubExpression extends Expression
         $this->precedence = 0;
         $this->name = '';
         $this->type = TokenType::RESERVED;
+        $this->start = -1;
     }
 
     /**

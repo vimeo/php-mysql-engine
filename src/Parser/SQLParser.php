@@ -208,7 +208,11 @@ final class SQLParser
     {
         $out = [];
         $count = \count($tokens);
+        $start = 0;
+        $end = 0;
         foreach ($tokens as $i => $token) {
+            $start = $end;
+            $end = $start + \strlen($token);
             $trimmed_token = \trim($token);
 
             if ($trimmed_token === '' || $trimmed_token === '.') {
@@ -223,7 +227,7 @@ final class SQLParser
             }
 
             if (\preg_match('/^[0-9\.]+$/', $token)) {
-                $out[] = new Token(TokenType::NUMERIC_CONSTANT, $token, $token);
+                $out[] = new Token(TokenType::NUMERIC_CONSTANT, $token, $token, $start);
                 continue;
             }
 
@@ -233,7 +237,7 @@ final class SQLParser
                 $raw = $token;
                 $token = \substr($token, 1, \strlen($token) - 2);
                 $token = \preg_replace("/\\\\0/", "\0", \preg_replace("/\\\\([^%_rntbZ0])/", '\\1', $token));
-                $out[] = new Token(TokenType::STRING_CONSTANT, $token, $raw);
+                $out[] = new Token(TokenType::STRING_CONSTANT, $token, $raw, $start);
                 continue;
             }
 
@@ -259,12 +263,12 @@ final class SQLParser
                     continue;
                 }
 
-                $out[] = new Token(TokenType::IDENTIFIER, $token, $raw);
+                $out[] = new Token(TokenType::IDENTIFIER, $token, $raw, $start);
                 continue;
             }
 
             if ($first_char === '(') {
-                $out[] = new Token(TokenType::PAREN, $token, $token);
+                $out[] = new Token(TokenType::PAREN, $token, $token, $start);
                 continue;
             }
 
@@ -286,7 +290,7 @@ final class SQLParser
                     && $previous_type !== TokenType::IDENTIFIER
                     && $previous->value !== ')'
                 ) {
-                    $out[] = new Token(TokenType::IDENTIFIER, $token, $token);
+                    $out[] = new Token(TokenType::IDENTIFIER, $token, $token, $start);
                     continue;
                 }
 
@@ -319,7 +323,7 @@ final class SQLParser
                         $op = 'UNARY_PLUS';
                     }
 
-                    $out[] = new Token(TokenType::OPERATOR, $op, $token);
+                    $out[] = new Token(TokenType::OPERATOR, $op, $token, $start);
                     continue;
                 }
             }
@@ -343,27 +347,27 @@ final class SQLParser
             }
 
             if ($token_upper === 'NULL') {
-                $out[] = new Token(TokenType::NULL_CONSTANT, $token, $token);
+                $out[] = new Token(TokenType::NULL_CONSTANT, $token, $token, $start);
             } elseif ($token_upper === 'TRUE') {
-                $out[] = new Token(TokenType::NUMERIC_CONSTANT, '1', $token);
+                $out[] = new Token(TokenType::NUMERIC_CONSTANT, '1', $token, $start);
             } elseif ($token_upper === 'FALSE') {
-                $out[] = new Token(TokenType::NUMERIC_CONSTANT, '0', $token);
+                $out[] = new Token(TokenType::NUMERIC_CONSTANT, '0', $token, $start);
             } elseif (\array_key_exists($token_upper, self::CLAUSES)) {
-                $out[] = new Token(TokenType::CLAUSE, $token_upper, $token);
+                $out[] = new Token(TokenType::CLAUSE, $token_upper, $token, $start);
             } elseif (\array_key_exists($token_upper, self::OPERATORS)
                 && !self::isFunctionVersionOfOperator($token_upper, $i, $count, $tokens)
             ) {
-                $out[] = new Token(TokenType::OPERATOR, $token_upper, $token);
+                $out[] = new Token(TokenType::OPERATOR, $token_upper, $token, $start);
             } elseif (\array_key_exists($token_upper, self::RESERVED_WORDS)) {
-                $out[] = new Token(TokenType::RESERVED, $token_upper, $token);
+                $out[] = new Token(TokenType::RESERVED, $token_upper, $token, $start);
             } elseif ($token_upper === 'IF' && $i < $count - 1 && $tokens[$i + 1] !== '(') {
-                $out[] = new Token(TokenType::RESERVED, $token_upper, $token);
+                $out[] = new Token(TokenType::RESERVED, $token_upper, $token, $start);
             } elseif (\array_key_exists($token_upper, self::SEPARATORS)) {
-                $out[] = new Token(TokenType::SEPARATOR, $token_upper, $token);
+                $out[] = new Token(TokenType::SEPARATOR, $token_upper, $token, $start);
             } elseif ($i < $count - 1 && $tokens[$i + 1] === '(') {
-                $out[] = new Token(TokenType::SQLFUNCTION, $token_upper, $token);
+                $out[] = new Token(TokenType::SQLFUNCTION, $token_upper, $token, $start);
             } elseif ($first_char === ':') {
-                $out[] = $token_obj = new Token(TokenType::IDENTIFIER, '?', '?');
+                $out[] = $token_obj = new Token(TokenType::IDENTIFIER, '?', '?', $start);
                 $token_obj->parameterName = \trim($token);
             } else {
                 $previous_key = \array_key_last($out);
@@ -373,7 +377,7 @@ final class SQLParser
                     $out[$previous_key]->value .= $token;
                     continue;
                 }
-                $out[] = new Token(TokenType::IDENTIFIER, $token, $token);
+                $out[] = new Token(TokenType::IDENTIFIER, $token, $token, $start);
             }
         }
         return $out;

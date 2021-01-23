@@ -59,7 +59,8 @@ final class BinaryOperatorEvaluator
                     new \Vimeo\MysqlEngine\Parser\Token(
                         TokenType::SQLFUNCTION,
                         $functionName,
-                        $functionName
+                        $functionName,
+                        $expr->start
                     ),
                     [
                         $left,

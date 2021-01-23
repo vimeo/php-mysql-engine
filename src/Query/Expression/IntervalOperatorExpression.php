@@ -4,6 +4,7 @@ namespace Vimeo\MysqlEngine\Query\Expression;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Parser\ExpressionParser;
 use Vimeo\MysqlEngine\Parser\ParserException;
+use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\TokenType;
 
 final class IntervalOperatorExpression extends Expression
@@ -37,12 +38,13 @@ final class IntervalOperatorExpression extends Expression
     /** @var ?string */
     public $unit = null;
 
-    public function __construct()
+    public function __construct(Token $token)
     {
         $this->name = '';
         $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE['INTERVAL'];
         $this->operator = 'INTERVAL';
         $this->type = TokenType::OPERATOR;
+        $this->start = $token->start;
     }
 
     /**

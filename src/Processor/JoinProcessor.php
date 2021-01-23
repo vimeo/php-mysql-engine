@@ -203,10 +203,10 @@ final class JoinProcessor
         string $right_column
     ) {
         $left = new ColumnExpression(
-            new Token(TokenType::IDENTIFIER, $left_column, $left_column)
+            new Token(TokenType::IDENTIFIER, $left_column, $left_column, 0)
         );
         $right = new ColumnExpression(
-            new Token(TokenType::IDENTIFIER, $right_column, $right_column)
+            new Token(TokenType::IDENTIFIER, $right_column, $right_column, 0)
         );
         $expr = new BinaryOperatorExpression($left, false, '=', $right);
 

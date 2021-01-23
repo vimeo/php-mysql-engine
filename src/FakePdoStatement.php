@@ -91,8 +91,6 @@ class FakePdoStatement extends \PDOStatement
      */
     public function execute($params = null)
     {
-        $parameters = [];
-
         $sql = $this->sql;
 
         if ($this->realStatement) {
@@ -177,7 +175,7 @@ class FakePdoStatement extends \PDOStatement
                     }
 
                     if ($real_result != $fake_result) {
-                        var_dump($real_result, $fake_result);
+                        var_dump($this->getExecutedSql($this->boundValues), $real_result, $fake_result);
                         throw new \TypeError('different');
                     }
                 }
@@ -516,5 +514,39 @@ class FakePdoStatement extends \PDOStatement
     public function fetchObject($class = \stdClass::class, $ctorArgs = null)
     {
         throw new \Exception('not implemented');
+    }
+
+    private function getExecutedSql(?array $params) : string
+    {
+        if (!$params) {
+            return $this->sql;
+        }
+
+        $sql = $this->sql;
+
+        foreach ($params as $key => $value) {
+            if ($key[0] === ':') {
+                $key = \substr($key, 1);
+            }
+
+            $sql = preg_replace(
+                '/:' . $key . '(?![a-z_A-Z0-9])/',
+                \is_string($value) || \is_object($value)
+                    ? "'" . str_replace("'", "\\'", (string) $value) . "'"
+                    : ($value === null
+                        ? 'NULL'
+                        : ($value === true
+                            ? 'TRUE'
+                            : ($value === false
+                                ? 'FALSE'
+                                : (string) $value
+                            )
+                        )
+                    ),
+                $sql
+            );
+        }
+
+        return $sql;
     }
 }

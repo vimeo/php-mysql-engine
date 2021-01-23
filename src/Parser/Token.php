@@ -21,6 +21,11 @@ class Token
     public $raw;
 
     /**
+     * @var int
+     */
+    public $start;
+
+    /**
      * @var ?string
      */
     public $parameterName;
@@ -31,10 +36,12 @@ class Token
     public function __construct(
         string $type,
         string $value,
-        string $raw
+        string $raw,
+        int $start
     ) {
         $this->type = $type;
         $this->value = $value;
         $this->raw = $raw;
+        $this->start = $start;
     }
 }

@@ -31,6 +31,7 @@ final class InOperatorExpression extends Expression
         $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE['IN'];
         $this->operator = 'IN';
         $this->type = TokenType::OPERATOR;
+        $this->start = $left->start;
     }
 
     /**

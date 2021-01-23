@@ -326,7 +326,7 @@ final class FromParser
                     if ($arg->type !== TokenType::IDENTIFIER) {
                         throw new ParserException("Expected identifier in USING clause");
                     }
-                    $filter = self::addJoinFilterExpression($filter, $left_table, $table['name'], $arg->value);
+                    $filter = self::addJoinFilterExpression($filter, $left_table, $table['name'], $arg->value, $arg->start);
                 } else {
                     if ($arg->value !== ',') {
                         throw new ParserException("Expected , after argument in USING clause");
@@ -348,13 +348,14 @@ final class FromParser
         ?Expression $filter,
         string $left_table,
         string $right_table,
-        string $column
+        string $column,
+        int $start
     ) : BinaryOperatorExpression {
         $left = new ColumnExpression(
-            new Token(TokenType::IDENTIFIER, "{$left_table}.{$column}", '')
+            new Token(TokenType::IDENTIFIER, "{$left_table}.{$column}", '', $start)
         );
         $right = new ColumnExpression(
-            new Token(TokenType::IDENTIFIER, "{$right_table}.{$column}", '')
+            new Token(TokenType::IDENTIFIER, "{$right_table}.{$column}", '', $start)
         );
         $expr = new BinaryOperatorExpression($left, false, '=', $right);
         if ($filter !== null) {

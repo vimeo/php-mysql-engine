@@ -21,6 +21,7 @@ final class ConstantExpression extends Expression
         $this->precedence = 0;
         $this->name = $token->value;
         $this->value = self::extractConstantValue($token);
+        $this->start = $token->start;
     }
 
     /**

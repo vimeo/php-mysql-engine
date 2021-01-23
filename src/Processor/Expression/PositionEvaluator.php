@@ -21,8 +21,6 @@ final class PositionEvaluator
             $row = $first_row;
         }
 
-        $row = (array) $row;
-
         if (!\array_key_exists($expr->position - 1, $row)) {
             throw new ProcessorException(
                 "Undefined positional reference {$expr->position} IN GROUP BY or ORDER BY"

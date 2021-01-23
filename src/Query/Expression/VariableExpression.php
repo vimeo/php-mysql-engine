@@ -20,6 +20,7 @@ final class VariableExpression extends Expression
         $this->precedence = 0;
         $this->variableName = substr($token->value, 1);
         $this->name = $this->variableName;
+        $this->start = $token->start;
     }
 
     /**

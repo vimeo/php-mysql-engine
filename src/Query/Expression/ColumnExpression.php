@@ -66,6 +66,7 @@ final class ColumnExpression extends Expression
         }
 
         $this->name = $this->columnName;
+        $this->start = $token->start;
     }
 
     /**

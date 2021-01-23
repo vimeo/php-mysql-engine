@@ -348,7 +348,7 @@ final class ExpressionParser
                             if ($distinct) {
                                 throw new ParserException("Unexpected DISTINCT in row expression");
                             }
-                            $expr = new RowExpression($elements);
+                            $expr = new RowExpression($elements, $token);
                         } else {
                             $p = new ExpressionParser($arg_tokens, -1);
                             $expr = $p->build();
@@ -397,7 +397,7 @@ final class ExpressionParser
                         $close = SQLParser::findMatchingEnd($this->pointer, $this->tokens);
                         $arg_tokens = \array_slice($this->tokens, $this->pointer + 1, $close - $this->pointer);
 
-                        $p = new ExpressionParser($arg_tokens, -1, new CaseOperatorExpression());
+                        $p = new ExpressionParser($arg_tokens, -1, new CaseOperatorExpression($token));
                         $expr = $p->build();
 
                         $this->pointer = $close;
@@ -420,7 +420,7 @@ final class ExpressionParser
                             break;
                         }
 
-                        $this->expression = new IntervalOperatorExpression();
+                        $this->expression = new IntervalOperatorExpression($token);
                         break;
                     }
 
@@ -539,7 +539,8 @@ final class ExpressionParser
                             );
                         } elseif ($operator === 'EXISTS' || $operator === 'NOT EXISTS') {
                             $this->expression = new ExistsOperatorExpression(
-                                $operator === 'NOT EXISTS' || $this->expression->negated
+                                $operator === 'NOT EXISTS' || $this->expression->negated,
+                                $token
                             );
                         } elseif ($operator === 'UNARY_MINUS'
                             || $operator === 'UNARY_PLUS'
@@ -550,7 +551,7 @@ final class ExpressionParser
                                 throw new \TypeError('Failed assertion');
                             }
 
-                            $this->expression = new UnaryExpression($operator);
+                            $this->expression = new UnaryExpression($operator, $token);
                         } else {
                             if (!$this->expression instanceof BinaryOperatorExpression) {
                                 throw new \TypeError(

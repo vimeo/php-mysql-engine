@@ -56,19 +56,28 @@ final class SelectProcessor extends Processor
             $where
         );
 
-        $having = self::applyHaving(
-            $conn,
-            $scope,
-            $stmt,
-            $group_by
-        );
+        if ($stmt->havingClause) {
+            $having = self::applyHaving(
+                $conn,
+                $scope,
+                $stmt->havingClause,
+                $group_by
+            );
 
-        $select = self::applySelect(
-            $conn,
-            $scope,
-            $stmt,
-            $having
-        );
+            $select = self::applySelect(
+                $conn,
+                $scope,
+                $stmt,
+                $having
+            );
+        } else {
+            $select = self::applySelect(
+                $conn,
+                $scope,
+                $stmt,
+                $group_by
+            );
+        }
 
         $order_by = self::applyOrderBy(
             $conn,
@@ -170,30 +179,38 @@ final class SelectProcessor extends Processor
     protected static function applyHaving(
         FakePdo $conn,
         Scope $scope,
-        SelectQuery $stmt,
+        \Vimeo\MysqlEngine\Query\Expression\Expression $havingClause,
         QueryResult $result
     ) : QueryResult {
-        $havingClause = $stmt->havingClause;
+        if ($result->grouped_rows === null) {
+            $rows = [];
 
-        if ($havingClause !== null && $result->grouped_rows !== null) {
-            $out_groups = [];
-
-            foreach ($result->grouped_rows as $group_id => $rows) {
-                $group_result = new QueryResult($rows, $result->columns);
-
-                if (Expression\Evaluator::evaluate($conn, $scope, $havingClause, reset($rows), $group_result)) {
-                    $out_groups[] = $rows;
+            foreach ($result->rows as $i => $row) {
+                if (Expression\Evaluator::evaluate($conn, $scope, $havingClause, $row, $result)) {
+                    $rows[$i] = $row;
                 }
             }
 
-            return new QueryResult(
-                $result->rows,
-                $result->columns,
-                $out_groups
-            );
+            return new QueryResult($rows, $result->columns);
         }
 
-        return $result;
+        $out_groups = [];
+
+        foreach ($result->grouped_rows as $group_id => $rows) {
+            $group_result = new QueryResult($rows, $result->columns);
+
+            $first_row = reset($rows);
+
+            if (Expression\Evaluator::evaluate($conn, $scope, $havingClause, $first_row, $group_result)) {
+                $out_groups[] = $rows;
+            }
+        }
+
+        return new QueryResult(
+            $result->rows,
+            $result->columns,
+            $out_groups
+        );
     }
 
     protected static function applySelect(
@@ -380,6 +397,11 @@ final class SelectProcessor extends Processor
                         && $order_by['expression']->tableName
                     ) {
                         $name = $order_by['expression']->tableName . '.%.' . $order_by['expression']->columnName;
+                    }
+
+                    if ($order_by['expression'] instanceof FunctionExpression) {
+                        // TODO it’s possible a FIELD(..) expression contains some columns not in the result set
+                        continue;
                     }
 
                     if (\array_key_exists($name, $out[$i])) {

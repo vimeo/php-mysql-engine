@@ -44,12 +44,13 @@ final class CaseOperatorExpression extends Expression
      */
     public $wellFormed = false;
 
-    public function __construct()
+    public function __construct(Token $token)
     {
         $this->name = 'CASE';
         $this->precedence = ExpressionParser::OPERATOR_PRECEDENCE['CASE'];
         $this->operator = 'CASE';
         $this->type = TokenType::OPERATOR;
+        $this->start = $token->start;
     }
 
     /**
@@ -89,7 +90,7 @@ final class CaseOperatorExpression extends Expression
             case 'END':
                 if ($this->lastKeyword === 'THEN' && $this->then) {
                     $this->else = new ConstantExpression(
-                        new Token(TokenType::NULL_CONSTANT, 'null', 'null')
+                        new Token(TokenType::NULL_CONSTANT, 'null', 'null', $this->start)
                     );
                 } else {
                     if ($this->lastKeyword !== 'ELSE' || !$this->else) {

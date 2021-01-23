@@ -49,4 +49,25 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
             )->rows
         );
     }
+
+    public function testStringDecimalIntComparison()
+    {
+        $query = 'SELECT ("0.00" > 0) as `a`';
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+
+        $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
+
+        $this->assertSame(
+            [['a' => 0]],
+            \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+                $conn,
+                new \Vimeo\MysqlEngine\Processor\Scope([]),
+                $select_query,
+                null
+            )->rows
+        );
+    }
 }

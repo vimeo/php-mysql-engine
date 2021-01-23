@@ -46,6 +46,7 @@ final class FunctionExpression extends Expression
         $this->functionName = $token->value;
         $this->name = $token->value;
         $this->operator = (string) $this->type;
+        $this->start = $token->start;
     }
 
     /**

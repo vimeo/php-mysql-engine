@@ -34,6 +34,7 @@ final class CastExpression extends Expression
         $this->operator = (string) $this->type;
         $this->expr = $expr;
         $this->castType = $cast_type;
+        $this->start = $token->start;
     }
 
     /**

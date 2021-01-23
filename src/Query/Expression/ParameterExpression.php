@@ -20,6 +20,7 @@ final class ParameterExpression extends Expression
         $this->precedence = 0;
         $this->parameterName = $parameter_name;
         $this->name = '?';
+        $this->start = $token->start;
     }
 
     /**

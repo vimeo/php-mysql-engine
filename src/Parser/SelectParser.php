@@ -97,7 +97,7 @@ final class SelectParser
 
     private function parseMainSelect() : SelectQuery
     {
-        $query = new SelectQuery($this->sql);
+        $query = new SelectQuery($this->sql, $this->tokens[$this->pointer]->start);
         $this->pointer++;
 
         $count = \count($this->tokens);

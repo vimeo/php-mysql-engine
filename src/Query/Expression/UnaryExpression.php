@@ -2,6 +2,7 @@
 namespace Vimeo\MysqlEngine\Query\Expression;
 
 use Vimeo\MysqlEngine\Parser\ParserException;
+use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\TokenType;
 
@@ -17,12 +18,13 @@ final class UnaryExpression extends Expression
      */
     public $operator;
 
-    public function __construct(string $operator)
+    public function __construct(string $operator, Token $token)
     {
         $this->operator = $operator;
         $this->type = TokenType::OPERATOR;
         $this->precedence = 14;
         $this->name = $operator;
+        $this->start = $token->start;
     }
 
     public function setNextChild(Expression $expr, bool $overwrite = false) : void

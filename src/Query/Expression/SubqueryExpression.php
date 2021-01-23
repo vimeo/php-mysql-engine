@@ -23,6 +23,7 @@ final class SubqueryExpression extends Expression
         $this->name = $name;
         $this->precedence = 0;
         $this->type = TokenType::CLAUSE;
+        $this->start = $query->start;
     }
 
     /**
