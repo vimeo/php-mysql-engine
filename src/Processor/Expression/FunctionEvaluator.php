@@ -277,7 +277,7 @@ final class FunctionEvaluator
     /**
      * @param array<string, Column> $columns
      *
-     * @return numeric
+     * @return ?numeric
      */
     private static function sqlSum(
         FakePdo $conn,
@@ -288,6 +288,10 @@ final class FunctionEvaluator
         $expr = $expr->getExpr();
 
         $sum = 0;
+
+        if (!$result->rows) {
+            return null;
+        }
 
         foreach ($result->rows as $row) {
             \is_array($row) ? $row : (function () {
@@ -347,15 +351,15 @@ final class FunctionEvaluator
         $expr = $expr->getExpr();
         $values = [];
 
+        if (!$result->rows) {
+            return null;
+        }
+
         foreach ($result->rows as $row) {
             \is_array($row) ? $row : (function () {
                 throw new \TypeError('Failed assertion');
             })();
             $values[] = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
-        }
-
-        if (0 === \count($values)) {
-            return null;
         }
 
         return self::castAggregate(\min($values), $expr, $result);
@@ -375,15 +379,15 @@ final class FunctionEvaluator
         $expr = $expr->getExpr();
         $values = [];
 
+        if (!$result->rows) {
+            return null;
+        }
+
         foreach ($result->rows as $row) {
             \is_array($row) ? $row : (function () {
                 throw new \TypeError('Failed assertion');
             })();
             $values[] = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
-        }
-
-        if (0 === \count($values)) {
-            return null;
         }
 
         return self::castAggregate(\max($values), $expr, $result);

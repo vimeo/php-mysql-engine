@@ -66,6 +66,17 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testSumEmptySet()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare("SELECT SUM(`id`) FROM `video_game_characters` WHERE `id` > :id");
+        $query->bindValue(':id', 100);
+        $query->execute();
+
+        $this->assertSame([['SUM(`id`)' => null]], $query->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
     public function testDefaultNullTimestamp()
     {
         $pdo = self::getConnectionToFullDB(false);
