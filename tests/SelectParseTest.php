@@ -42,27 +42,6 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertSame('bar', $select_query->selectExpressions[0]->columnName);
     }
 
-    public function testCast()
-    {
-        $query = 'SELECT CAST(1 + 2 AS UNSIGNED) as `a`';
-
-        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
-
-        $this->assertInstanceOf(SelectQuery::class, $select_query);
-
-        $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
-
-        $this->assertSame(
-            [['a' => 3]],
-            \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
-                $conn,
-                new \Vimeo\MysqlEngine\Processor\Scope([]),
-                $select_query,
-                null
-            )->rows
-        );
-    }
-
     public function testAddFunctionResults()
     {
         $query = 'SELECT IFNULL(`a`.`b`, 0) + ISNULL(`a`.`c`)';
@@ -81,27 +60,6 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
         $this->assertTrue($select_query->selectExpressions[0]->isWellFormed());
 
         $this->assertSame('IFNULL(`a`.`b`, 0) + ISNULL(`a`.`c`)', $select_query->selectExpressions[0]->name);
-    }
-
-    public function testSubqueryCalculation()
-    {
-        $query = 'SELECT (SELECT 2) + (SELECT 3) as `a`';
-
-        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
-
-        $this->assertInstanceOf(SelectQuery::class, $select_query);
-
-        $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
-
-        $this->assertSame(
-            [['a' => 5]],
-            \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
-                $conn,
-                new \Vimeo\MysqlEngine\Processor\Scope([]),
-                $select_query,
-                null
-            )->rows
-        );
     }
 
     public function testFunctionOperatorPrecedence()
