@@ -237,7 +237,7 @@ final class BinaryOperatorEvaluator
 
                 $left_string = (string) Evaluator::evaluate($conn, $scope, $left, $row, $result);
 
-                if (!$right instanceof ConstantExpression) {
+                if (!\is_string($r_value)) {
                     throw new ProcessorException("LIKE pattern should be a constant string");
                 }
 
@@ -279,7 +279,6 @@ final class BinaryOperatorEvaluator
             case 'RLIKE':
             case 'REGEXP':
                 $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
-
 
                 $left_string = (string) Evaluator::evaluate($conn, $scope, $left, $row, $result);
                 $case_insensitive = 'i';
