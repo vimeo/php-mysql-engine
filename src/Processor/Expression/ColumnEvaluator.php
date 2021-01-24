@@ -93,7 +93,7 @@ final class ColumnEvaluator
         }
 
         throw new ProcessorException(
-            'Column with index ' . $expr->columnExpression . ' not found in row'
+            'Column with index ' . $expr->columnExpression . ' not found in row at offset ' . $expr->start
         );
     }
 }
