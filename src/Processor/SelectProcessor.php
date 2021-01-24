@@ -276,6 +276,8 @@ final class SelectProcessor extends Processor
 
         $grouped_rows = $result->grouped_rows !== null ? $result->grouped_rows : [$result->rows];
 
+        $have_reevaluated_columns = false;
+
         foreach ($grouped_rows as $group_id => $rows) {
             $group_result = $result->grouped_rows !== null
                 ? new QueryResult($rows, $result->columns)
@@ -344,9 +346,18 @@ final class SelectProcessor extends Processor
                     }
                 }
 
-                if ($scope->variables) {
-                    // fetch columns again if we have temp variables
-                    $columns = self::getSelectSchema($scope, $stmt, $result->columns, $columns);
+                if ($scope->variables || !$have_reevaluated_columns) {
+                    // fetch columns again if we have temp variables or if we have a single
+                    // new matcing row, as subqueries may have better types discovered
+                    $columns = self::getSelectSchema(
+                        $scope,
+                        $stmt,
+                        $result->columns,
+                        !$scope->variables ? [] : $columns,
+                        false
+                    );
+
+                    $have_reevaluated_columns = true;
                 }
 
                 $i++;
@@ -462,7 +473,8 @@ final class SelectProcessor extends Processor
         Scope $scope,
         SelectQuery $stmt,
         array $from_columns,
-        array $existing_columns
+        array $existing_columns,
+        bool $use_cache = true
     ) : array {
         $columns = [];
 
@@ -485,9 +497,9 @@ final class SelectProcessor extends Processor
                 }
             } else {
                 if (!isset($existing_columns[$expr->name])) {
-                    $columns[$expr->name] = Expression\Evaluator::getColumnSchema($expr, $scope, $from_columns);
+                    $columns[$expr->name] = Expression\Evaluator::getColumnSchema($expr, $scope, $from_columns, $use_cache);
                 } elseif ($existing_columns[$expr->name] instanceof Column\NullColumn) {
-                    $columns[$expr->name] = clone Expression\Evaluator::getColumnSchema($expr, $scope, $from_columns);
+                    $columns[$expr->name] = clone Expression\Evaluator::getColumnSchema($expr, $scope, $from_columns, $use_cache);
                     $columns[$expr->name]->isNullable = true;
                 }
             }

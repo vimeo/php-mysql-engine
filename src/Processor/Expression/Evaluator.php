@@ -5,6 +5,7 @@ use Vimeo\MysqlEngine\Expression;
 use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
+use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
 use Vimeo\MysqlEngine\Schema\Column;
 use Vimeo\MysqlEngine\TokenType;
 
@@ -45,7 +46,7 @@ class Evaluator
             case \Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression::class:
                 return ExistsOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            case \Vimeo\MysqlEngine\Query\Expression\FunctionExpression::class:
+            case FunctionExpression::class:
                 return FunctionEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\InOperatorExpression::class:
@@ -108,9 +109,10 @@ class Evaluator
     public static function getColumnSchema(
         \Vimeo\MysqlEngine\Query\Expression\Expression $expr,
         Scope $scope,
-        array $columns
+        array $columns,
+        bool $use_cache = true
     ) : Column {
-        if (!$scope->variables && $expr->column) {
+        if (!$scope->variables && $expr->column && $use_cache) {
             return $expr->column;
         }
 
@@ -159,7 +161,7 @@ class Evaluator
             case \Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression::class:
                 return $expr->column = new Column\TinyInt(true, 1);
 
-            case \Vimeo\MysqlEngine\Query\Expression\FunctionExpression::class:
+            case FunctionExpression::class:
                 return $expr->column = FunctionEvaluator::getColumnSchema($expr, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\InOperatorExpression::class:
@@ -175,7 +177,19 @@ class Evaluator
                 break;
 
             case \Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class:
-                break;
+                if (\count($expr->query->selectExpressions) === 1) {
+                    if ($expr->query->selectExpressions[0]->column) {
+                        return $expr->query->selectExpressions[0]->column;
+                    }
+
+                    if ($expr->query->selectExpressions[0] instanceof FunctionExpression
+                        && \strtoupper($expr->query->selectExpressions[0]->functionName) === 'COUNT'
+                    ) {
+                        return $expr->column = new Column\IntColumn(true, 10);
+                    }
+                }
+
+                return new Column\Varchar(10);
 
             case \Vimeo\MysqlEngine\Query\Expression\UnaryExpression::class:
                 break;
