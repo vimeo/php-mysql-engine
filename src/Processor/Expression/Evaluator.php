@@ -269,7 +269,7 @@ class Evaluator
             $type_1_null = $types[1] instanceof Column\NullColumn;
 
             if ($type_0_null && $type_1_null) {
-                return $type_1_null;
+                return $types[0];
             }
 
             if ($type_0_null) {
