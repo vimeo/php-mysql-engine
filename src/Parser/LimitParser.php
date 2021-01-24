@@ -44,8 +44,8 @@ final class LimitParser
 
         if ($next->type === TokenType::NUMERIC_CONSTANT) {
             $limit = new ConstantExpression($next);
-        } elseif ($next->type === TokenType::IDENTIFIER && $next->value[0] === ':') {
-            $limit = new ParameterExpression($next, $next->value);
+        } elseif ($next->type === TokenType::IDENTIFIER && $next->value === '?') {
+            $limit = new ParameterExpression($next, $next->parameterName);
         } else {
             throw new ParserException("Expected integer or parameter after OFFSET");
         }
@@ -63,8 +63,8 @@ final class LimitParser
 
                 if ($next->type === TokenType::NUMERIC_CONSTANT) {
                     $offset = new ConstantExpression($next);
-                } elseif ($next->type === TokenType::IDENTIFIER && $next->value[0] === ':') {
-                    $offset = new ParameterExpression($next, $next->value);
+                } elseif ($next->type === TokenType::IDENTIFIER && $next->value === '?') {
+                    $offset = new ParameterExpression($next, $next->parameterName);
                 } else {
                     throw new ParserException("Expected integer or parameter after OFFSET");
                 }
@@ -80,8 +80,8 @@ final class LimitParser
 
                     if ($next->type === TokenType::NUMERIC_CONSTANT) {
                         $limit = new ConstantExpression($next);
-                    } elseif ($next->type === TokenType::IDENTIFIER && $next->value[0] === ':') {
-                        $limit = new ParameterExpression($next, $next->value);
+                    } elseif ($next->type === TokenType::IDENTIFIER && $next->value === '?') {
+                        $limit = new ParameterExpression($next, $next->parameterName);
                     } else {
                         throw new ParserException("Expected integer or parameter after OFFSET");
                     }
