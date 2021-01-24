@@ -128,15 +128,15 @@ class Evaluator
                 return $expr->column = BinaryOperatorEvaluator::getColumnSchema($expr, $scope, $columns);
 
             case \Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression::class:
-                foreach ($expr->whenExpressions as $when) {
-                    $then_type = Evaluator::getColumnSchema($when['then'], $scope, $columns);
+                $types = [];
 
-                    if ($then_type->getPhpType() === 'string') {
-                        return $expr->column = $then_type;
-                    }
+                foreach ($expr->whenExpressions as $when) {
+                    $types[] = Evaluator::getColumnSchema($when['then'], $scope, $columns);
                 }
 
-                return $expr->column = Evaluator::getColumnSchema($expr->else, $scope, $columns);
+                $types[] = Evaluator::getColumnSchema($expr->else, $scope, $columns);
+
+                return $expr->column = self::combineColumnTypes($types);
 
             case \Vimeo\MysqlEngine\Query\Expression\ColumnExpression::class:
                 return $expr->column = ColumnEvaluator::getColumnSchema($expr, $columns);
@@ -257,5 +257,54 @@ class Evaluator
         }
 
         return $expr->column = new Column\Varchar(10);
+    }
+
+    /**
+     * @param  list<Column>  $types
+     */
+    public static function combineColumnTypes(array $types)
+    {
+        $is_nullable = false;
+
+        $has_floating_point = false;
+        $has_integer = false;
+        $has_string = false;
+        $has_date = false;
+
+        foreach ($types as $type) {
+            if ($type->isNullable) {
+                $is_nullable = true;
+            }
+
+            if ($type instanceof Column\StringColumn
+                || $type instanceof Column\ChronologicalColumn
+            ) {
+                $has_string = true;
+            }
+
+            if ($type instanceof Column\DecimalPointColumn) {
+                $has_floating_point = true;
+            }
+
+            if ($type instanceof Column\IntegerColumn) {
+                $has_integer = true;
+            }
+        }
+
+        if ($has_string) {
+            $column = new Column\Varchar(255);
+        } elseif ($has_floating_point) {
+            $column = new Column\FloatColumn(10, 2);
+        } else if ($has_integer) {
+            $column = new Column\IntColumn(false, 10);
+        } else {
+            $column = new Column\Varchar(255);
+        }
+
+        if ($is_nullable) {
+            $column->isNullable = true;
+        }
+
+        return $column;
     }
 }

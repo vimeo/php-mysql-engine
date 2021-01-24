@@ -590,6 +590,7 @@ final class SelectProcessor extends Processor
         };
 
         $rows = $result->rows;
+        $columns = $result->columns;
 
         foreach ($stmt->multiQueries as $sub) {
             $subquery_result = SelectProcessor::process($conn, $scope, $sub['query'], null);
@@ -605,6 +606,18 @@ final class SelectProcessor extends Processor
 
                 case MultiOperand::UNION_ALL:
                     $rows = \array_merge($subquery_result->rows, $rows);
+                    foreach ($columns as $column_name => $column) {
+                        if (isset($subquery_result->columns[$column_name])
+                            && (\get_class($subquery_result->columns[$column_name])
+                                !== \get_class($column)
+                                || $subquery_result->columns[$column_name]->isNullable !== $column->isNullable)
+                        ) {
+                            $columns[$column_name] = Expression\Evaluator::combineColumnTypes([
+                                $subquery_result->columns[$column_name],
+                                $column
+                            ]);
+                        }
+                    }
                     break;
 
                 case MultiOperand::INTERSECT:
@@ -629,6 +642,6 @@ final class SelectProcessor extends Processor
             }
         }
 
-        return new QueryResult($rows, $result->columns);
+        return new QueryResult($rows, $columns);
     }
 }
