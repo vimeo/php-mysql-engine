@@ -22,6 +22,10 @@ class Evaluator
         array $row,
         QueryResult $result
     ) {
+        if ($expr->name && \array_key_exists($expr->name, $row)) {
+            return $row[$expr->name];
+        }
+
         switch (get_class($expr)) {
             case \Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression::class:
                 return BetweenOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
