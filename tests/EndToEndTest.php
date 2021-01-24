@@ -686,6 +686,44 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testGroupByAliasHavingNoAlias()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'SELECT count(*) AS `c`, `console` as `n` FROM `video_game_characters` GROUP BY `n` HAVING count(*) > 1'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['c' => 9, 'n' => 'nes'],
+                ['c' => 4, 'n' => 'sega genesis'],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testGroupByAliasHavingAlias()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'SELECT count(*) AS `c`, `console` as `n` FROM `video_game_characters` GROUP BY `n` HAVING `c` > 1'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['c' => 9, 'n' => 'nes'],
+                ['c' => 4, 'n' => 'sega genesis'],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
     {
         $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');
