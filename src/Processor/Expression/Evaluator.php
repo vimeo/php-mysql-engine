@@ -88,14 +88,10 @@ class Evaluator
                 return CastEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case \Vimeo\MysqlEngine\Query\Expression\VariableExpression::class:
-                return VariableEvaluator::evaluate($conn, $scope, $expr, $row, $result);
+                return VariableEvaluator::evaluate($scope, $expr);
 
             case \Vimeo\MysqlEngine\Query\Expression\ParameterExpression::class:
-                if (\array_key_exists($expr->parameterName, $scope->parameters)) {
-                    return $scope->parameters[$expr->parameterName];
-                }
-
-                throw new ProcessorException('Parameter offset ' . $expr->parameterName . ' out of range');
+                return ParameterEvaluator::evaluate($scope, $expr);
 
             default:
                 throw new ProcessorException('Unsupported expression ' . get_class($expr));

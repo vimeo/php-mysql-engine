@@ -2,6 +2,9 @@
 namespace Vimeo\MysqlEngine\Parser;
 
 use Vimeo\MysqlEngine\TokenType;
+use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
+use Vimeo\MysqlEngine\Query\Expression\ParameterExpression;
+use Vimeo\MysqlEngine\Query\LimitClause;
 
 final class LimitParser
 {
@@ -25,7 +28,7 @@ final class LimitParser
     }
 
     /**
-     * @return array{0:int, 1:array{rowcount:int, offset:int}}
+     * @return array{0:int, 1:LimitClause}
      */
     public function parse()
     {
@@ -34,32 +37,58 @@ final class LimitParser
         }
         $this->pointer++;
         $next = $this->tokens[$this->pointer] ?? null;
-        if ($next === null || $next->type !== TokenType::NUMERIC_CONSTANT) {
-            throw new ParserException("Expected integer after LIMIT");
+
+        if ($next === null) {
+            throw new ParserException("Expected token after OFFSET");
         }
-        $limit = (int) $next->value;
-        $offset = 0;
+
+        if ($next->type === TokenType::NUMERIC_CONSTANT) {
+            $limit = new ConstantExpression($next);
+        } elseif ($next->type === TokenType::IDENTIFIER && $next->value[0] === ':') {
+            $limit = new ParameterExpression($next, $next->value);
+        } else {
+            throw new ParserException("Expected integer or parameter after OFFSET");
+        }
+
+        $offset = null;
         $next = $this->tokens[$this->pointer + 1] ?? null;
         if ($next !== null) {
             if ($next->value === 'OFFSET') {
                 $this->pointer += 2;
                 $next = $this->tokens[$this->pointer] ?? null;
-                if ($next === null || $next->type !== TokenType::NUMERIC_CONSTANT) {
-                    throw new ParserException("Expected integer after OFFSET");
+
+                if ($next === null) {
+                    throw new ParserException("Expected token after OFFSET");
                 }
-                $offset = (int) $next->value;
+
+                if ($next->type === TokenType::NUMERIC_CONSTANT) {
+                    $offset = new ConstantExpression($next);
+                } elseif ($next->type === TokenType::IDENTIFIER && $next->value[0] === ':') {
+                    $offset = new ParameterExpression($next, $next->value);
+                } else {
+                    throw new ParserException("Expected integer or parameter after OFFSET");
+                }
             } else {
                 if ($next->value === ',') {
                     $this->pointer += 2;
                     $next = $this->tokens[$this->pointer] ?? null;
-                    if ($next === null || $next->type !== TokenType::NUMERIC_CONSTANT) {
-                        throw new ParserException("Expected integer after OFFSET");
-                    }
                     $offset = $limit;
-                    $limit = (int) $next->value;
+
+                    if ($next === null) {
+                        throw new ParserException("Expected token after OFFSET");
+                    }
+
+                    if ($next->type === TokenType::NUMERIC_CONSTANT) {
+                        $limit = new ConstantExpression($next);
+                    } elseif ($next->type === TokenType::IDENTIFIER && $next->value[0] === ':') {
+                        $limit = new ParameterExpression($next, $next->value);
+                    } else {
+                        throw new ParserException("Expected integer or parameter after OFFSET");
+                    }
                 }
             }
         }
-        return [$this->pointer, ['rowcount' => $limit, 'offset' => $offset]];
+
+        return [$this->pointer, new LimitClause($offset, $limit)];
     }
 }

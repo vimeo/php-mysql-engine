@@ -2,6 +2,7 @@
 namespace Vimeo\MysqlEngine\Query;
 
 use Vimeo\MysqlEngine\Query\Expression\Expression;
+use Vimeo\MysqlEngine\Query\LimitClause;
 
 final class TruncateQuery
 {
@@ -16,7 +17,7 @@ final class TruncateQuery
     public $orderBy = null;
 
     /**
-     * @var array{rowcount:int, offset:int}|null
+     * @var LimitClause|null
      */
     public $limitClause = null;
 

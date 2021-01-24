@@ -5,6 +5,7 @@ use Vimeo\MysqlEngine\JoinType;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
+use Vimeo\MysqlEngine\Query\LimitClause;
 
 final class UpdateQuery
 {
@@ -19,7 +20,7 @@ final class UpdateQuery
     public $orderBy = null;
 
     /**
-     * @var array{rowcount:int, offset:int}|null
+     * @var LimitClause|null
      */
     public $limitClause = null;
 
@@ -37,7 +38,7 @@ final class UpdateQuery
      * @var array<int, BinaryOperatorExpression>
      */
     public $setClause = [];
-    
+
     public function __construct(string $tableName, string $sql)
     {
         $this->tableName = $tableName;

@@ -102,6 +102,7 @@ final class SelectProcessor extends Processor
                 $stmt,
                 self::applyLimit(
                     $stmt->limitClause,
+                    $scope,
                     $order_by
                 )
             )

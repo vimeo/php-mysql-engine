@@ -4,6 +4,8 @@ namespace Vimeo\MysqlEngine\Processor;
 use Vimeo\MysqlEngine\DataIntegrity;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
+use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
+use Vimeo\MysqlEngine\Query\LimitClause;
 use Vimeo\MysqlEngine\Schema\Column\IntegerColumn;
 use Vimeo\MysqlEngine\Schema\TableDefinition;
 use Vimeo\MysqlEngine\Schema\Column;
@@ -97,17 +99,28 @@ abstract class Processor
         return new QueryResult(array_values($rows), $result->columns);
     }
 
-    /**
-     * @param array{rowcount:int, offset:int}|null $limit
-     */
-    protected static function applyLimit(?array $limit, QueryResult $result) : QueryResult
+    protected static function applyLimit(?LimitClause $limit, Scope $scope, QueryResult $result) : QueryResult
     {
         if ($limit === null) {
             return $result;
         }
 
+        if ($limit->offset === null) {
+            $offset = 0;
+        } elseif ($limit->offset instanceof ConstantExpression) {
+            $offset = (int) $limit->offset->value;
+        } else {
+            $offset = (int) Expression\ParameterEvaluator::evaluate($scope, $limit->offset);
+        }
+
+        if ($limit->rowcount instanceof ConstantExpression) {
+            $rowcount = (int) $limit->rowcount->value;
+        } else {
+            $rowcount = (int) Expression\ParameterEvaluator::evaluate($scope, $limit->rowcount);
+        }
+
         return new QueryResult(
-            \array_slice($result->rows, $limit['offset'], $limit['rowcount'], true),
+            \array_slice($result->rows, $offset, $rowcount, true),
             $result->columns
         );
     }

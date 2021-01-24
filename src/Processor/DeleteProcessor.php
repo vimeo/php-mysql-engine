@@ -33,6 +33,7 @@ final class DeleteProcessor extends Processor
             $table_name,
             self::applyLimit(
                 $stmt->limitClause,
+                $scope,
                 self::applyOrderBy(
                     $conn,
                     $scope,

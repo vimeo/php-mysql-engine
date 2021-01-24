@@ -4,6 +4,7 @@ namespace Vimeo\MysqlEngine\Query;
 use Vimeo\MysqlEngine\MultiOperand;
 use Vimeo\MysqlEngine\Parser\ParserException;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
+use Vimeo\MysqlEngine\Query\LimitClause;
 
 final class SelectQuery
 {
@@ -18,7 +19,7 @@ final class SelectQuery
     public $orderBy = null;
 
     /**
-     * @var array{rowcount:int, offset:int}|null
+     * @var LimitClause|null
      */
     public $limitClause = null;
 
