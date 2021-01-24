@@ -724,6 +724,28 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testHavingAliasSelectColumn()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'SELECT LENGTH(`console`) as `l`, `name`, `type`
+            FROM `video_game_characters`
+            HAVING `l` > 4 AND `type` = "hero"
+            ORDER BY `l` LIMIT 2'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['l' => 5, 'name' => 'pac man', 'type' => 'hero'],
+                ['l' => 7, 'name' => 'pikachu', 'type' => 'hero'],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
     {
         $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');

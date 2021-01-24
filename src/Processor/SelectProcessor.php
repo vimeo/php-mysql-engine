@@ -49,33 +49,40 @@ final class SelectProcessor extends Processor
             );
         }
 
-        $group_by = self::applyGroupBy(
+        $select = self::applyGroupBy(
             $conn,
             $scope,
             $stmt,
             $where
         );
 
-        if ($stmt->havingClause) {
-            $having = self::applyHaving(
+        // if the having statement follows a GROUP BY
+        // then filter there
+        if ($stmt->groupBy && $stmt->havingClause) {
+            $select = self::applyHaving(
                 $conn,
                 $scope,
                 $stmt->havingClause,
-                $group_by
+                $select
             );
+        }
 
-            $select = self::applySelect(
+        $select = self::applySelect(
+            $conn,
+            $scope,
+            $stmt,
+            $select
+        );
+
+        // If there's no GROUP BY then we only
+        // care to filter on the returned select
+        // fields
+        if (!$stmt->groupBy && $stmt->havingClause) {
+            $select = self::applyHaving(
                 $conn,
                 $scope,
-                $stmt,
-                $having
-            );
-        } else {
-            $select = self::applySelect(
-                $conn,
-                $scope,
-                $stmt,
-                $group_by
+                $stmt->havingClause,
+                $select
             );
         }
 
