@@ -189,7 +189,7 @@ class Evaluator
                     }
                 }
 
-                return new Column\Varchar(10);
+                return new Column\NullColumn();
 
             case \Vimeo\MysqlEngine\Query\Expression\UnaryExpression::class:
                 break;
@@ -262,8 +262,29 @@ class Evaluator
     /**
      * @param  list<Column>  $types
      */
-    public static function combineColumnTypes(array $types)
+    public static function combineColumnTypes(array $types) : Column
     {
+        if (count($types) === 2) {
+            $type_0_null = $types[0] instanceof Column\NullColumn;
+            $type_1_null = $types[1] instanceof Column\NullColumn;
+
+            if ($type_0_null && $type_1_null) {
+                return $type_1_null;
+            }
+
+            if ($type_0_null) {
+                $type = clone $types[1];
+                $type->isNullable = true;
+                return $type;
+            }
+
+            if ($type_1_null) {
+                $type = clone $types[0];
+                $type->isNullable = true;
+                return $type;
+            }
+        }
+
         $is_nullable = false;
 
         $has_floating_point = false;
@@ -271,11 +292,29 @@ class Evaluator
         $has_string = false;
         $has_date = false;
 
+        $non_null_types = [];
+
         foreach ($types as $type) {
             if ($type->isNullable) {
                 $is_nullable = true;
             }
 
+            if (!$type instanceof Column\NullColumn) {
+                $non_null_types[] = $type;
+            }
+        }
+
+        if (!$non_null_types) {
+            return new Column\NullColumn;
+        }
+
+        if (count($non_null_types) === 1) {
+            $type = clone $non_null_types[0];
+            $type->isNullable = true;
+            return $type;
+        }
+
+        foreach ($non_null_types as $type) {
             if ($type instanceof Column\StringColumn
                 || $type instanceof Column\ChronologicalColumn
             ) {
