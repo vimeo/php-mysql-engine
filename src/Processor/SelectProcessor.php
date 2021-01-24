@@ -433,7 +433,7 @@ final class SelectProcessor extends Processor
 
         $out = array_values($out);
 
-        if (\array_key_exists('DISTINCT', $stmt->options)) {
+        if (\in_array('DISTINCT', $stmt->options)) {
             $new_out = [];
 
             foreach ($out as $row) {

@@ -746,6 +746,30 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testDistinctColumn()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'SELECT DISTINCT `console` AS `console`
+            FROM `video_game_characters`
+            ORDER BY `console`'
+        );
+
+        $query->execute();
+
+        $this->assertEquals(
+            [
+                ['console' => 'atari'],
+                ['console' => 'gameboy'],
+                ['console' => 'nes'],
+                ['console' => 'sega genesis'],
+                ['console' => 'super nintendo'],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
     {
         $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');
