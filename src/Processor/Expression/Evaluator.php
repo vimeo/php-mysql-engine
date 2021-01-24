@@ -114,6 +114,10 @@ class Evaluator
             return $expr->column;
         }
 
+        if ($expr->name && \array_key_exists($expr->name, $columns)) {
+            return $expr->column = $columns[$expr->name];
+        }
+
         switch (get_class($expr)) {
             case \Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression::class:
                 return $expr->column = new Column\TinyInt(true, 1);
