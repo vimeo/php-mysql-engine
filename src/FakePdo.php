@@ -83,8 +83,10 @@ class FakePdo extends \PDO
         if ($this->real) {
             $real_last_insert_id = $this->real->lastInsertId($seqname);
             if ($this->lastInsertId !== $real_last_insert_id) {
-                var_dump($real_last_insert_id, $this->lastInsertId);
-                throw new \UnexpectedValueException('different last insert id');
+                throw new \UnexpectedValueException(
+                    'different last insert id – saw ' . $this->lastInsertId
+                        . ' but MySQL produced ' . $real_last_insert_id
+                );
             }
         }
 
@@ -94,6 +96,7 @@ class FakePdo extends \PDO
     public function beginTransaction()
     {
         Server::snapshot('transaction');
+        return true;
     }
 
     public function commit()
@@ -104,5 +107,6 @@ class FakePdo extends \PDO
     public function rollback()
     {
         Server::restoreSnapshot('transaction');
+        return true;
     }
 }

@@ -83,13 +83,7 @@ final class DataIntegrity
                     if ($column_nullable) {
                         continue;
                     } else {
-                        if (true) {
-                            $row[$column_name] = self::coerceValueToColumn($column, null);
-                        } else {
-                            throw new Processor\ProcessorException(
-                                "Column '{$column_name}' on '{$table_definition->name}' does not allow null values"
-                            );
-                        }
+                        $row[$column_name] = self::coerceValueToColumn($column, null);
                     }
                 } else {
                     switch ($php_type) {
@@ -98,42 +92,18 @@ final class DataIntegrity
                                 $row[$column_name] = (int) $row[$column_name];
                             } else {
                                 if (!\is_int($row[$column_name])) {
-                                    if (false) {
-                                        $field_str = \var_export($row[$column_name], true);
-                                        throw new Processor\ProcessorException(
-                                            "Invalid value {$field_str} for column '{$column_name}'"
-                                                . " on '{$table_definition->name}', expected int"
-                                        );
-                                    } else {
-                                        $row[$column_name] = (int) $row[$column_name];
-                                    }
+                                    $row[$column_name] = (int) $row[$column_name];
                                 }
                             }
                             break;
                         case 'float':
                             if (!\is_float($row[$column_name])) {
-                                if (false) {
-                                    $field_str = \var_export($row[$column_name], true);
-                                    throw new Processor\ProcessorException(
-                                        "Invalid value '{$field_str}' for column '{$column_name}'"
-                                            . " on '{$table_definition->name}', expected float"
-                                    );
-                                } else {
-                                    $row[$column_name] = (double) $row[$column_name];
-                                }
+                                $row[$column_name] = (double) $row[$column_name];
                             }
                             break;
                         default:
                             if (!\is_string($row[$column_name])) {
-                                if (false) {
-                                    $field_str = \var_export($row[$column_name], true);
-                                    throw new Processor\ProcessorException(
-                                        "Invalid value '{$field_str}' for column '{$column_name}'"
-                                            . " on '{$table_definition->name}', expected string"
-                                    );
-                                } else {
-                                    $row[$column_name] = (string) $row[$column_name];
-                                }
+                                $row[$column_name] = (string) $row[$column_name];
                             }
                             break;
                     }

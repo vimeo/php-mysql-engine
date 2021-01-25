@@ -73,7 +73,7 @@ class FakePdoStatement extends \PDOStatement
      */
     public function bindValue($key, $value, $type = \PDO::PARAM_STR) : void
     {
-        if ($key[0] !== ':') {
+        if (\is_string($key) && $key[0] !== ':') {
             $key = ':' . $key;
         }
 
@@ -458,6 +458,7 @@ class FakePdoStatement extends \PDOStatement
     }
 
     /**
+     * @param array<string, mixed> $row
      * @return object
      */
     private static function convertRowToObject(array $row, string $class, array $ctor_args)
@@ -525,7 +526,7 @@ class FakePdoStatement extends \PDOStatement
         $sql = $this->sql;
 
         foreach ($params as $key => $value) {
-            if ($key[0] === ':') {
+            if (\is_string($key) && $key[0] === ':') {
                 $key = \substr($key, 1);
             }
 
