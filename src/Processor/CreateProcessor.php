@@ -165,7 +165,7 @@ final class CreateProcessor
                 return $timestamp;
 
             case DataType::VARBINARY:
-                throw new \UnexpectedValueException('VARBINARY is not yet supported');
+                return new Column\Varbinary((int) $stmt->length);
 
             case DataType::JSON:
                 throw new \UnexpectedValueException('JSON is not yet supported');
