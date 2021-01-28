@@ -557,7 +557,7 @@ final class SQLParser
         return $pointer;
     }
 
-    public static function bustCache()
+    public static function bustCache(): void
     {
         self::$cache = [];
     }

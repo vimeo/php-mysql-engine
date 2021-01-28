@@ -57,7 +57,7 @@ abstract class Processor
             }
         }
 
-        $sort_fun = function (array $a, array $b) use ($conn, $scope, $orders, $result) {
+        $sort_fun = function (array $a, array $b) use ($conn, $scope, $orders, $result): int {
             foreach ($orders as $rule) {
                 $value_a = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $a, $result);
                 $value_b = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $b, $result);

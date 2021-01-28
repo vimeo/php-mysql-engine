@@ -307,6 +307,7 @@ final class FunctionEvaluator
 
     /**
      * @param array<string, Column> $columns
+     * @param scalar $value
      *
      * @return mixed
      */
@@ -329,7 +330,7 @@ final class FunctionEvaluator
                 case 'string':
                     if ($column instanceof \Vimeo\MysqlEngine\Schema\Column\Decimal) {
                         /** @var numeric-string */
-                        return \number_format($value, $column->getDecimalScale(), '.', '');
+                        return \number_format((float) $value, $column->getDecimalScale(), '.', '');
                     }
             }
         }
@@ -359,7 +360,14 @@ final class FunctionEvaluator
             \is_array($row) ? $row : (function () {
                 throw new \TypeError('Failed assertion');
             })();
-            $values[] = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
+
+            $value = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
+
+            if (!\is_scalar($value)) {
+                throw new \TypeError('Bad min value');
+            }
+
+            $values[] = $value;
         }
 
         return self::castAggregate(\min($values), $expr, $result);
@@ -387,7 +395,14 @@ final class FunctionEvaluator
             \is_array($row) ? $row : (function () {
                 throw new \TypeError('Failed assertion');
             })();
-            $values[] = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
+
+            $value = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
+
+            if (!\is_scalar($value)) {
+                throw new \TypeError('Bad max value');
+            }
+
+            $values[] = $value;
         }
 
         return self::castAggregate(\max($values), $expr, $result);
@@ -441,9 +456,8 @@ final class FunctionEvaluator
 
             $value = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            if (!\is_int($value) && !\is_float($value)) {
-                throw new \TypeError('Failed assertion');
-            }
+            \assert(\is_int($value) || \is_float($value));
+            $values[] = $value;
         }
 
         if (\count($values) === 0) {
@@ -883,6 +897,10 @@ final class FunctionEvaluator
         }
 
         $value = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
+
+        if (!\is_scalar($value)) {
+            throw new ProcessorException("MySQL COLUMN first arg must be a scalar");
+        }
 
         foreach ($args as $k => $arg) {
             if ($k < 1) {

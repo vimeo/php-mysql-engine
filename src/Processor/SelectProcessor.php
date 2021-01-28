@@ -577,8 +577,8 @@ final class SelectProcessor extends Processor
         Scope $scope,
         SelectQuery $stmt,
         QueryResult $result
-    ) {
-        $row_encoder = function ($row) {
+    ): QueryResult {
+        $row_encoder = function ($row): string {
             return \implode(
                 '-',
                 \array_map(

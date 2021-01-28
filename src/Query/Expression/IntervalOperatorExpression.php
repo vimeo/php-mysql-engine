@@ -60,7 +60,7 @@ final class IntervalOperatorExpression extends Expression
         $this->number = $expr;
     }
 
-    public function setUnit(string $unit)
+    public function setUnit(string $unit): void
     {
         $unit = \strtoupper($unit);
 

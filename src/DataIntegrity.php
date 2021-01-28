@@ -141,6 +141,9 @@ final class DataIntegrity
         return $row;
     }
 
+    /**
+     * @return false|float|int|null|string
+     */
     public static function coerceValueToColumn(
         Schema\Column $column,
         $value

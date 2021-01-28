@@ -14,7 +14,7 @@ class FakePdoStatement extends \PDOStatement
     private $affectedRows = 0;
 
     /**
-     * @var ?array
+     * @var array<int, array<string, mixed>>|null
      */
     private $result = null;
 
@@ -230,7 +230,7 @@ class FakePdoStatement extends \PDOStatement
                     $this->conn->databaseName,
                     $parsed_query->pattern
                 )) {
-                    $this->result = [[$parsed_query->pattern]];
+                    $this->result = [[$parsed_query->sql => $parsed_query->pattern]];
                 } else {
                     $this->result = [];
                 }
@@ -244,13 +244,16 @@ class FakePdoStatement extends \PDOStatement
         return true;
     }
 
-    private static function processResult(Processor\QueryResult $raw_result)
+    /**
+     * @psalm-return array<int, array<string, mixed>>
+     */
+    private static function processResult(Processor\QueryResult $raw_result): array
     {
         $result = [];
 
         foreach ($raw_result->rows as $i => $row) {
             foreach ($row as $key => $value) {
-                $result[$i][\substr($key, 0, 255)] = isset($raw_result->columns[$key])
+                $result[$i][\substr($key, 0, 255) ?: ''] = isset($raw_result->columns[$key])
                     ? DataIntegrity::coerceValueToColumn($raw_result->columns[$key], $value)
                     : $value;
             }
@@ -483,7 +486,12 @@ class FakePdoStatement extends \PDOStatement
         return $instance;
     }
 
-    private static function stringify(array $row)
+    /**
+     * @param array<string, mixed> $row
+     *
+     * @psalm-return array<string, null|string>
+     */
+    private static function stringify(array $row): array
     {
         return \array_map(
             function ($value) {
@@ -493,7 +501,13 @@ class FakePdoStatement extends \PDOStatement
         );
     }
 
-    private static function lowercaseKeys(array $row)
+    /**
+     * @template T
+     * @param array<string, T> $row
+     *
+     * @psalm-return array<string, T>
+     */
+    private static function lowercaseKeys(array $row): array
     {
         $lowercased_row = [];
 

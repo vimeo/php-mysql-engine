@@ -178,6 +178,9 @@ final class CreateProcessor
         }
     }
 
+    /**
+     * @return Column\BigInt|Column\IntColumn|Column\MediumInt|Column\SmallInt|Column\TinyInt
+     */
     private static function getIntegerDefinitionColumn(Query\MysqlColumnType $stmt)
     {
         $unsigned = $stmt->unsigned;
@@ -208,6 +211,9 @@ final class CreateProcessor
         }
     }
 
+    /**
+     * @return Column\LongText|Column\MediumText|Column\Text|Column\TinyText|Column\Varchar
+     */
     private static function getTextDefinitionColumn(Query\MysqlColumnType $stmt)
     {
         $collation = null;

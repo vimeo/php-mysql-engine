@@ -631,9 +631,9 @@ final class CreateTableParser
     /**
      * @param array<int, array{0:int, 1:int}> $source_map
      *
-     * @return non-empty-list<string>
+     * @psalm-return non-empty-list<string>
      */
-    private function extractTokens(string $sql, array $source_map)
+    private function extractTokens(string $sql, array $source_map): array
     {
         $lists = [
             'FULLTEXT INDEX',
@@ -673,7 +673,7 @@ final class CreateTableParser
         $i = 0;
         $len = \count($source_map);
         while ($i < $len) {
-            $token = \substr($sql, $source_map[$i][0], $source_map[$i][1]);
+            $token = \substr($sql, $source_map[$i][0], $source_map[$i][1]) ?: '';
             $tokenUpper = \strtoupper($token);
             if (\array_key_exists($tokenUpper, $maps)) {
                 $found = false;
