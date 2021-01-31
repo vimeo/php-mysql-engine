@@ -1,4 +1,4 @@
-<img src="/logo.svg" alt="PHP MySQL engine logo" width="345px" height="171px" />
+<img src="/elephin.svg" alt="PHP MySQL engine logo" width="345px" height="171px" />
 
 # PHP MySQL Engine
 
