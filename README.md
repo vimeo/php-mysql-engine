@@ -4,6 +4,8 @@ PHP MySQL Engine is a library for PHP that allows you to test database-driven ap
 
 PHP MySQL Engine is based on Slack's [Hack SQL Fake](https://github.com/slackhq/hack-sql-fake) created by [Scott Sandler](https://github.com/ssandler).
 
+You can read an article about this tool [here](https://medium.com/vimeo-engineering-blog/the-great-pretender-faster-application-tests-with-mysql-simulation-26250f13d251).
+
 ## Motivation
 
 Currently there are two ways to test code that reads and writes to a database:
