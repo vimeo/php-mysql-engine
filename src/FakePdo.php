@@ -75,7 +75,11 @@ class FakePdo extends \PDO
      */
     public function prepare($statement, $options = null)
     {
-        return new FakePdoStatement($this, $statement, $this->real);
+        if (\PHP_MAJOR_VERSION === 8) {
+            return new Php8\FakePdoStatement($this, $statement, $this->real);
+        }
+
+        return new Php7\FakePdoStatement($this, $statement, $this->real);
     }
 
     public function lastInsertId($seqname = null) : string

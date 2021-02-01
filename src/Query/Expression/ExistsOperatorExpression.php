@@ -19,7 +19,7 @@ final class ExistsOperatorExpression extends Expression
      */
     public $negated = false;
 
-    public function __construct(bool $negated = false, Token $token)
+    public function __construct(bool $negated, Token $token)
     {
         $this->negated = $negated;
         $this->name = '';

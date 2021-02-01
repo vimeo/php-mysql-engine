@@ -1,7 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine;
 
-class FakePdoStatement extends \PDOStatement
+trait FakePdoTrait
 {
     /**
      * @var string
@@ -89,7 +89,7 @@ class FakePdoStatement extends \PDOStatement
      * @param ?array $params
      * @return bool
      */
-    public function execute($params = null)
+    public function universalExecute(?array $params = null)
     {
         $sql = $this->sql;
 
@@ -336,19 +336,17 @@ class FakePdoStatement extends \PDOStatement
 
     /**
      * @param  int $fetch_style
-     * @param  string $fetch_argument
-     * @param  array $ctor_args
+     * @param  mixed      $args
      */
-    public function fetchAll($fetch_style = -123, $fetch_argument = null, $ctor_args = null) : array
+    public function universalFetchAll(int $fetch_style = -123, ...$args) : array
     {
         if ($fetch_style === -123) {
             $fetch_style = $this->fetchMode;
             $fetch_argument = $this->fetchArgument;
             $ctor_args = $this->fetchConstructorArgs;
         } else {
-            // may have to uncomment for PHP 8
-            //$fetch_argument = $args[0] ?? null;
-            //$ctor_args = $args[1] ?? [];
+            $fetch_argument = $args[0] ?? null;
+            $ctor_args = $args[1] ?? [];
         }
 
         if ($fetch_style === \PDO::FETCH_ASSOC) {
@@ -442,15 +440,12 @@ class FakePdoStatement extends \PDOStatement
 
     /**
      * @param  int $fetch_style
-     * @param  mixed $fetch_argument
-     * @param  array $ctorargs
-     * @param  array ...$args
+     * @param  mixed      $args
      */
-    public function setFetchMode($mode, $fetch_argument = null, $ctorargs = []) : bool
+    public function universalSetFetchMode(int $mode, ...$args) : bool
     {
-        // may have to uncomment for PHP 8
-        //$fetch_argument = $args[0] ?? null;
-        //$ctorargs = $args[1] ?? [];
+        $fetch_argument = $args[0] ?? null;
+        $ctorargs = $args[1] ?? [];
 
         if ($this->realStatement) {
             $this->realStatement->setFetchMode($mode, $fetch_argument, $ctorargs);
@@ -529,7 +524,7 @@ class FakePdoStatement extends \PDOStatement
      * @param    array|null $ctorArgs
      * @return   false|T
      */
-    public function fetchObject($class = \stdClass::class, $ctorArgs = null)
+    public function universalFetchObject(?string $class = \stdClass::class, ?array $ctorArgs = null)
     {
         throw new \Exception('not implemented');
     }
