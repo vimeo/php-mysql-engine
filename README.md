@@ -74,4 +74,16 @@ If you want to fork the project with an issue tracker, feel free!
 
 ## Contributing
 
-See [Contributing](CONTRIBUTING.md)
+If you want to create a PR, please make sure it passes unit tests:
+
+```
+vendor/bin/phpunit
+```
+
+and also Psalm's checks
+
+```
+vendor/bin/psalm
+```
+
+Thanks!
