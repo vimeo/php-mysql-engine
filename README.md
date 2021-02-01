@@ -39,7 +39,7 @@ This engine does _not_ support [MySQL Stored objects](https://dev.mysql.com/doc/
 
 ## Caveat Emptor
 
-Unlike [Psalm](https://github.com/vimeo/psalm), this package is not designed with a wide audience in mind. For a project to really benefit from this library it should already have a large number of unit tests that require a database connection to complete, and the project maintainers must understand the tradeoffs associated with using an unofficial MySQL implementation in their test suite.
+Unlike [Psalm](https://github.com/vimeo/psalm), this package is not designed with a wide audience in mind. For a project to really benefit from this library it should already have a large number of tests that require a database connection to complete, and the project maintainers must understand the tradeoffs associated with using an unofficial MySQL implementation in their test suite.
 
 ## Known issues
 
