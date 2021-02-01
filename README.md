@@ -1,6 +1,6 @@
 # PHP MySQL Engine
 
-PHP MySQL Engine is a library for PHP that allows you to test database-driven applications with an in-memory simulation of MySQL. This project extends the `PDO` class and allows you to call common PDO MySQL methods. It supports a wide variety of queries, and some PDO-specific functionality like transactions and different fetch modes.
+PHP MySQL Engine is a library for PHP that allows you to test database-driven applications with an in-memory simulation of MySQL 5.6. This project extends the `PDO` class and allows you to call common PDO MySQL methods. It supports a wide variety of queries, and some PDO-specific functionality like transactions and different fetch modes.
 
 PHP MySQL Engine is based on Slack's [Hack SQL Fake](https://github.com/slackhq/hack-sql-fake) created by [Scott Sandler](https://github.com/ssandler).
 
@@ -33,6 +33,10 @@ This library supports a wide variety of query syntax, including:
 - Temporary variables like `@previous_name := user.name`
 - Validating parser: the query parser will throw exceptions on most invalid SQL Queries, helping protect your production environment from accidental SQL syntax errors
 
+## Unsupported MySQL features
+
+This engine does _not_ support [MySQL Stored objects](https://dev.mysql.com/doc/refman/5.6/en/stored-objects.html), which precludes the testing of stored procedures, triggers and views.
+
 ## Caveat Emptor
 
 Unlike [Psalm](https://github.com/vimeo/psalm), this package is not designed with a wide audience in mind. For a project to really benefit from this library it should already have a large number of unit tests that require a database connection to complete, and the project maintainers must understand the tradeoffs associated with using an unofficial MySQL implementation in their test suite.
@@ -41,7 +45,7 @@ Unlike [Psalm](https://github.com/vimeo/psalm), this package is not designed wit
 
 ### Result types when not emulating prepares
 
-By default the engine returns all data formatted as a string. If `$pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false)` is called, the engine will instead infer column types and  (for example, `SUM(some_int_column)` will be given an `int` type). In some cases `php-mysql-engine` may do a better job of inferring correct column types than actual MySQL, which defaults to string when it can’t work out a column type. If you do strict type checks on the results you may see small discrepancies.
+By default the engine returns all data formatted as a string. If `$pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false)` is called, the engine will instead infer column types (for example, `SUM(some_int_column)` will be given an `int` type). In some cases `php-mysql-engine` may do a better job of inferring correct column types than actual MySQL, which defaults to string when it can’t work out a column type. If you do strict type checks on the results you may see small discrepancies.
 
 ## Installation
 
@@ -67,6 +71,8 @@ The rest of your code can operate as normal, using the database in the same way 
 ## Why doesn't it support X?
 
 This library aims to support everything its users use in MySQL, rather than every possibly feature MySQL offers. We welcome pull requests to add support for new syntax, sql functions, data types, bug fixes, and other features.
+
+### No planned support 
 
 ## Why doesn’t this project have an issue tracker?
 
