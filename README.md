@@ -1,5 +1,3 @@
-<img src="/elephin.svg" alt="PHP MySQL engine logo" width="345px" height="171px" />
-
 # PHP MySQL Engine
 
 PHP MySQL Engine is a unit testing library for PHP. It enables testing database-driven applications with an in-memory simulation of MySQL. This project extends the `PDO` class and allows you to call common PDO MySQL methods. It supports a wide variety of queries, and some PDO-specific functionality like transactions and different fetch modes.
