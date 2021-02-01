@@ -42,7 +42,13 @@ final class JoinProcessor
                         $left_row = $row;
                         $candidate_row = \array_merge($row, $r);
                         if (!$filter
-                            || ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row, new QueryResult([], $joined_columns))
+                            || ExpressionEvaluator::evaluate(
+                                $conn,
+                                $scope,
+                                $filter,
+                                $candidate_row,
+                                new QueryResult([], $joined_columns)
+                            )
                         ) {
                             $rows[] = $candidate_row;
                         }
@@ -146,7 +152,13 @@ final class JoinProcessor
                     foreach ($right_result->rows as $r) {
                         $left_row = $row;
                         $candidate_row = \array_merge($left_row, $r);
-                        if (ExpressionEvaluator::evaluate($conn, $scope, $filter, $candidate_row, new QueryResult([], $joined_columns))) {
+                        if (ExpressionEvaluator::evaluate(
+                            $conn,
+                            $scope,
+                            $filter,
+                            $candidate_row,
+                            new QueryResult([], $joined_columns)
+                        )) {
                             $rows[] = $candidate_row;
                         }
                     }

@@ -19,5 +19,3 @@ final class ParameterEvaluator
         throw new ProcessorException('Parameter offset ' . $expr->parameterName . ' out of range');
     }
 }
-
-

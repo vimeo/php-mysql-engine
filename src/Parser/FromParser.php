@@ -326,7 +326,14 @@ final class FromParser
                     if ($arg->type !== TokenType::IDENTIFIER) {
                         throw new ParserException("Expected identifier in USING clause");
                     }
-                    $filter = self::addJoinFilterExpression($filter, $left_table, $table['name'], $arg->value, $arg->start);
+
+                    $filter = self::addJoinFilterExpression(
+                        $filter,
+                        $left_table,
+                        $table['name'],
+                        $arg->value,
+                        $arg->start
+                    );
                 } else {
                     if ($arg->value !== ',') {
                         throw new ParserException("Expected , after argument in USING clause");

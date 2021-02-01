@@ -196,7 +196,7 @@ final class DataIntegrity
                 return (float) $value;
 
             case 'null':
-                if ($value === nulL) {
+                if ($value === null) {
                     return null;
                 }
 

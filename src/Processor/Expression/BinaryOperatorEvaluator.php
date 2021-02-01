@@ -126,8 +126,10 @@ final class BinaryOperatorEvaluator
                         && \preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9]$/', $r_value)
                     ) {
                         $r_value .= ' 00:00:00';
-                    } elseif (\preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/', $r_value)
-                        && \preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9]$/', $l_value)
+                    } elseif (\preg_match(
+                        '/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9] [0-2][0-9]:[0-5][0-9]:[0-5][0-9]$/',
+                        $r_value
+                    ) && \preg_match('/^[0-9]{2,4}-[0-1][0-9]-[0-3][0-9]$/', $l_value)
                     ) {
                         $l_value .= ' 00:00:00';
                     }
@@ -142,7 +144,8 @@ final class BinaryOperatorEvaluator
                 switch ($expr->operator) {
                     case '=':
                         if ($as_string) {
-                            return \strtolower((string) $l_value) === \strtolower((string) $r_value) ? 1 : 0 ^ $expr->negatedInt;
+                            return (\strtolower((string) $l_value) === \strtolower((string) $r_value) ? 1 : 0)
+                                ^ $expr->negatedInt;
                         }
 
                         if (empty($l_value) && empty($r_value)) {
@@ -154,7 +157,8 @@ final class BinaryOperatorEvaluator
                     case '<>':
                     case '!=':
                         if ($as_string) {
-                            return \strtolower((string) $l_value) !== \strtolower((string) $r_value) ? 1 : 0 ^ $expr->negatedInt;
+                            return (\strtolower((string) $l_value) !== \strtolower((string) $r_value) ? 1 : 0)
+                                ^ $expr->negatedInt;
                         }
 
                         if (empty($l_value) && empty($r_value)) {
@@ -191,6 +195,8 @@ final class BinaryOperatorEvaluator
 
                         return (float) $l_value <= (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
                 }
+
+                // PHPCS thinks there's a fallthrough here, but there provably is not
 
             case '*':
             case '%':

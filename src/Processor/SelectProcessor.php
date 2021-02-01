@@ -498,9 +498,20 @@ final class SelectProcessor extends Processor
                 }
             } else {
                 if (!isset($existing_columns[$expr->name])) {
-                    $columns[$expr->name] = Expression\Evaluator::getColumnSchema($expr, $scope, $from_columns, $use_cache);
+                    $columns[$expr->name] = Expression\Evaluator::getColumnSchema(
+                        $expr,
+                        $scope,
+                        $from_columns,
+                        $use_cache
+                    );
                 } elseif ($existing_columns[$expr->name] instanceof Column\NullColumn) {
-                    $columns[$expr->name] = clone Expression\Evaluator::getColumnSchema($expr, $scope, $from_columns, $use_cache);
+                    $columns[$expr->name] = clone Expression\Evaluator::getColumnSchema(
+                        $expr,
+                        $scope,
+                        $from_columns,
+                        $use_cache
+                    );
+
                     $columns[$expr->name]->isNullable = true;
                 }
             }

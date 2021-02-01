@@ -248,7 +248,8 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $query = $pdo->prepare(
             'SELECT @a := `id` as `id`, @b := @a AS `id_copy`
                 FROM `video_game_characters`
-                LIMIT 3');
+                LIMIT 3'
+        );
 
         $query->execute();
 
@@ -563,7 +564,8 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
             'SELECT `console`
             FROM `video_game_characters`
             GROUP BY `console`
-            HAVING COUNT(*) > 2');
+            HAVING COUNT(*) > 2'
+        );
 
         $query->execute();
 
@@ -584,7 +586,8 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
             'SELECT `console`, COUNT(*) as `c`
             FROM `video_game_characters`
             GROUP BY `console`
-            HAVING `c` > 2');
+            HAVING `c` > 2'
+        );
 
         $query->execute();
 
@@ -648,7 +651,8 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
             'SELECT `id`, `console` AS `console_name`
             FROM `video_game_characters`
             ORDER BY `console`, `powerups`, `name`
-            LIMIT 4');
+            LIMIT 4'
+        );
 
         $query->execute();
 
@@ -671,7 +675,8 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
             'SELECT `id`, `console` AS `console_name`
             FROM `video_game_characters`
             ORDER BY `console_name`, `powerups`, `name`
-            LIMIT 4');
+            LIMIT 4'
+        );
 
         $query->execute();
 

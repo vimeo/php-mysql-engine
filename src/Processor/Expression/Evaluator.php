@@ -330,7 +330,7 @@ class Evaluator
             $column = new Column\Varchar(255);
         } elseif ($has_floating_point) {
             $column = new Column\FloatColumn(10, 2);
-        } else if ($has_integer) {
+        } elseif ($has_integer) {
             $column = new Column\IntColumn(false, 10);
         } else {
             $column = new Column\Varchar(255);
