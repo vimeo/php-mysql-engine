@@ -145,6 +145,10 @@ final class BinaryOperatorEvaluator
                             return \strtolower((string) $l_value) === \strtolower((string) $r_value) ? 1 : 0 ^ $expr->negatedInt;
                         }
 
+                        if (empty($l_value) && empty($r_value)) {
+                            return !$expr->negatedInt;
+                        }
+
                         return $l_value == $r_value ? 1 : 0 ^ $expr->negatedInt;
 
                     case '<>':
@@ -153,7 +157,11 @@ final class BinaryOperatorEvaluator
                             return \strtolower((string) $l_value) !== \strtolower((string) $r_value) ? 1 : 0 ^ $expr->negatedInt;
                         }
 
-                        return (float) $l_value != (float) $r_value ? 1 : 0 ^ $expr->negatedInt;
+                        if (empty($l_value) && empty($r_value)) {
+                            return $expr->negatedInt;
+                        }
+
+                        return $l_value != $r_value ? 1 : 0 ^ $expr->negatedInt;
 
                     case '>':
                         if ($as_string) {
