@@ -253,7 +253,10 @@ class FakePdoStatement extends \PDOStatement
 
         foreach ($raw_result->rows as $i => $row) {
             foreach ($row as $key => $value) {
-                $result[$i][\substr($key, 0, 255) ?: ''] = isset($raw_result->columns[$key])
+                /**
+                 * @psalm-suppress MixedAssignment
+                 */
+                $result[$i][\substr($key, 0, 255) ?: ''] = \array_key_exists($key, $raw_result->columns)
                     ? DataIntegrity::coerceValueToColumn($raw_result->columns[$key], $value)
                     : $value;
             }

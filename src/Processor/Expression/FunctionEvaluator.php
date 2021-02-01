@@ -454,9 +454,11 @@ final class FunctionEvaluator
                 throw new \TypeError('Failed assertion');
             })();
 
+            /**
+             * @var float|int
+             */
             $value = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            \assert(\is_int($value) || \is_float($value));
             $values[] = $value;
         }
 
