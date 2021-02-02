@@ -93,6 +93,13 @@ class Evaluator
             case \Vimeo\MysqlEngine\Query\Expression\ParameterExpression::class:
                 return ParameterEvaluator::evaluate($scope, $expr);
 
+            case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
+                if (\array_key_exists($expr->offset, $scope->parameters)) {
+                    return $scope->parameters[$expr->offset];
+                }
+
+                throw new ProcessorException('Parameter offset ' . $expr->offset . ' out of range');
+
             default:
                 throw new ProcessorException('Unsupported expression ' . get_class($expr));
         }
@@ -226,25 +233,7 @@ class Evaluator
 
             case \Vimeo\MysqlEngine\Query\Expression\ParameterExpression::class:
                 if (\array_key_exists($expr->parameterName, $scope->parameters)) {
-                    $value = $scope->parameters[$expr->parameterName];
-
-                    if (\is_int($value)) {
-                        return $expr->column = new Column\IntColumn(false, 10);
-                    }
-
-                    if (\is_float($value)) {
-                        return $expr->column = new Column\FloatColumn(10, 2);
-                    }
-
-                    if (\is_bool($value)) {
-                        return $expr->column = new Column\TinyInt(true, 1);
-                    }
-
-                    if ($value === null) {
-                        return $expr->column = new Column\NullColumn();
-                    }
-
-                    return new Column\Varchar(10);
+                    return self::getColumnTypeFromValue($expr, $scope->parameters[$expr->parameterName]);
                 }
 
                 // When MySQL can't figure out a variable column's type
@@ -253,6 +242,32 @@ class Evaluator
         }
 
         return $expr->column = new Column\Varchar(10);
+    }
+
+    /**
+     * @param mixed $value
+     */
+    private static function getColumnTypeFromValue(
+        \Vimeo\MysqlEngine\Query\Expression\Expression $expr,
+        $value
+    ) : Column {
+        if (\is_int($value)) {
+            return $expr->column = new Column\IntColumn(false, 10);
+        }
+
+        if (\is_float($value)) {
+            return $expr->column = new Column\FloatColumn(10, 2);
+        }
+
+        if (\is_bool($value)) {
+            return $expr->column = new Column\TinyInt(true, 1);
+        }
+
+        if ($value === null) {
+            return $expr->column = new Column\NullColumn();
+        }
+
+        return new Column\Varchar(10);
     }
 
     /**

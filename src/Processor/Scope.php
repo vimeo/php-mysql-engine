@@ -9,7 +9,7 @@ class Scope
     public $variables = [];
 
     /**
-     * @var array<string, mixed>
+     * @var array<string|int, mixed>
      */
     public $parameters = [];
 

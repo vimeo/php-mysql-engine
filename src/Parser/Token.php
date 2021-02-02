@@ -31,6 +31,11 @@ class Token
     public $parameterName;
 
     /**
+     * @var ?int
+     */
+    public $parameterOffset;
+
+    /**
      * @param TokenType::* $type
      */
     public function __construct(

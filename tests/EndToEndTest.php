@@ -66,6 +66,23 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testPlaceholders()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare("SELECT id FROM `video_game_characters` WHERE `id` > ? ORDER BY `id` ASC");
+        $query->bindValue(1, 14);
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['id' => 15],
+                ['id' => 16]
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     public function testSumEmptySet()
     {
         $pdo = self::getConnectionToFullDB(false);

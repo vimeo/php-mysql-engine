@@ -208,6 +208,10 @@ final class SQLParser
     {
         $out = [];
         $count = \count($tokens);
+
+        // all parameters in PDO MySQL start at 1. I know, it's weird.
+        $parameter_offset = 1;
+
         foreach ($tokens as $i => [$token, $start]) {
             $trimmed_token = \trim($token);
 
@@ -342,7 +346,12 @@ final class SQLParser
                 }
             }
 
-            if ($token_upper === 'NULL') {
+            if ($token_upper === '?') {
+                $token_obj = new Token(TokenType::IDENTIFIER, $token, $token, $start);
+                $token_obj->parameterOffset = $parameter_offset;
+                $out[] = $token_obj;
+                $parameter_offset++;
+            } elseif ($token_upper === 'NULL') {
                 $out[] = new Token(TokenType::NULL_CONSTANT, $token, $token, $start);
             } elseif ($token_upper === 'TRUE') {
                 $out[] = new Token(TokenType::NUMERIC_CONSTANT, '1', $token, $start);
