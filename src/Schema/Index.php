@@ -4,7 +4,7 @@ namespace Vimeo\MysqlEngine\Schema;
 class Index
 {
     /**
-     * @var string
+     * @var 'INDEX'|'UNIQUE'|'PRIMARY'|'FULLTEXT'|'SPATIAL'
      */
     public $type;
 
@@ -13,6 +13,9 @@ class Index
      */
     public $columns;
 
+    /**
+     * @param 'INDEX'|'UNIQUE'|'PRIMARY'|'FULLTEXT'|'SPATIAL' $type
+     */
     public function __construct(
         string $type,
         array $columns

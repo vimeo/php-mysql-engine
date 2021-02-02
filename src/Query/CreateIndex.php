@@ -9,7 +9,7 @@ class CreateIndex
     public $name;
 
     /**
-     * @var string
+     * @var 'INDEX'|'UNIQUE'|'PRIMARY'|'FULLTEXT'|'SPATIAL'
      */
     public $type;
 

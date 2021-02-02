@@ -34,7 +34,7 @@ class TableDefinition
     public $primaryKeyColumns;
 
     /**
-     * @var array
+     * @var array<string, Index>
      */
     public $indexes;
 
@@ -43,6 +43,9 @@ class TableDefinition
      */
     public $autoIncrementOffsets = [];
 
+    /**
+     * @param array<string, Index> $indexes
+     */
     public function __construct(
         string $name,
         string $databaseName,
