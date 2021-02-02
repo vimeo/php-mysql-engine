@@ -2,6 +2,7 @@
   "name": "vimeo/php-mysql-engine",
   "description": "A MySQL engine written in PHP for speeding up tests",
   "type": "library",
+  "license": "MIT",
   "authors": [
     {
       "name": "Scott Sandler",
