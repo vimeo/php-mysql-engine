@@ -72,11 +72,9 @@ The rest of your code can operate as normal, using the database in the same way 
 
 This library aims to support everything its users use in MySQL, rather than every possibly feature MySQL offers. We welcome pull requests to add support for new syntax, sql functions, data types, bug fixes, and other features.
 
-### No planned support 
-
 ## Why doesn’t this project have an issue tracker?
 
-Maintaining open-source projects is hard work, and I don't want to make more work for me or my colleagues.
+Maintaining open-source projects is hard work, and I don't want to make more work for me or my colleagues. Use this project very much use at your own risk.
 
 If you want to fork the project with an issue tracker, feel free!
 
