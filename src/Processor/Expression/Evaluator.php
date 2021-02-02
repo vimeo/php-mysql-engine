@@ -239,6 +239,15 @@ class Evaluator
                 // When MySQL can't figure out a variable column's type
                 // it defaults to string
                 return new Column\Varchar(10);
+
+            case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
+                if (\array_key_exists($expr->offset, $scope->parameters)) {
+                    return self::getColumnTypeFromValue($expr, $scope->parameters[$expr->offset]);
+                }
+
+                // When MySQL can't figure out a variable column's type
+                // it defaults to string
+                return new Column\Varchar(10);
         }
 
         return $expr->column = new Column\Varchar(10);
