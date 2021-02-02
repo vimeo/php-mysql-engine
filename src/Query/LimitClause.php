@@ -3,19 +3,20 @@ namespace Vimeo\MysqlEngine\Query;
 
 use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\Expression\ParameterExpression;
+use Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression;
+use Vimeo\MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression;
 
 final class LimitClause
 {
-    /** @var ConstantExpression|ParameterExpression|null */
+    /** @var ConstantExpression|NamedPlaceholderExpression|QuestionMarkPlaceholderExpression|null */
     public $offset;
 
-    /** @var ConstantExpression|ParameterExpression */
+    /** @var ConstantExpression|NamedPlaceholderExpression|QuestionMarkPlaceholderExpression */
     public $rowcount;
 
     /**
-     * @param ConstantExpression|ParameterExpression $offset
-     * @param ConstantExpression|ParameterExpression $rowcount
+     * @param ConstantExpression|NamedPlaceholderExpression|QuestionMarkPlaceholderExpression $offset
+     * @param ConstantExpression|NamedPlaceholderExpression|QuestionMarkPlaceholderExpression $rowcount
      */
     public function __construct(?Expression $offset, Expression $rowcount)
     {

@@ -70,14 +70,24 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
     {
         $pdo = self::getConnectionToFullDB(false);
 
-        $query = $pdo->prepare("SELECT id FROM `video_game_characters` WHERE `id` > ? ORDER BY `id` ASC");
+        $query = $pdo->prepare("SELECT id FROM `video_game_characters` WHERE `id` > ? ORDER BY `id` ASC LIMIT ?");
         $query->bindValue(1, 14);
+        $query->bindValue(2, 1);
         $query->execute();
 
         $this->assertSame(
             [
-                ['id' => 15],
-                ['id' => 16]
+                ['id' => 15]
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+
+        $query = $pdo->prepare("SELECT id FROM `video_game_characters` WHERE `id` > ? ORDER BY `id` ASC LIMIT ?");
+        $query->execute([14, 1]);
+
+        $this->assertSame(
+            [
+                ['id' => 15]
             ],
             $query->fetchAll(\PDO::FETCH_ASSOC)
         );

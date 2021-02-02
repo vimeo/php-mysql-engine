@@ -5,6 +5,7 @@ use Vimeo\MysqlEngine\DataIntegrity;
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
+use Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression;
 use Vimeo\MysqlEngine\Query\LimitClause;
 use Vimeo\MysqlEngine\Schema\Column\IntegerColumn;
 use Vimeo\MysqlEngine\Schema\TableDefinition;
@@ -109,14 +110,18 @@ abstract class Processor
             $offset = 0;
         } elseif ($limit->offset instanceof ConstantExpression) {
             $offset = (int) $limit->offset->value;
+        } elseif ($limit->offset instanceof NamedPlaceholderExpression) {
+            $offset = (int) Expression\NamedPlaceholderEvaluator::evaluate($scope, $limit->offset);
         } else {
-            $offset = (int) Expression\ParameterEvaluator::evaluate($scope, $limit->offset);
+            $offset = (int) Expression\QuestionMarkPlaceholderEvaluator::evaluate($scope, $limit->offset);
         }
 
         if ($limit->rowcount instanceof ConstantExpression) {
             $rowcount = (int) $limit->rowcount->value;
+        } elseif ($limit->rowcount instanceof NamedPlaceholderExpression) {
+            $rowcount = (int) Expression\NamedPlaceholderEvaluator::evaluate($scope, $limit->rowcount);
         } else {
-            $rowcount = (int) Expression\ParameterEvaluator::evaluate($scope, $limit->rowcount);
+            $rowcount = (int) Expression\QuestionMarkPlaceholderEvaluator::evaluate($scope, $limit->rowcount);
         }
 
         return new QueryResult(

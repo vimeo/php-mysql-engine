@@ -90,15 +90,11 @@ class Evaluator
             case \Vimeo\MysqlEngine\Query\Expression\VariableExpression::class:
                 return VariableEvaluator::evaluate($scope, $expr);
 
-            case \Vimeo\MysqlEngine\Query\Expression\ParameterExpression::class:
-                return ParameterEvaluator::evaluate($scope, $expr);
+            case \Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression::class:
+                return NamedPlaceholderEvaluator::evaluate($scope, $expr);
 
-            case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
-                if (\array_key_exists($expr->offset, $scope->parameters)) {
-                    return $scope->parameters[$expr->offset];
-                }
-
-                throw new ProcessorException('Parameter offset ' . $expr->offset . ' out of range');
+            case \Vimeo\MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression::class:
+                return QuestionMarkPlaceholderEvaluator::evaluate($scope, $expr);
 
             default:
                 throw new ProcessorException('Unsupported expression ' . get_class($expr));
@@ -231,7 +227,7 @@ class Evaluator
                 // it defaults to string
                 return new Column\Varchar(10);
 
-            case \Vimeo\MysqlEngine\Query\Expression\ParameterExpression::class:
+            case \Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression::class:
                 if (\array_key_exists($expr->parameterName, $scope->parameters)) {
                     return self::getColumnTypeFromValue($expr, $scope->parameters[$expr->parameterName]);
                 }
@@ -240,7 +236,7 @@ class Evaluator
                 // it defaults to string
                 return new Column\Varchar(10);
 
-            case \Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression::class:
+            case \Vimeo\MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression::class:
                 if (\array_key_exists($expr->offset, $scope->parameters)) {
                     return self::getColumnTypeFromValue($expr, $scope->parameters[$expr->offset]);
                 }

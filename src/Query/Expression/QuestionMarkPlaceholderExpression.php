@@ -4,7 +4,7 @@ namespace Vimeo\MysqlEngine\Query\Expression;
 use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\TokenType;
 
-final class PlaceholderExpression extends Expression
+final class QuestionMarkPlaceholderExpression extends Expression
 {
     /**
      * @var int

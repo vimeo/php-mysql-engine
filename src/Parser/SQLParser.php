@@ -209,8 +209,7 @@ final class SQLParser
         $out = [];
         $count = \count($tokens);
 
-        // all parameters in PDO MySQL start at 1. I know, it's weird.
-        $parameter_offset = 1;
+        $parameter_offset = 0;
 
         foreach ($tokens as $i => [$token, $start]) {
             $trimmed_token = \trim($token);

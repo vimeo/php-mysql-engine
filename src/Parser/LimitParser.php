@@ -3,7 +3,8 @@ namespace Vimeo\MysqlEngine\Parser;
 
 use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
-use Vimeo\MysqlEngine\Query\Expression\ParameterExpression;
+use Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression;
+use Vimeo\MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression;
 use Vimeo\MysqlEngine\Query\LimitClause;
 
 final class LimitParser
@@ -45,7 +46,13 @@ final class LimitParser
         if ($next->type === TokenType::NUMERIC_CONSTANT) {
             $limit = new ConstantExpression($next);
         } elseif ($next->type === TokenType::IDENTIFIER && $next->value === '?') {
-            $limit = new ParameterExpression($next, $next->parameterName);
+            if ($next->parameterOffset !== null) {
+                $limit = new QuestionMarkPlaceholderExpression($next, $next->parameterOffset);
+            } elseif ($next->parameterName !== null) {
+                $limit = new NamedPlaceholderExpression($next, $next->parameterName);
+            } else {
+                throw new ParserException('? encountered with unknown offset');
+            }
         } else {
             throw new ParserException("Expected integer or parameter after OFFSET");
         }
@@ -64,7 +71,7 @@ final class LimitParser
                 if ($next->type === TokenType::NUMERIC_CONSTANT) {
                     $offset = new ConstantExpression($next);
                 } elseif ($next->type === TokenType::IDENTIFIER && $next->value === '?') {
-                    $offset = new ParameterExpression($next, $next->parameterName);
+                    $offset = new NamedPlaceholderExpression($next, $next->parameterName);
                 } else {
                     throw new ParserException("Expected integer or parameter after OFFSET");
                 }
@@ -81,7 +88,7 @@ final class LimitParser
                     if ($next->type === TokenType::NUMERIC_CONSTANT) {
                         $limit = new ConstantExpression($next);
                     } elseif ($next->type === TokenType::IDENTIFIER && $next->value === '?') {
-                        $limit = new ParameterExpression($next, $next->parameterName);
+                        $limit = new NamedPlaceholderExpression($next, $next->parameterName);
                     } else {
                         throw new ParserException("Expected integer or parameter after OFFSET");
                     }

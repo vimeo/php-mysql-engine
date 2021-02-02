@@ -14,8 +14,8 @@ use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
 use Vimeo\MysqlEngine\Query\Expression\InOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
 use Vimeo\MysqlEngine\Query\Expression\StubExpression;
-use Vimeo\MysqlEngine\Query\Expression\ParameterExpression;
-use Vimeo\MysqlEngine\Query\Expression\PlaceholderExpression;
+use Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression;
+use Vimeo\MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression;
 use Vimeo\MysqlEngine\Query\Expression\PositionExpression;
 use Vimeo\MysqlEngine\Query\Expression\RowExpression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
@@ -228,15 +228,15 @@ final class ExpressionParser
                 }
 
                 if ($token->value === '?') {
-                    if ($token->parameterName === null) {
-                        if ($token->parameterOffset !== null) {
-                            return new PlaceholderExpression($token, $token->parameterOffset);
-                        }
-
-                        throw new ParserException('? encountered with unknown offset');
+                    if ($token->parameterOffset !== null) {
+                        return new QuestionMarkPlaceholderExpression($token, $token->parameterOffset);
                     }
 
-                    return new ParameterExpression($token, $token->parameterName);
+                    if ($token->parameterName !== null) {
+                        return new NamedPlaceholderExpression($token, $token->parameterName);
+                    }
+
+                    throw new ParserException('? encountered with unknown offset');
                 }
 
                 if ($token->value[0] === '@') {

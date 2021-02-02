@@ -75,6 +75,9 @@ trait FakePdoTrait
     {
         if (\is_string($key) && $key[0] !== ':') {
             $key = ':' . $key;
+        } elseif (\is_int($key)) {
+            // Parameter offsets start at 1, which is weird.
+            --$key;
         }
 
         $this->boundValues[$key] = $value;
@@ -137,7 +140,7 @@ trait FakePdoTrait
                 try {
                     $raw_result = Processor\SelectProcessor::process(
                         $this->conn,
-                        new Processor\Scope($this->boundValues),
+                        new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
                         $parsed_query
                     );
                 } catch (Processor\ProcessorException $runtime_exception) {
@@ -185,7 +188,7 @@ trait FakePdoTrait
             case Query\InsertQuery::class:
                 $this->affectedRows = Processor\InsertProcessor::process(
                     $this->conn,
-                    new Processor\Scope($this->boundValues),
+                    new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
                     $parsed_query
                 );
 
@@ -194,7 +197,7 @@ trait FakePdoTrait
             case Query\UpdateQuery::class:
                 $this->affectedRows = Processor\UpdateProcessor::process(
                     $this->conn,
-                    new Processor\Scope($this->boundValues),
+                    new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
                     $parsed_query
                 );
 
@@ -203,7 +206,7 @@ trait FakePdoTrait
             case Query\DeleteQuery::class:
                 $this->affectedRows = Processor\DeleteProcessor::process(
                     $this->conn,
-                    new Processor\Scope($this->boundValues),
+                    new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
                     $parsed_query
                 );
 
