@@ -1,6 +1,8 @@
 <?php
 namespace Vimeo\MysqlEngine;
 
+use PDO;
+
 class FakePdo extends \PDO
 {
     /**
@@ -70,9 +72,10 @@ class FakePdo extends \PDO
         return $this->server;
     }
 
-    /**
-     * @param  string $statement
-     */
+	/**
+	 * @param string $statement
+	 * @return Php7\FakePdoStatement|Php8\FakePdoStatement
+	 */
     public function prepare($statement, $options = null)
     {
         if (\PHP_MAJOR_VERSION === 8) {
@@ -97,20 +100,59 @@ class FakePdo extends \PDO
         return $this->lastInsertId;
     }
 
+	/**
+	 * @return bool
+	 */
     public function beginTransaction()
     {
         Server::snapshot('transaction');
         return true;
     }
 
+	/**
+	 * @return bool
+	 */
     public function commit()
     {
         return Server::deleteSnapshot('transaction');
     }
 
+	/**
+	 * @return bool
+	 * @throws Processor\ProcessorException
+	 */
     public function rollback()
     {
         Server::restoreSnapshot('transaction');
         return true;
     }
+
+	/**
+	 * @param string $statement
+	 * @return bool
+	 */
+	public function exec($statement)
+	{
+		$statement = trim($statement);
+		if (strpos($statement, 'SET ')===0){
+			return false;
+		}
+
+		$sth = $this->prepare($statement);
+		return $sth->execute();
+	}
+
+	/**
+	 * @param string $statement
+	 * @param int $mode
+	 * @param null $arg3
+	 * @param array $ctorargs
+	 * @return Php7\FakePdoStatement|Php8\FakePdoStatement
+	 */
+	public function query($statement, $mode = PDO::ATTR_DEFAULT_FETCH_MODE, $arg3 = null, array $ctorargs = [])
+	{
+		$sth = $this->prepare($statement);
+		$sth->execute();
+		return $sth;
+	}
 }
