@@ -9,10 +9,11 @@ class FakePdo extends PDO implements FakePdoInterface
 {
     use FakePdoTrait;
 
-    /**
-     * @param  string $statement
-     * @param  ?array $options
-     */
+	/**
+	 * @param string $statement
+	 * @param array $options
+	 * @return FakePdoStatement
+	 */
     public function prepare($statement, array $options = [])
     {
         return new FakePdoStatement($this, $statement, $this->real);
