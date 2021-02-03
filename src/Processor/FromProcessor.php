@@ -6,8 +6,11 @@ use Vimeo\MysqlEngine\Schema\Column;
 
 final class FromProcessor
 {
-    public static function process(\Vimeo\MysqlEngine\FakePdoInterface $conn, Scope $scope, FromClause $stmt) : QueryResult
-    {
+    public static function process(
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        Scope $scope,
+        FromClause $stmt
+    ) : QueryResult {
         $is_first_table = true;
         $left_column_list = [];
 
