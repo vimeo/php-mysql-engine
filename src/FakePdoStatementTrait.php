@@ -1,7 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine;
 
-trait FakePdoTrait
+trait FakePdoStatementTrait
 {
     /**
      * @var string
