@@ -17,7 +17,7 @@ final class InOperatorEvaluator
      * @return mixed
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         InOperatorExpression $expr,
         array $row,

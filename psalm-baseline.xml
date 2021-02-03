@@ -1,17 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="dev-master@665170eadb6cb0728de7f70a52db0b339285f8dc">
+<files psalm-version="4.4.1@9fd7a7d885b3a216cff8dec9d8c21a132f275224">
   <file src="src/DataIntegrity.php">
-    <MissingClosureParamType occurrences="2">
-      <code>$field</code>
-      <code>$key</code>
-    </MissingClosureParamType>
     <MissingParamType occurrences="1">
       <code>$value</code>
     </MissingParamType>
-    <MixedArgument occurrences="3">
+    <MixedArgument occurrences="1">
       <code>$column_default</code>
-      <code>$unique_key</code>
-      <code>$unique_key</code>
     </MixedArgument>
     <MixedArrayOffset occurrences="5">
       <code>$existing_row[$field]</code>
@@ -20,38 +14,14 @@
       <code>$new_row[$key]</code>
       <code>$new_row[$key]</code>
     </MixedArrayOffset>
-    <MixedAssignment occurrences="8">
+    <MixedAssignment occurrences="4">
       <code>$column_default</code>
-      <code>$index</code>
       <code>$key</code>
       <code>$row[$column_name]</code>
-      <code>$unique_key</code>
-      <code>$unique_keys[$name]</code>
-      <code>$unique_keys['PRIMARY']</code>
       <code>$value</code>
     </MixedAssignment>
-    <MixedPropertyFetch occurrences="3">
-      <code>$index-&gt;columns</code>
-      <code>$index-&gt;columns</code>
-      <code>$index-&gt;type</code>
-    </MixedPropertyFetch>
   </file>
-  <file src="src/FakePdo.php">
-    <MissingParamType occurrences="4">
-      <code>$key</code>
-      <code>$options</code>
-      <code>$seqname</code>
-      <code>$value</code>
-    </MissingParamType>
-    <MixedArgument occurrences="2">
-      <code>$key</code>
-      <code>$seqname</code>
-    </MixedArgument>
-    <PossiblyNullArgument occurrences="1">
-      <code>$host</code>
-    </PossiblyNullArgument>
-  </file>
-  <file src="src/FakePdoTrait.php">
+  <file src="src/FakePdoStatementTrait.php">
     <ArgumentTypeCoercion occurrences="1">
       <code>$class</code>
     </ArgumentTypeCoercion>
@@ -91,10 +61,24 @@
       <code>$ctor_args</code>
       <code>$fetch_argument</code>
       <code>$fetch_argument</code>
-      <code>$this-&gt;conn-&gt;databaseName</code>
-      <code>$this-&gt;conn-&gt;databaseName</code>
-      <code>$this-&gt;conn-&gt;databaseName</code>
+      <code>$this-&gt;conn-&gt;getDatabaseName()</code>
+      <code>$this-&gt;conn-&gt;getDatabaseName()</code>
+      <code>$this-&gt;conn-&gt;getDatabaseName()</code>
       <code>$this-&gt;fetchConstructorArgs</code>
+    </PossiblyNullArgument>
+  </file>
+  <file src="src/FakePdoTrait.php">
+    <MissingParamType occurrences="3">
+      <code>$key</code>
+      <code>$seqname</code>
+      <code>$value</code>
+    </MissingParamType>
+    <MixedArgument occurrences="2">
+      <code>$key</code>
+      <code>$seqname</code>
+    </MixedArgument>
+    <PossiblyNullArgument occurrences="1">
+      <code>$host</code>
     </PossiblyNullArgument>
   </file>
   <file src="src/Parser/CreateTableParser.php">
@@ -172,13 +156,20 @@
     </DocblockTypeContradiction>
   </file>
   <file src="src/Parser/LimitParser.php">
-    <PossiblyNullArgument occurrences="3">
-      <code>$next-&gt;parameterName</code>
+    <PossiblyNullArgument occurrences="2">
       <code>$next-&gt;parameterName</code>
       <code>$next-&gt;parameterName</code>
     </PossiblyNullArgument>
   </file>
   <file src="src/Parser/SQLLexer.php">
+    <ArgumentTypeCoercion occurrences="1">
+      <code>\PREG_SPLIT_DELIM_CAPTURE | \PREG_SPLIT_NO_EMPTY | \PREG_SPLIT_OFFSET_CAPTURE</code>
+    </ArgumentTypeCoercion>
+    <InvalidArgument occurrences="3">
+      <code>$tokens</code>
+      <code>$tokens</code>
+      <code>$tokens</code>
+    </InvalidArgument>
     <PossiblyNullArrayOffset occurrences="1">
       <code>$tokens</code>
     </PossiblyNullArrayOffset>
@@ -240,8 +231,9 @@
       <code>$stmt-&gt;values</code>
       <code>$stmt-&gt;values</code>
     </MixedArgumentTypeCoercion>
-    <PossiblyNullArgument occurrences="4">
-      <code>$conn-&gt;databaseName</code>
+    <PossiblyNullArgument occurrences="5">
+      <code>$conn-&gt;getDatabaseName()</code>
+      <code>$conn-&gt;getDatabaseName()</code>
       <code>$stmt-&gt;decimals</code>
       <code>$stmt-&gt;length</code>
       <code>$stmt-&gt;length</code>
@@ -347,8 +339,7 @@
     </RedundantConditionGivenDocblockType>
   </file>
   <file src="src/Processor/Expression/Evaluator.php">
-    <MixedAssignment occurrences="2">
-      <code>$value</code>
+    <MixedAssignment occurrences="1">
       <code>$value</code>
     </MixedAssignment>
     <PossiblyNullArgument occurrences="1">
@@ -550,11 +541,6 @@
       <code>$columns</code>
       <code>$grouped_rows</code>
       <code>$rows</code>
-    </MixedPropertyTypeCoercion>
-  </file>
-  <file src="src/Processor/Scope.php">
-    <MixedPropertyTypeCoercion occurrences="1">
-      <code>$parameters</code>
     </MixedPropertyTypeCoercion>
   </file>
   <file src="src/Processor/SelectProcessor.php">

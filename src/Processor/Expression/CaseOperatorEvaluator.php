@@ -16,7 +16,7 @@ final class CaseOperatorEvaluator
      * @return mixed
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         CaseOperatorExpression $expr,
         array $row,

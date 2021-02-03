@@ -8,7 +8,7 @@ final class DeleteProcessor extends Processor
     /**
      * @return int
      */
-    public static function process(\Vimeo\MysqlEngine\FakePdo $conn, Scope $scope, DeleteQuery $stmt)
+    public static function process(\Vimeo\MysqlEngine\FakePdoInterface $conn, Scope $scope, DeleteQuery $stmt)
     {
         ($__tmp1__ = $stmt->fromClause) !== null ? $__tmp1__ : (function () {
             throw new \TypeError('Failed assertion');
@@ -57,7 +57,7 @@ final class DeleteProcessor extends Processor
      * @return int
      */
     protected static function applyDelete(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         string $database,
         string $table_name,
         array $filtered_rows,

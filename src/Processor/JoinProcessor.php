@@ -21,7 +21,7 @@ final class JoinProcessor
      * @return QueryResult
      */
     public static function process(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         QueryResult $left_result,
         QueryResult $right_result,

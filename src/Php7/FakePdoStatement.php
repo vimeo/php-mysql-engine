@@ -3,7 +3,7 @@ namespace Vimeo\MysqlEngine\Php7;
 
 class FakePdoStatement extends \PDOStatement
 {
-    use \Vimeo\MysqlEngine\FakePdoTrait;
+    use \Vimeo\MysqlEngine\FakePdoStatementTrait;
 
     /**
      * Overriding execute method to add query logging

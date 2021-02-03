@@ -12,7 +12,7 @@ final class BetweenOperatorEvaluator
      * @param array<string, mixed> $row
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         BetweenOperatorExpression $expr,
         array $row,

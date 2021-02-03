@@ -14,7 +14,7 @@ use Vimeo\MysqlEngine\Schema\Column;
 abstract class Processor
 {
     protected static function applyWhere(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         ?\Vimeo\MysqlEngine\Query\Expression\Expression $where,
         QueryResult $result
@@ -38,7 +38,7 @@ abstract class Processor
      * @param ?array<int, array{expression: \Vimeo\MysqlEngine\Query\Expression\Expression, direction: string}> $orders
      */
     protected static function applyOrderBy(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         ?array $orders,
         QueryResult $result
@@ -133,7 +133,7 @@ abstract class Processor
     /**
      * @return array{0:string, 1:string}
      */
-    public static function parseTableName(\Vimeo\MysqlEngine\FakePdo $conn, string $table)
+    public static function parseTableName(\Vimeo\MysqlEngine\FakePdoInterface $conn, string $table)
     {
         if (\strpos($table, '.')) {
             $parts = \explode('.', $table);
@@ -144,7 +144,7 @@ abstract class Processor
             return [$database, $table_name];
         }
 
-        $database = $conn->databaseName;
+        $database = $conn->getDatabaseName();
         return [$database, $table];
     }
 
@@ -157,7 +157,7 @@ abstract class Processor
      * @return array{0:int, 1:array<int, array<string, mixed>>}
      */
     protected static function applySet(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         string $database,
         string $table_name,
@@ -275,7 +275,7 @@ abstract class Processor
 
         $conn->getServer()->saveTable($database, $table_name, $original_table);
 
-        $conn->lastInsertId = (string) $last_insert_id;
+        $conn->setLastInsertId((string) $last_insert_id);
 
         return [$update_count, $original_table];
     }

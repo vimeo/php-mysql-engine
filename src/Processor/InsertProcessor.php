@@ -9,7 +9,7 @@ use Vimeo\MysqlEngine\Schema\Column\IntegerColumn;
 final class InsertProcessor extends Processor
 {
     public static function process(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         InsertQuery $stmt
     ) : int {
@@ -29,7 +29,7 @@ final class InsertProcessor extends Processor
 
         $last_insert_id = null;
 
-        $conn->lastInsertId = "0";
+        $conn->setLastInsertId("0");
 
         foreach ($stmt->values as $value_list) {
             $row = [];
@@ -87,8 +87,8 @@ final class InsertProcessor extends Processor
                 }
             }
 
-            if (\count($table_definition->primaryKeyColumns) === 1 && $conn->lastInsertId === "0") {
-                $conn->lastInsertId = (string) $row[$table_definition->primaryKeyColumns[0]];
+            if (\count($table_definition->primaryKeyColumns) === 1 && $conn->lastInsertId() === "0") {
+                $conn->setLastInsertId((string) $row[$table_definition->primaryKeyColumns[0]]);
             }
 
             $table[] = $row;
