@@ -129,7 +129,7 @@ class FakePdo extends \PDO
 
 	/**
 	 * @param string $statement
-	 * @return bool
+	 * @return int|false
 	 */
 	public function exec($statement)
 	{
@@ -139,7 +139,10 @@ class FakePdo extends \PDO
 		}
 
 		$sth = $this->prepare($statement);
-		return $sth->execute();
+		if ($sth->execute()){
+			return $sth->rowCount();
+		}
+		return false;
 	}
 
 	/**
