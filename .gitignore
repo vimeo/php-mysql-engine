@@ -5,3 +5,6 @@ www.pid
 *~
 composer.lock
 .vscode
+/.idea
+composer.phar
+.phpunit.result.cache
