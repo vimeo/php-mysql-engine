@@ -9,7 +9,7 @@ use Vimeo\MysqlEngine\Schema\Column;
 final class CreateProcessor
 {
     public static function process(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Query\CreateQuery $stmt
     ) : void {
         $definition_columns = [];
@@ -78,7 +78,7 @@ final class CreateProcessor
 
         $definition = new TableDefinition(
             $stmt->name,
-            $conn->databaseName,
+            $conn->getDatabaseName(),
             $definition_columns,
             $default_character_set,
             $default_collation,
@@ -88,7 +88,7 @@ final class CreateProcessor
         );
 
         $conn->getServer()->addTableDefinition(
-            $conn->databaseName,
+            $conn->getDatabaseName(),
             $stmt->name,
             $definition
         );

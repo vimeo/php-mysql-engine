@@ -17,7 +17,7 @@ final class ExistsOperatorEvaluator
      * @return mixed
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         ExistsOperatorExpression $expr,
         array $row,

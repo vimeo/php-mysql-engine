@@ -4,7 +4,7 @@ namespace Vimeo\MysqlEngine\Processor;
 final class UpdateProcessor extends Processor
 {
     public static function process(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         \Vimeo\MysqlEngine\Query\UpdateQuery $stmt
     ) : int {
@@ -56,7 +56,7 @@ final class UpdateProcessor extends Processor
      * @return array{0:string, 1:string}
      */
     protected static function processUpdateClause(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         \Vimeo\MysqlEngine\Query\UpdateQuery $stmt
     ) : array {
         list($database, $table_name) = self::parseTableName($conn, $stmt->tableName);

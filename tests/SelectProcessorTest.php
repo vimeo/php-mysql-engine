@@ -16,7 +16,7 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
 
         $this->assertInstanceOf(SelectQuery::class, $select_query);
 
-        $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
+        $conn = new \Vimeo\MysqlEngine\Php8\FakePdo('mysql:foo');
 
         $this->assertSame(
             [['a' => 3]],
@@ -37,7 +37,7 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
 
         $this->assertInstanceOf(SelectQuery::class, $select_query);
 
-        $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
+        $conn = new \Vimeo\MysqlEngine\Php8\FakePdo('mysql:foo');
 
         $this->assertSame(
             [['a' => 5]],
@@ -58,7 +58,7 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
 
         $this->assertInstanceOf(SelectQuery::class, $select_query);
 
-        $conn = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
+        $conn = new \Vimeo\MysqlEngine\Php8\FakePdo('mysql:foo');
 
         $this->assertSame(
             [['a' => 0]],

@@ -425,7 +425,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
     public function testDateArithhmetic()
     {
-        $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo');
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
         $query = $pdo->prepare(
@@ -462,7 +462,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
     public function testInOperator()
     {
-        $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo');
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
         $query = $pdo->prepare(
@@ -481,7 +481,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
     public function testEmptyStringEqualsZero()
     {
-        $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo');
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
         $query = $pdo->prepare(
@@ -802,9 +802,18 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    private static function getPdo(string $connection_string) : \PDO
+    {
+        if (\PHP_MAJOR_VERSION === 8) {
+            return new \Vimeo\MysqlEngine\Php8\FakePdo($connection_string);
+        }
+
+        return new \Vimeo\MysqlEngine\Php7\FakePdo($connection_string);
+    }
+
     private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
     {
-        $pdo = new \Vimeo\MysqlEngine\FakePdo('mysql:foo;dbname=test;');
+        $pdo = self::getPdo('mysql:foo;dbname=test;');
 
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, $emulate_prepares);
 

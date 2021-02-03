@@ -1,7 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine;
 
-class FakePdo extends \PDO
+trait FakePdoTrait
 {
     /**
      * @var Server
@@ -70,16 +70,24 @@ class FakePdo extends \PDO
         return $this->server;
     }
 
-    /**
-     * @param  string $statement
-     */
-    public function prepare($statement, $options = null)
+    public function getDatabaseName() : ?string
     {
-        if (\PHP_MAJOR_VERSION === 8) {
-            return new Php8\FakePdoStatement($this, $statement, $this->real);
-        }
+        return $this->databaseName;
+    }
 
-        return new Php7\FakePdoStatement($this, $statement, $this->real);
+    public function shouldStringifyResult(): bool
+    {
+        return $this->stringifyResult;
+    }
+
+    public function shouldLowercaseResultKeys(): bool
+    {
+        return $this->lowercaseResultKeys;
+    }
+
+    public function setLastInsertId(string $last_insert_id) : void
+    {
+        $this->lastInsertId = $last_insert_id;
     }
 
     public function lastInsertId($seqname = null) : string

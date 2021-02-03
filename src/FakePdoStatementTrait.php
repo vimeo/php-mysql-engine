@@ -36,7 +36,7 @@ trait FakePdoStatementTrait
     private $fetchConstructorArgs = null;
 
     /**
-     * @var FakePdo
+     * @var FakePdoInterface
      */
     private $conn;
 
@@ -55,7 +55,7 @@ trait FakePdoStatementTrait
      */
     private $boundValues = [];
 
-    public function __construct(FakePdo $conn, string $sql, ?\PDO $real)
+    public function __construct(FakePdoInterface $conn, string $sql, ?\PDO $real)
     {
         $this->sql = $sql;
         $this->conn = $conn;
@@ -158,7 +158,7 @@ trait FakePdoStatementTrait
                     $real_result = $this->realStatement->fetchAll(\PDO::FETCH_ASSOC);
 
                     if ($fake_result) {
-                        if ($this->conn->stringifyResult) {
+                        if ($this->conn->shouldStringifyResult()) {
                             $fake_result = array_map(
                                 function ($row) {
                                     return self::stringify($row);
@@ -167,7 +167,7 @@ trait FakePdoStatementTrait
                             );
                         }
 
-                        if ($this->conn->lowercaseResultKeys) {
+                        if ($this->conn->shouldLowercaseResultKeys()) {
                             $fake_result = array_map(
                                 function ($row) {
                                     return self::lowercaseKeys($row);
@@ -214,7 +214,7 @@ trait FakePdoStatementTrait
 
             case Query\TruncateQuery::class:
                 $this->conn->getServer()->resetTable(
-                    $this->conn->databaseName,
+                    $this->conn->getDatabaseName(),
                     $parsed_query->table
                 );
 
@@ -222,7 +222,7 @@ trait FakePdoStatementTrait
 
             case Query\DropTableQuery::class:
                 $this->conn->getServer()->dropTable(
-                    $this->conn->databaseName,
+                    $this->conn->getDatabaseName(),
                     $parsed_query->table
                 );
 
@@ -230,7 +230,7 @@ trait FakePdoStatementTrait
 
             case Query\ShowTablesQuery::class:
                 if ($this->conn->getServer()->getTable(
-                    $this->conn->databaseName,
+                    $this->conn->getDatabaseName(),
                     $parsed_query->pattern
                 )) {
                     $this->result = [[$parsed_query->sql => $parsed_query->pattern]];
@@ -302,11 +302,11 @@ trait FakePdoStatementTrait
             return false;
         }
 
-        if ($this->conn->stringifyResult) {
+        if ($this->conn->shouldStringifyResult()) {
             $row = self::stringify($row);
         }
 
-        if ($this->conn->lowercaseResultKeys) {
+        if ($this->conn->shouldLowercaseResultKeys()) {
             $row = self::lowercaseKeys($row);
         }
 
@@ -355,11 +355,11 @@ trait FakePdoStatementTrait
         if ($fetch_style === \PDO::FETCH_ASSOC) {
             return array_map(
                 function ($row) {
-                    if ($this->conn->stringifyResult) {
+                    if ($this->conn->shouldStringifyResult()) {
                         $row = self::stringify($row);
                     }
 
-                    if ($this->conn->lowercaseResultKeys) {
+                    if ($this->conn->shouldLowercaseResultKeys()) {
                         $row = self::lowercaseKeys($row);
                     }
 
@@ -374,7 +374,7 @@ trait FakePdoStatementTrait
         if ($fetch_style === \PDO::FETCH_NUM) {
             return array_map(
                 function ($row) {
-                    if ($this->conn->stringifyResult) {
+                    if ($this->conn->shouldStringifyResult()) {
                         $row = self::stringify($row);
                     }
 
@@ -387,11 +387,11 @@ trait FakePdoStatementTrait
         if ($fetch_style === \PDO::FETCH_BOTH) {
             return array_map(
                 function ($row) {
-                    if ($this->conn->stringifyResult) {
+                    if ($this->conn->shouldStringifyResult()) {
                         $row = self::stringify($row);
                     }
 
-                    if ($this->conn->lowercaseResultKeys) {
+                    if ($this->conn->shouldLowercaseResultKeys()) {
                         $row = self::lowercaseKeys($row);
                     }
 
@@ -405,7 +405,7 @@ trait FakePdoStatementTrait
             return \array_column(
                 array_map(
                     function ($row) {
-                        if ($this->conn->stringifyResult) {
+                        if ($this->conn->shouldStringifyResult()) {
                             $row = self::stringify($row);
                         }
 
@@ -424,11 +424,11 @@ trait FakePdoStatementTrait
 
             return array_map(
                 function ($row) use ($fetch_argument, $ctor_args) {
-                    if ($this->conn->stringifyResult) {
+                    if ($this->conn->shouldStringifyResult()) {
                         $row = self::stringify($row);
                     }
 
-                    if ($this->conn->lowercaseResultKeys) {
+                    if ($this->conn->shouldLowercaseResultKeys()) {
                         $row = self::lowercaseKeys($row);
                     }
 

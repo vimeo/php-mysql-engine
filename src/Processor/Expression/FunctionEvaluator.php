@@ -1,7 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\FakePdo;
+use Vimeo\MysqlEngine\FakePdoInterface;
 use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
 use Vimeo\MysqlEngine\Processor\ProcessorException;
@@ -20,7 +20,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     public static function evaluate(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -238,7 +238,7 @@ final class FunctionEvaluator
      * @return int
      */
     private static function sqlCount(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         QueryResult $result
@@ -280,7 +280,7 @@ final class FunctionEvaluator
      * @return ?numeric
      */
     private static function sqlSum(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         QueryResult $result
@@ -344,7 +344,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlMin(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         QueryResult $result
@@ -379,7 +379,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlMax(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         QueryResult $result
@@ -415,7 +415,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlMod(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -441,7 +441,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlAvg(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         QueryResult $result
@@ -476,7 +476,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlIf(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -506,7 +506,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlSubstring(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -540,7 +540,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlSubstringIndex(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -581,7 +581,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlLower(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -605,7 +605,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlUpper(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -628,7 +628,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlLength(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -651,7 +651,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlBinary(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -673,7 +673,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlCharLength(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -697,7 +697,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlCoalesce(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -724,7 +724,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlGreatest(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -751,7 +751,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlNullif(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -773,7 +773,7 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlIsNull(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -792,7 +792,7 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlFromUnixtime(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -815,7 +815,7 @@ final class FunctionEvaluator
      * @return string
      */
     private static function sqlConcat(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -842,7 +842,7 @@ final class FunctionEvaluator
      * @return string
      */
     private static function sqlConcatWS(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -885,7 +885,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlColumn(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -923,7 +923,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlValues(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -952,7 +952,7 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlDate(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -981,7 +981,7 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlLastDay(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -1008,7 +1008,7 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlDateFormat(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -1044,7 +1044,7 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlDateSub(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -1092,7 +1092,7 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlDateAdd(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -1140,7 +1140,7 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlDateDiff(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -1162,7 +1162,7 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlDay(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -1183,7 +1183,7 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlRound(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
         array $row,
@@ -1202,7 +1202,7 @@ final class FunctionEvaluator
     }
 
     private static function getPhpIntervalFromExpression(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         IntervalOperatorExpression $expr,
         array $row,

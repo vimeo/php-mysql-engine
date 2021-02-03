@@ -17,7 +17,7 @@ class Evaluator
      * @return mixed
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         \Vimeo\MysqlEngine\Query\Expression\Expression $expr,
         array $row,

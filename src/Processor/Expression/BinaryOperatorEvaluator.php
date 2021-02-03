@@ -20,7 +20,7 @@ final class BinaryOperatorEvaluator
      * @param array<string, Column> $columns
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         BinaryOperatorExpression $expr,
         array $row,
@@ -470,7 +470,7 @@ final class BinaryOperatorEvaluator
      * @return bool
      */
     private static function evaluateRowComparison(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         BinaryOperatorExpression $expr,
         RowExpression $left,

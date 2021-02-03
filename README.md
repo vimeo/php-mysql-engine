@@ -60,7 +60,8 @@ PHP MySQL Engine works by providing a subclass of [PDO](https://www.php.net/manu
 You can instantiate the subclass as you would `PDO`, and use dependency injection or similar to provide that instance to your application code.
 
 ```php
-$pdo = new \Vimeo\MysqlEngine\FakePdo($dsn, $user, $password);
+// use a class specific to your cuurrent PHP version (APIs changed in major versions)
+$pdo = new \Vimeo\MysqlEngine\Php8\FakePdo($dsn, $user, $password);
 // currently supported attributes
 $pdo->setAttribute(\PDO::ATTR_CASE, \PDO::CASE_LOWER);
 $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);

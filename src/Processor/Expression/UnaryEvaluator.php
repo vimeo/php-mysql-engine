@@ -15,7 +15,7 @@ final class UnaryEvaluator
      * @return mixed
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         UnaryExpression $expr,
         array $row,

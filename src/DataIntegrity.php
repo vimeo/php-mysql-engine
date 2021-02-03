@@ -7,7 +7,7 @@ final class DataIntegrity
      * @return mixed
      */
     protected static function getDefaultValueForColumn(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         string $php_type,
         bool $nullable,
         ?string $default,
@@ -57,7 +57,7 @@ final class DataIntegrity
      * @return array<string, mixed>
      */
     public static function ensureColumnsPresent(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         array $row,
         Schema\TableDefinition $table_definition
     ) {
@@ -119,7 +119,7 @@ final class DataIntegrity
      * @return array<string, mixed>
      */
     public static function coerceToSchema(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         array $row,
         Schema\TableDefinition $table_definition
     ) {

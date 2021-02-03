@@ -16,7 +16,7 @@ final class ColumnEvaluator
      * @return scalar|null
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdo $conn,
+        \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         ColumnExpression $expr,
         array $row,

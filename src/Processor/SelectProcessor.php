@@ -5,7 +5,7 @@ use Vimeo\MysqlEngine\Query\SelectQuery;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
 use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
-use Vimeo\MysqlEngine\FakePdo;
+use Vimeo\MysqlEngine\FakePdoInterface;
 use Vimeo\MysqlEngine\MultiOperand;
 use Vimeo\MysqlEngine\Schema\Column;
 
@@ -18,7 +18,7 @@ final class SelectProcessor extends Processor
      * @return QueryResult
      */
     public static function process(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         SelectQuery $stmt,
         ?array $row = null,
@@ -110,7 +110,7 @@ final class SelectProcessor extends Processor
     }
 
     protected static function applyFrom(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         SelectQuery $stmt,
         ?array $row,
@@ -141,7 +141,7 @@ final class SelectProcessor extends Processor
     }
 
     protected static function applyGroupBy(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         SelectQuery $stmt,
         QueryResult $result
@@ -185,7 +185,7 @@ final class SelectProcessor extends Processor
     }
 
     protected static function applyHaving(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         \Vimeo\MysqlEngine\Query\Expression\Expression $havingClause,
         QueryResult $result
@@ -222,7 +222,7 @@ final class SelectProcessor extends Processor
     }
 
     protected static function applySelect(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         SelectQuery $stmt,
         QueryResult $result
@@ -521,7 +521,7 @@ final class SelectProcessor extends Processor
     }
 
     protected static function removeOrderByExtras(
-        FakePdo $_conn,
+        FakePdoInterface $_conn,
         SelectQuery $stmt,
         QueryResult $result
     ) : QueryResult {
@@ -584,7 +584,7 @@ final class SelectProcessor extends Processor
     }
 
     protected static function processMultiQuery(
-        FakePdo $conn,
+        FakePdoInterface $conn,
         Scope $scope,
         SelectQuery $stmt,
         QueryResult $result

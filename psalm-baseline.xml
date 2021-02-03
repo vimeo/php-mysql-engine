@@ -21,22 +21,7 @@
       <code>$value</code>
     </MixedAssignment>
   </file>
-  <file src="src/FakePdo.php">
-    <MissingParamType occurrences="4">
-      <code>$key</code>
-      <code>$options</code>
-      <code>$seqname</code>
-      <code>$value</code>
-    </MissingParamType>
-    <MixedArgument occurrences="2">
-      <code>$key</code>
-      <code>$seqname</code>
-    </MixedArgument>
-    <PossiblyNullArgument occurrences="1">
-      <code>$host</code>
-    </PossiblyNullArgument>
-  </file>
-  <file src="src/FakePdoTrait.php">
+  <file src="src/FakePdoStatementTrait.php">
     <ArgumentTypeCoercion occurrences="1">
       <code>$class</code>
     </ArgumentTypeCoercion>
@@ -76,10 +61,24 @@
       <code>$ctor_args</code>
       <code>$fetch_argument</code>
       <code>$fetch_argument</code>
-      <code>$this-&gt;conn-&gt;databaseName</code>
-      <code>$this-&gt;conn-&gt;databaseName</code>
-      <code>$this-&gt;conn-&gt;databaseName</code>
+      <code>$this-&gt;conn-&gt;getDatabaseName()</code>
+      <code>$this-&gt;conn-&gt;getDatabaseName()</code>
+      <code>$this-&gt;conn-&gt;getDatabaseName()</code>
       <code>$this-&gt;fetchConstructorArgs</code>
+    </PossiblyNullArgument>
+  </file>
+  <file src="src/FakePdoTrait.php">
+    <MissingParamType occurrences="3">
+      <code>$key</code>
+      <code>$seqname</code>
+      <code>$value</code>
+    </MissingParamType>
+    <MixedArgument occurrences="2">
+      <code>$key</code>
+      <code>$seqname</code>
+    </MixedArgument>
+    <PossiblyNullArgument occurrences="1">
+      <code>$host</code>
     </PossiblyNullArgument>
   </file>
   <file src="src/Parser/CreateTableParser.php">
@@ -232,8 +231,9 @@
       <code>$stmt-&gt;values</code>
       <code>$stmt-&gt;values</code>
     </MixedArgumentTypeCoercion>
-    <PossiblyNullArgument occurrences="4">
-      <code>$conn-&gt;databaseName</code>
+    <PossiblyNullArgument occurrences="5">
+      <code>$conn-&gt;getDatabaseName()</code>
+      <code>$conn-&gt;getDatabaseName()</code>
       <code>$stmt-&gt;decimals</code>
       <code>$stmt-&gt;length</code>
       <code>$stmt-&gt;length</code>
