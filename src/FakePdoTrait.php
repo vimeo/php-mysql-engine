@@ -121,4 +121,25 @@ trait FakePdoTrait
         Server::restoreSnapshot('transaction');
         return true;
     }
+
+    /**
+     * @param string $statement
+     * @return int|false
+     */
+    public function exec($statement)
+    {
+        $statement = trim($statement);
+
+        if (strpos($statement, 'SET ')===0) {
+            return false;
+        }
+
+        $sth = $this->prepare($statement);
+
+        if ($sth->execute()) {
+            return $sth->rowCount();
+        }
+
+        return false;
+    }
 }

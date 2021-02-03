@@ -16,7 +16,7 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
 
         $this->assertInstanceOf(SelectQuery::class, $select_query);
 
-        $conn = new \Vimeo\MysqlEngine\Php8\FakePdo('mysql:foo');
+        $conn = self::getPdo('mysql:foo');
 
         $this->assertSame(
             [['a' => 3]],
@@ -37,7 +37,7 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
 
         $this->assertInstanceOf(SelectQuery::class, $select_query);
 
-        $conn = new \Vimeo\MysqlEngine\Php8\FakePdo('mysql:foo');
+        $conn = self::getPdo('mysql:foo');
 
         $this->assertSame(
             [['a' => 5]],
@@ -58,7 +58,7 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
 
         $this->assertInstanceOf(SelectQuery::class, $select_query);
 
-        $conn = new \Vimeo\MysqlEngine\Php8\FakePdo('mysql:foo');
+        $conn = self::getPdo('mysql:foo');
 
         $this->assertSame(
             [['a' => 0]],
@@ -69,5 +69,14 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
                 null
             )->rows
         );
+    }
+
+    private static function getPdo(string $connection_string) : \PDO
+    {
+        if (\PHP_MAJOR_VERSION === 8) {
+            return new \Vimeo\MysqlEngine\Php8\FakePdo($connection_string);
+        }
+
+        return new \Vimeo\MysqlEngine\Php7\FakePdo($connection_string);
     }
 }
