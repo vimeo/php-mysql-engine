@@ -17,4 +17,6 @@ interface FakePdoInterface
      * @param  string $seqname
      */
     public function lastInsertId($seqname = null) : string;
+
+    public function useStrictMode() : bool;
 }

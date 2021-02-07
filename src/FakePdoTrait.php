@@ -29,11 +29,19 @@ trait FakePdoTrait
     public $lowercaseResultKeys = false;
 
     /**
+     * @var bool
+     */
+    public $strict_mode = false;
+
+    /**
      * @var ?string
      * @readonly
      */
     public $databaseName = null;
 
+    /**
+     * @param array<string>  $options
+     */
     public function __construct(string $dsn, string $username = '', string $passwd = '', array $options = [])
     {
         //$this->real = new \PDO($dsn, $username, $passwd, $options);
@@ -44,6 +52,10 @@ trait FakePdoTrait
         if (preg_match('/dbname=([a-zA-Z0-9_]+);/', $host, $matches)) {
             $this->databaseName = $matches[1];
         }
+
+        // do a quick check for this string – hacky but fast
+        $this->strict_mode = \array_key_exists(\PDO::MYSQL_ATTR_INIT_COMMAND, $options)
+            && \strpos($options[\PDO::MYSQL_ATTR_INIT_COMMAND], 'STRICT_ALL_TABLES');
 
         $this->server = Server::getOrCreate('primary');
     }
@@ -103,6 +115,11 @@ trait FakePdoTrait
         }
 
         return $this->lastInsertId;
+    }
+
+    public function useStrictMode() : bool
+    {
+        return $this->strict_mode;
     }
 
     public function beginTransaction()

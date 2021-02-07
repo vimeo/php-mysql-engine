@@ -802,18 +802,50 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    private static function getPdo(string $connection_string) : \PDO
+    public function testInsertOutOfRangeStrict()
     {
-        if (\PHP_MAJOR_VERSION === 8) {
-            return new \Vimeo\MysqlEngine\Php8\FakePdo($connection_string);
-        }
+        $pdo = self::getConnectionToFullDB(false, true);
 
-        return new \Vimeo\MysqlEngine\Php7\FakePdo($connection_string);
+        $query = $pdo->prepare(
+            "INSERT INTO `video_game_characters`
+                (`name`, `type`, `profession`, `console`, `is_alive`, `powerups`, `skills`, `created_on`)
+            VALUES
+                ('wario','villain','plumber','nes','1','-4','{\"magic\":0, \"speed\":0, \"strength\":0, \"weapons\":0}', NOW())"
+        );
+
+        $this->expectException(\Vimeo\MysqlEngine\Processor\InvalidValueException::class);
+
+        $query->execute();
     }
 
-    private static function getConnectionToFullDB(bool $emulate_prepares = true) : \PDO
+    public function testInsertOutOfRangeLenient()
     {
-        $pdo = self::getPdo('mysql:foo;dbname=test;');
+        $pdo = self::getConnectionToFullDB(false, false);
+
+        $query = $pdo->prepare(
+            "INSERT INTO `video_game_characters`
+                (`name`, `type`, `profession`, `console`, `is_alive`, `powerups`, `skills`, `created_on`)
+            VALUES
+                ('wario','villain','plumber','nes','1','-4','{\"magic\":0, \"speed\":0, \"strength\":0, \"weapons\":0}', NOW())"
+        );
+
+        $query->execute();
+    }
+
+    private static function getPdo(string $connection_string, bool $strict_mode = false) : \PDO
+    {
+        $options = $strict_mode ? [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="STRICT_ALL_TABLES"'] : [];
+
+        if (\PHP_MAJOR_VERSION === 8) {
+            return new \Vimeo\MysqlEngine\Php8\FakePdo($connection_string, '', '', $options);
+        }
+
+        return new \Vimeo\MysqlEngine\Php7\FakePdo($connection_string, '', '', $options);
+    }
+
+    private static function getConnectionToFullDB(bool $emulate_prepares = true, bool $strict_mode = false) : \PDO
+    {
+        $pdo = self::getPdo('mysql:foo;dbname=test;', $strict_mode);
 
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, $emulate_prepares);
 

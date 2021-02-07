@@ -150,7 +150,7 @@ class Evaluator
                         return $expr->column = new Column\IntColumn(false, 10);
 
                     case TokenType::STRING_CONSTANT:
-                        return $expr->column = new Column\Varchar(10);
+                        return $expr->column = new Column\Varchar(255);
 
                     case TokenType::NULL_CONSTANT:
                         return $expr->column = new Column\NullColumn();
@@ -220,7 +220,7 @@ class Evaluator
                         return new Column\NullColumn();
                     }
 
-                    return new Column\Varchar(10);
+                    return new Column\Varchar(255);
                 }
 
                 // When MySQL can't figure out a variable column's type

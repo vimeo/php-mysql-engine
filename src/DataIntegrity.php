@@ -83,7 +83,7 @@ final class DataIntegrity
                     if ($column_nullable) {
                         continue;
                     } else {
-                        $row[$column_name] = self::coerceValueToColumn($column, null);
+                        $row[$column_name] = self::coerceValueToColumn($conn, $column, null);
                     }
                 } else {
                     switch ($php_type) {
@@ -135,7 +135,7 @@ final class DataIntegrity
 
             $column = $table_definition->columns[$column_name];
 
-            $row[$column_name] = self::coerceValueToColumn($column, $value);
+            $row[$column_name] = self::coerceValueToColumn($conn, $column, $value);
         }
 
         return $row;
@@ -145,6 +145,7 @@ final class DataIntegrity
      * @return false|float|int|null|string
      */
     public static function coerceValueToColumn(
+        FakePdoInterface $conn,
         Schema\Column $column,
         $value
     ) {
@@ -152,6 +153,46 @@ final class DataIntegrity
 
         if ($column->isNullable && $value === null) {
             return null;
+        }
+
+        if ($column instanceof Schema\Column\NumberColumn) {
+            if ($value === '') {
+                $value = 0;
+            } elseif (\is_bool($value)) {
+                $value = (int) $value;
+            }
+
+            if (!\is_numeric($value)) {
+                throw new Processor\InvalidValueException('Number column expects a numeric value, but saw ' . $value);
+            }
+
+            if ((float) $value > $column->getMaxValue()) {
+                if ($conn->useStrictMode()) {
+                    throw new Processor\InvalidValueException('Value ' . $value . ' out of acceptable range');
+                }
+
+                $value = $column->getMaxValue();
+            } elseif ((float) $value < $column->getMinValue()) {
+                if ($conn->useStrictMode()) {
+                    throw new Processor\InvalidValueException('Value ' . $value . ' out of acceptable range');
+                }
+
+                $value = $column->getMinValue();
+            }
+        }
+
+        if ($column instanceof Schema\Column\CharacterColumn) {
+            if (!is_string($value)) {
+                $value = (string) $value;
+            }
+
+            if (\strlen($value) > $column->getMaxStringLength()) {
+                if ($conn->useStrictMode()) {
+                    throw new Processor\InvalidValueException('String length for ' . $value . ' larger than expected');
+                }
+
+                $value = \substr($value, 0, $column->getMaxStringLength());
+            }
         }
 
         switch ($php_type) {

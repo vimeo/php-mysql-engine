@@ -151,7 +151,7 @@ trait FakePdoStatementTrait
                     );
                 }
 
-                $this->result = self::processResult($raw_result);
+                $this->result = self::processResult($this->conn, $raw_result);
 
                 if ($this->realStatement) {
                     $fake_result = $this->result;
@@ -250,7 +250,7 @@ trait FakePdoStatementTrait
     /**
      * @psalm-return array<int, array<string, mixed>>
      */
-    private static function processResult(Processor\QueryResult $raw_result): array
+    private static function processResult(FakePdoInterface $conn, Processor\QueryResult $raw_result): array
     {
         $result = [];
 
@@ -260,7 +260,7 @@ trait FakePdoStatementTrait
                  * @psalm-suppress MixedAssignment
                  */
                 $result[$i][\substr($key, 0, 255) ?: ''] = \array_key_exists($key, $raw_result->columns)
-                    ? DataIntegrity::coerceValueToColumn($raw_result->columns[$key], $value)
+                    ? DataIntegrity::coerceValueToColumn($conn, $raw_result->columns[$key], $value)
                     : $value;
             }
         }
