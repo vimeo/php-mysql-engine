@@ -338,6 +338,24 @@ trait FakePdoStatementTrait
     }
 
     /**
+     * @param int $column
+     * @return mixed
+     */
+    public function fetchColumn($column = 0)
+    {
+        /** @var array|false $row */
+        $row = $this->fetch(\PDO::FETCH_NUM);
+        if ($row === false) {
+            return $row;
+        }
+        if (!\array_key_exists($column, $row)) {
+            throw new \PDOException('SQLSTATE[HY000]: General error: Invalid column index');
+        }
+
+        return $row[$column] ?? null;
+    }
+
+    /**
      * @param  int $fetch_style
      * @param  mixed      $args
      */
