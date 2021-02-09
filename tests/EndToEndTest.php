@@ -1,6 +1,8 @@
 <?php
 namespace Vimeo\MysqlEngine\Tests;
 
+use PDOException;
+
 class EndToEndTest extends \PHPUnit\Framework\TestCase
 {
     public function tearDown() : void
@@ -830,6 +832,42 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
 
         $query->execute();
+    }
+
+    public function testFetchCount()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare('SELECT count(*) FROM `video_game_characters`');
+
+        $query->execute();
+
+        $this->assertGreaterThan(0, $query->fetchColumn());
+
+        $this->assertFalse($query->fetchColumn());
+    }
+
+    public function dataProviderFetchCountForMissingColumn(): \Generator
+    {
+        foreach ([-1, 1, 100] as $idx) {
+            yield 'column: '.$idx => [$idx];
+        }
+    }
+
+    /**
+     * @dataProvider dataProviderFetchCountForMissingColumn
+     */
+    public function testFetchCountForMissingColumn(int $columnIndex)
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare('SELECT `id` FROM `video_game_characters` LIMIT 1');
+
+        $query->execute();
+
+        $this->expectException(PDOException::class);
+
+        $query->fetchColumn($columnIndex);
     }
 
     private static function getPdo(string $connection_string, bool $strict_mode = false) : \PDO
