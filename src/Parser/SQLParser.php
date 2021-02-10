@@ -35,6 +35,7 @@ final class SQLParser
         'VALUES' => true,
         'DROP' => true,
         'SHOW' => true,
+        'TRUNCATE' => true,
     ];
 
     /**
@@ -168,7 +169,7 @@ final class SQLParser
             $tokens = \array_slice($tokens, 1, $close - 1);
             $token = $tokens[0];
         }
-        if ($token->type !== TokenType::CLAUSE && $token->value !== 'TRUNCATE') {
+        if ($token->type !== TokenType::CLAUSE) {
             throw new ParserException("Unexpected {$token->value}");
         }
         switch ($token->value) {
