@@ -163,7 +163,9 @@ final class DataIntegrity
             }
 
             if (!\is_numeric($value)) {
-                throw new Processor\InvalidValueException('Number column expects a numeric value, but saw ' . $value);
+                throw new Processor\InvalidValueException(
+                    'Number column expects a numeric value, but saw ' . var_export($value, true)
+                );
             }
 
             if ((float) $value > $column->getMaxValue()) {
