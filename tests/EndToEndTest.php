@@ -870,6 +870,37 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $query->fetchColumn($columnIndex);
     }
 
+    public function dataProviderTruncateForms(): array
+    {
+        return [
+            'short'       => ['TRUNCATE'],
+            'long'        => ['TRUNCATE TABLE'],
+            'lower short' => ['TRUNCATE'],
+            'lower long'  => ['TRUNCATE TABLE'],
+        ];
+    }
+
+    /**
+     * @param string $truncateForm
+     *
+     * @dataProvider dataProviderTruncateForms
+     */
+    public function testTruncate(string $truncateForm)
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        // check that table some data
+        $this->assertGreaterThan(
+            0,
+            $pdo->query('SELECT count(*) FROM `video_game_characters`')->fetchColumn(0)
+        );
+        $pdo->exec($truncateForm . ' video_game_characters');
+        $this->assertEquals(
+            0,
+            $pdo->query('SELECT count(*) FROM `video_game_characters`')->fetchColumn(0)
+        );
+    }
+
     private static function getPdo(string $connection_string, bool $strict_mode = false) : \PDO
     {
         $options = $strict_mode ? [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="STRICT_ALL_TABLES"'] : [];

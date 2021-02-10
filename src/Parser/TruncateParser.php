@@ -23,6 +23,7 @@ final class TruncateParser
 
     /**
      * @param array<int, Token> $tokens
+     * @param string            $sql
      */
     public function __construct(array $tokens, string $sql)
     {
@@ -30,18 +31,31 @@ final class TruncateParser
         $this->sql = $sql;
     }
 
+    /**
+     * @return TruncateQuery
+     * @throws ParserException
+     */
     public function parse() : TruncateQuery
     {
-        if ($this->tokens[$this->pointer]->value !== 'TRUNCATE') {
-            throw new ParserException("Parser error: expected TRUNCATE");
+        $token = $this->tokens[$this->pointer] ?? null;
+        if ($token === null) {
+            throw new ParserException('Parser error: invalid tokens');
+        }
+        if ($token->value !== 'TRUNCATE') {
+            throw new ParserException('Parser error: expected TRUNCATE');
         }
 
         $this->pointer++;
 
-        $token = $this->tokens[$this->pointer];
+        $token = $this->tokens[$this->pointer] ?? null;
+
+        if ($token!==null && $token->value === 'TABLE' && $token->type===TokenType::RESERVED) {
+            $this->pointer++;
+            $token = $this->tokens[$this->pointer] ?? null;
+        }
 
         if ($token === null || $token->type !== TokenType::IDENTIFIER) {
-            throw new ParserException("Expected table name after TRUNCATE");
+            throw new ParserException('Expected table name after TRUNCATE');
         }
 
         return new TruncateQuery($token->value, $this->sql);
