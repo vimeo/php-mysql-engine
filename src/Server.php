@@ -98,7 +98,7 @@ final class Server
 
     public static function restoreSnapshot(string $name) : void
     {
-        if (!\array_key_exists($name, static::$snapshot_names)) {
+        if (!static::haveSnapshot($name)) {
             throw new Processor\ProcessorException("Snapshot {$name} not found, unable to restore");
         }
 
@@ -111,7 +111,7 @@ final class Server
 
     public static function deleteSnapshot(string $name) : bool
     {
-        if (!\array_key_exists($name, static::$snapshot_names)) {
+        if (!static::haveSnapshot($name)) {
             return false;
         }
 
@@ -122,6 +122,11 @@ final class Server
         unset(static::$snapshot_names[$name]);
 
         return true;
+    }
+
+    public static function haveSnapshot(string $name) : bool
+    {
+        return \array_key_exists($name, static::$snapshot_names);
     }
 
     protected function doSnapshot(string $name) : void
