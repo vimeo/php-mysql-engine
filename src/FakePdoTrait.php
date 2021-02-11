@@ -139,6 +139,11 @@ trait FakePdoTrait
         return true;
     }
 
+    public function inTransaction()
+    {
+        return Server::haveSnapshot('transaction');
+    }
+
     /**
      * @param string $statement
      * @return int|false
