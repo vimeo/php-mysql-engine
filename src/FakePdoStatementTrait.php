@@ -213,18 +213,14 @@ trait FakePdoStatementTrait
                 break;
 
             case Query\TruncateQuery::class:
-                $this->conn->getServer()->resetTable(
-                    $this->conn->getDatabaseName(),
-                    $parsed_query->table
-                );
+                [$databaseName, $tableName] = Processor\Processor::parseTableName($this->conn, $parsed_query->table);
+                $this->conn->getServer()->resetTable($databaseName, $tableName);
 
                 break;
 
             case Query\DropTableQuery::class:
-                $this->conn->getServer()->dropTable(
-                    $this->conn->getDatabaseName(),
-                    $parsed_query->table
-                );
+                [$databaseName, $tableName] = Processor\Processor::parseTableName($this->conn, $parsed_query->table);
+                $this->conn->getServer()->dropTable($databaseName, $tableName);
 
                 break;
 

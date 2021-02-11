@@ -870,34 +870,74 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $query->fetchColumn($columnIndex);
     }
 
-    public function dataProviderTruncateForms(): array
+    public function dataProviderTruncateForms(): \Generator
     {
-        return [
-            'short'       => ['TRUNCATE'],
-            'long'        => ['TRUNCATE TABLE'],
-            'lower short' => ['TRUNCATE'],
-            'lower long'  => ['TRUNCATE TABLE'],
-        ];
+        foreach ([
+                'short'       => 'TRUNCATE',
+                'long'        => 'TRUNCATE TABLE',
+                'lower short' => 'truncate',
+                'lower long'  => 'truncate table',
+            ] as $formName => $formSql
+        ) {
+            foreach ([
+                    'relative table' => '`video_game_characters`',
+                    'absolute table' => '`test`.`video_game_characters`',
+                ] as $position => $table
+            ) {
+                yield $formName . ' + ' . $position => [$formSql, $table];
+            }
+        };
     }
 
     /**
      * @param string $truncateForm
+     * @param string $table
      *
      * @dataProvider dataProviderTruncateForms
      */
-    public function testTruncate(string $truncateForm)
+    public function testTruncate(string $truncateForm, string $table)
     {
         $pdo = self::getConnectionToFullDB(false);
 
         // check that table some data
         $this->assertGreaterThan(
             0,
-            $pdo->query('SELECT count(*) FROM `video_game_characters`')->fetchColumn(0)
+            $pdo->query('SELECT count(*) FROM '.$table)->fetchColumn(0)
         );
-        $pdo->exec($truncateForm . ' video_game_characters');
+        $pdo->exec($truncateForm . ' '.$table);
         $this->assertEquals(
             0,
-            $pdo->query('SELECT count(*) FROM `video_game_characters`')->fetchColumn(0)
+            $pdo->query('SELECT count(*) FROM '.$table)->fetchColumn(0)
+        );
+    }
+
+    public function dataProviderDropTable(): array
+    {
+        return [
+            'relative'  => ['`video_game_characters`'],
+            'absolute' => ['`test`.`video_game_characters`'],
+        ];
+    }
+    /**
+     * @param string $table
+     *
+     * @dataProvider dataProviderDropTable
+     */
+    public function testDropTable(string $table): void
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        // checking that table exists
+        $this->assertNotFalse(
+            $pdo->query('SHOW TABLES LIKE "video_game_characters"')->fetchColumn(0)
+        );
+
+        // remove table
+        $pdo->exec('DROP TABLE '.$table);
+
+        // checking that table is missing
+        $this->assertFalse(
+            $pdo->query('SHOW TABLES LIKE "video_game_characters"')->fetchColumn(0)
         );
     }
 
