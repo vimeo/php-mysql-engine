@@ -164,4 +164,33 @@ trait FakePdoTrait
 
         return false;
     }
+
+    /**
+     * @param string $string
+     * @param int $parameter_type
+     * @return string
+     */
+    public function quote($string , $parameter_type = \PDO::PARAM_STR)
+    {
+        // @see https://github.com/php/php-src/blob/php-8.0.2/ext/mysqlnd/mysqlnd_charset.c#L860-L878
+        $quoted = strtr($string, [
+            "\0" => '\0',
+            "\n" => '\n',
+            "\r" => '\r',
+            "\\" => '\\\\',
+            "\'" => '\\\'',
+            "\"" => '\\"',
+            "\032" => '\Z',
+        ]);
+
+        // @see https://github.com/php/php-src/blob/php-8.0.2/ext/pdo_mysql/mysql_driver.c#L307-L320
+        $quotes = ['\'', '\''];
+        if (defined('PDO::PARAM_STR_NATL') &&
+            (constant('PDO::PARAM_STR_NATL') & $parameter_type) === constant('PDO::PARAM_STR_NATL')
+        ) {
+            $quotes[0] = 'N\'';
+        }
+
+        return "{$quotes[0]}{$quoted}{$quotes[1]}";
+    }
 }
