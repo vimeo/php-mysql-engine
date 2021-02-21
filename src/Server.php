@@ -111,7 +111,7 @@ final class Server
 
     public static function deleteSnapshot(string $name) : bool
     {
-        if (!static::haveSnapshot($name)) {
+        if (!static::hasSnapshot($name)) {
             return false;
         }
 
