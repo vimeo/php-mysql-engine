@@ -124,7 +124,7 @@ final class Server
         return true;
     }
 
-    public static function haveSnapshot(string $name) : bool
+    public static function hasSnapshot(string $name) : bool
     {
         return \array_key_exists($name, static::$snapshot_names);
     }
