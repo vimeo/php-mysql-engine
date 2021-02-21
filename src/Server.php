@@ -98,7 +98,7 @@ final class Server
 
     public static function restoreSnapshot(string $name) : void
     {
-        if (!static::haveSnapshot($name)) {
+        if (!static::hasSnapshot($name)) {
             throw new Processor\ProcessorException("Snapshot {$name} not found, unable to restore");
         }
 
