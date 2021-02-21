@@ -141,7 +141,7 @@ trait FakePdoTrait
 
     public function inTransaction()
     {
-        return Server::haveSnapshot('transaction');
+        return Server::hasSnapshot('transaction');
     }
 
     /**
