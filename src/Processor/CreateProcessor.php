@@ -8,10 +8,10 @@ use Vimeo\MysqlEngine\Schema\Column;
 
 final class CreateProcessor
 {
-    public static function process(
+    public static function getTableDefinition(
         \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Query\CreateQuery $stmt
-    ) : void {
+    ) : TableDefinition {
         $definition_columns = [];
 
         $primary_key_columns = [];
@@ -76,7 +76,7 @@ final class CreateProcessor
             throw new \UnexpectedValueException('No default collation or character set given');
         }
 
-        $definition = new TableDefinition(
+        return new TableDefinition(
             $stmt->name,
             $conn->getDatabaseName(),
             $definition_columns,
@@ -85,12 +85,6 @@ final class CreateProcessor
             $primary_key_columns,
             $indexes,
             $auto_increment_offsets
-        );
-
-        $conn->getServer()->addTableDefinition(
-            $conn->getDatabaseName(),
-            $stmt->name,
-            $definition
         );
     }
 

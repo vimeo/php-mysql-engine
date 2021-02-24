@@ -107,7 +107,11 @@ trait FakePdoStatementTrait
             $create_queries = (new Parser\CreateTableParser())->parse($sql);
 
             foreach ($create_queries as $create_query) {
-                Processor\CreateProcessor::process($this->conn, $create_query);
+                $this->conn->getServer()->addTableDefinition(
+                    $this->conn->getDatabaseName(),
+                    $create_query->name,
+                    Processor\CreateProcessor::getTableDefinition($this->conn, $create_query)
+                );
             }
 
             return true;
