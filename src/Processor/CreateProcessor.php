@@ -8,9 +8,9 @@ use Vimeo\MysqlEngine\Schema\Column;
 
 final class CreateProcessor
 {
-    public static function getTableDefinition(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
-        Query\CreateQuery $stmt
+    public static function makeTableDefinition(
+        Query\CreateQuery $stmt,
+        string $database_name
     ) : TableDefinition {
         $definition_columns = [];
 
@@ -78,7 +78,7 @@ final class CreateProcessor
 
         return new TableDefinition(
             $stmt->name,
-            $conn->getDatabaseName(),
+            $database_name,
             $definition_columns,
             $default_character_set,
             $default_collation,

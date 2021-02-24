@@ -110,7 +110,10 @@ trait FakePdoStatementTrait
                 $this->conn->getServer()->addTableDefinition(
                     $this->conn->getDatabaseName(),
                     $create_query->name,
-                    Processor\CreateProcessor::getTableDefinition($this->conn, $create_query)
+                    Processor\CreateProcessor::makeTableDefinition(
+                        $create_query,
+                        $this->conn->getDatabaseName()
+                    )
                 );
             }
 
