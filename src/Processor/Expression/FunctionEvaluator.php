@@ -116,6 +116,11 @@ final class FunctionEvaluator
             case 'MAX':
             case 'MIN':
                 $column = clone Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
+
+                if ($column instanceof Column\IntegerColumn) {
+                    $column = new Column\BigInt(false, 10);
+                }
+
                 $column->isNullable = true;
                 return $column;
 
