@@ -272,7 +272,7 @@ class Evaluator
             return $expr->column = new Column\NullColumn();
         }
 
-        return new Column\Varchar(10);
+        return new Column\Varchar(strlen($value));
     }
 
     /**
