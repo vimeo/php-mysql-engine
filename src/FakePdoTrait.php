@@ -124,6 +124,10 @@ trait FakePdoTrait
 
     public function beginTransaction()
     {
+        if (Server::hasSnapshot('transaction')) {
+            return false;
+        }
+
         Server::snapshot('transaction');
         return true;
     }
@@ -135,6 +139,10 @@ trait FakePdoTrait
 
     public function rollback()
     {
+        if (!Server::hasSnapshot('transaction')) {
+            return false;
+        }
+
         Server::restoreSnapshot('transaction');
         return true;
     }
