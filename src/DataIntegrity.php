@@ -163,9 +163,13 @@ final class DataIntegrity
             }
 
             if (!\is_numeric($value)) {
-                throw new Processor\InvalidValueException(
-                    'Number column expects a numeric value, but saw ' . var_export($value, true)
-                );
+                if ($value === null && !$conn->useStrictMode()) {
+                    $value = 0;
+                } else {
+                    throw new Processor\InvalidValueException(
+                        'Number column expects a numeric value, but saw ' . var_export($value, true)
+                    );
+                }
             }
 
             if ((float) $value > $column->getMaxValue()) {
