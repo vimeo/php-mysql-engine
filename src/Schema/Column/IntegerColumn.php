@@ -8,4 +8,8 @@ interface IntegerColumn
     public function autoIncrement() : void;
 
     public function isAutoIncrement() : bool;
+
+    public function isUnsigned() : bool;
+
+    public function getDisplayWidth() : int;
 }
