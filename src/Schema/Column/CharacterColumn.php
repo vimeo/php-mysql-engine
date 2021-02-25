@@ -14,12 +14,12 @@ abstract class CharacterColumn extends \Vimeo\MysqlEngine\Schema\Column
     protected $max_truncated_length; // used for in-memory columns
 
     /**
-     * @var string
+     * @var ?string
      */
     protected $character_set;
 
     /**
-     * @var string
+     * @var ?string
      */
     protected $collation;
 
@@ -40,12 +40,12 @@ abstract class CharacterColumn extends \Vimeo\MysqlEngine\Schema\Column
         return $this->max_truncated_length;
     }
 
-    public function getCharacterSet() : string
+    public function getCharacterSet() : ?string
     {
         return $this->character_set;
     }
 
-    public function getCollation() : string
+    public function getCollation() : ?string
     {
         return $this->collation;
     }
