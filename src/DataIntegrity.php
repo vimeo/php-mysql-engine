@@ -194,7 +194,9 @@ final class DataIntegrity
 
             if (\strlen($value) > $column->getMaxStringLength()) {
                 if ($conn->useStrictMode()) {
-                    throw new Processor\InvalidValueException('String length for ' . $value . ' larger than expected');
+                    throw new Processor\InvalidValueException(
+                        'String length for ' . $value . ' larger than expected ' . $column->getMaxStringLength()
+                    );
                 }
 
                 $value = \substr($value, 0, $column->getMaxStringLength());
