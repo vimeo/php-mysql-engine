@@ -73,7 +73,7 @@ final class CreateProcessor
                 $column->autoIncrement();
             }
 
-            if ($field->default && $column instanceof Column\Defaultable) {
+            if ($field->default !== null && $column instanceof Column\Defaultable) {
                 $column->setDefault(
                     $field->default === 'NULL' ? null : $field->default
                 );
