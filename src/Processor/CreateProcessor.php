@@ -188,6 +188,10 @@ final class CreateProcessor
             case DataType::MEDIUMTEXT:
             case DataType::LONGTEXT:
             case DataType::VARCHAR:
+                if ($stmt->null === null) {
+                    $stmt->null = true;
+                }
+
                 return self::getTextDefinitionColumn($stmt);
 
             case DataType::DATE:
@@ -203,9 +207,7 @@ final class CreateProcessor
                 return new Column\Year();
 
             case DataType::TIMESTAMP:
-                $timestamp = new Column\Timestamp();
-                $timestamp->isNullable = false;
-                return $timestamp;
+                return new Column\Timestamp();
 
             case DataType::VARBINARY:
                 return new Column\Varbinary((int) $stmt->length);

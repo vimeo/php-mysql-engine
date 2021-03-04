@@ -1,6 +1,8 @@
 CREATE TABLE `video_game_characters` (
 	`id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
 	`name` varchar(32) NOT NULL DEFAULT '',
+	`bio_en` text NOT NULL,
+	`bio_fr` text,
 	`type` enum('hero', 'villain') NOT NULL DEFAULT 'hero',
 	`profession` varchar(30) CHARACTER SET utf8mb4 DEFAULT NULL,
 	`console` enum('atari', 'gameboy', 'nes', 'pc', 'sega genesis', 'super nintendo') DEFAULT NULL,

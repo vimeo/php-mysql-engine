@@ -672,6 +672,36 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame("22", $pdo->lastInsertId());
     }
 
+    public function testInsertWithNullAndEmpty()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            "INSERT INTO `video_game_characters`
+                (`id`, `name`, `type`, `profession`, `console`, `is_alive`, `powerups`, `skills`, `created_on`)
+            VALUES
+                (20, 'wario','villain','plumber','nes','1','3','{\"magic\":0, \"speed\":0, \"strength\":0, \"weapons\":0}', NOW())"
+        );
+
+        $query->execute();
+
+        $query = $pdo->prepare(
+            'SELECT `bio_en`, `bio_fr`
+            FROM `video_game_characters`
+            ORDER BY `id` DESC
+            LIMIT 1'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['bio_en' => '', 'bio_fr' => null],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     public function testOrderBySecondDimensionAliased()
     {
         $pdo = self::getConnectionToFullDB(false);
