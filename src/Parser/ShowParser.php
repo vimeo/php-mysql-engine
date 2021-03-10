@@ -1,6 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Parser;
 
+use Vimeo\MysqlEngine\Query\ShowIndexQuery;
 use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Query\ShowTablesQuery;
 
@@ -33,7 +34,11 @@ final class ShowParser
         $this->sql = $sql;
     }
 
-    public function parse() : ShowTablesQuery
+    /**
+     * @return ShowTablesQuery|ShowIndexQuery
+     * @throws ParserException
+     */
+    public function parse()
     {
         if ($this->tokens[$this->pointer]->value !== 'SHOW') {
             throw new ParserException("Parser error: expected SHOW");
@@ -41,10 +46,21 @@ final class ShowParser
 
         $this->pointer++;
 
-        if ($this->tokens[$this->pointer]->value !== 'TABLES') {
-            throw new ParserException("Parser error: expected SHOW TABLES");
+        switch ($this->tokens[$this->pointer]->value) {
+            case 'TABLES':
+                return $this->parseShowTables();
+            case 'INDEX':
+            case 'INDEXES':
+            case 'KEYS':
+                return $this->parseShowIndex();
+            default:
+                throw new ParserException("Parser error: expected SHOW TABLES");
         }
 
+    }
+
+    private function parseShowTables()
+    {
         $this->pointer++;
 
         if ($this->tokens[$this->pointer]->value !== 'LIKE') {
@@ -60,5 +76,20 @@ final class ShowParser
         }
 
         return new ShowTablesQuery($token->value, $this->sql);
+    }
+
+    private function parseShowIndex()
+    {
+        $this->pointer++;
+
+        if ($this->tokens[$this->pointer]->value !== 'FROM') {
+            throw new ParserException("Parser error: expected SHOW INDEX FROM");
+        }
+        $this->pointer++;
+        $token = $this->tokens[$this->pointer];
+        if ($token === null || $token->type !== TokenType::IDENTIFIER) {
+            throw new ParserException("Expected table name after FROM");
+        }
+        return new ShowIndexQuery($token->value, $this->sql);
     }
 }

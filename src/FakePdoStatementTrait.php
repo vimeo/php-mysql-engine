@@ -243,6 +243,10 @@ trait FakePdoStatementTrait
 
                 break;
 
+            case Query\ShowIndexQuery::class:
+                $this->result = Processor\ShowIndexProcessor::process($this->conn, $parsed_query->table);
+                break;
+
             default:
                 throw new \UnexpectedValueException('Unsupported operation type ' . $sql);
         }
