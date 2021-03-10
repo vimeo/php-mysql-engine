@@ -1,4 +1,5 @@
 <?php
+
 namespace Vimeo\MysqlEngine\Parser;
 
 use Vimeo\MysqlEngine\Query\ShowIndexQuery;
@@ -59,7 +60,7 @@ final class ShowParser
 
     }
 
-    private function parseShowTables()
+    private function parseShowTables(): ShowTablesQuery
     {
         $this->pointer++;
 
@@ -78,7 +79,7 @@ final class ShowParser
         return new ShowTablesQuery($token->value, $this->sql);
     }
 
-    private function parseShowIndex()
+    private function parseShowIndex(): ShowIndexQuery
     {
         $this->pointer++;
 
@@ -90,6 +91,18 @@ final class ShowParser
         if ($token === null || $token->type !== TokenType::IDENTIFIER) {
             throw new ParserException("Expected table name after FROM");
         }
-        return new ShowIndexQuery($token->value, $this->sql);
+
+        $query = new ShowIndexQuery($token->value, $this->sql);
+        $this->pointer++;
+
+        if ($this->pointer < count($this->tokens)) {
+            if ($this->tokens[$this->pointer]->value !== 'WHERE') {
+                throw new ParserException("Parser error: expected SHOW INDEX FROM [TABLE_NAME] WHERE");
+            }
+            $expression_parser = new ExpressionParser($this->tokens, $this->pointer);
+            list($this->pointer, $expression) = $expression_parser->buildWithPointer();
+            $query->whereClause = $expression;
+        }
+        return $query;
     }
 }

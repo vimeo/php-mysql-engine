@@ -4,6 +4,11 @@ namespace Vimeo\MysqlEngine\Query;
 final class ShowIndexQuery
 {
     /**
+     * @var ?Expression
+     */
+    public $whereClause = null;
+
+    /**
      * @var string
      */
     public $table;

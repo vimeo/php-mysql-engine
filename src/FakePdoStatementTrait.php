@@ -244,7 +244,14 @@ trait FakePdoStatementTrait
                 break;
 
             case Query\ShowIndexQuery::class:
-                $this->result = Processor\ShowIndexProcessor::process($this->conn, $parsed_query->table);
+                $this->result = self::processResult(
+                    $this->conn,
+                    Processor\ShowIndexProcessor::process(
+                        $this->conn,
+                        new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
+                        $parsed_query
+                    )
+                );
                 break;
 
             default:
