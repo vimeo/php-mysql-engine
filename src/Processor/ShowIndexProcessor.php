@@ -44,23 +44,23 @@ class ShowIndexProcessor extends Processor
                     'Key_name' => $name,
                     'Seq_in_index' => $i + 1,
                     'Column_name' => $column,
-                    // Index には "direction" がない(CreateIndex の $cols にはある)ため null
+                    // because Index does not have "direction" (in the $cols of CreateIndex)
                     'Collation' => null,
                     /*
                      * https://dev.mysql.com/doc/refman/8.0/en/analyze-table.html
-                     * ANALYZE TABLE が未実装のため null
+                     * because ANALYZE TABLE is not implemented
                      */
                     'Cardinality' => null,
-                    // Index には "length" がない(CreateIndex の $cols にはある)ため null
+                    // because Index does not have "length" (in the $cols of CreateIndex)
                     'Sub_part' => null,
-                    // PACK_KEYS が未実装のため null
+                    // because PACK_KEYS is not implemented
                     'Packed' => null,
                     'Null' => $table_definition->columns[$column]->isNullable ? 'YES' : '',
-                    // Index には $mode がない(CreateIndex にはある)ため null
+                    // because Index does not have $mode (in the CreateIndex)
                     'Index_type' => null,
-                    // DISABLE KEYS 未実装のため ''
+                    // because DISABLE KEYS is not implemented
                     'Comment' => '',
-                    // CREATE TABLE の INDEX COMMENT がスキップされているので ''
+                    // because INDEX COMMENT is skipped in CREATE TABLE
                     'Index_comment' => ''
                 ];
             }
