@@ -1,6 +1,8 @@
 <?php
 namespace Vimeo\MysqlEngine\Query;
 
+use Vimeo\MysqlEngine\Query\Expression\Expression;
+
 final class ShowIndexQuery
 {
     /**

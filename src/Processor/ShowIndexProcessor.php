@@ -7,6 +7,7 @@ namespace Vimeo\MysqlEngine\Processor;
 use Vimeo\MysqlEngine\FakePdoInterface;
 use Vimeo\MysqlEngine\Query\ShowIndexQuery;
 use Vimeo\MysqlEngine\Schema\Column;
+use function PHPUnit\Framework\assertIsArray;
 
 class ShowIndexProcessor extends Processor
 {
@@ -20,15 +21,18 @@ class ShowIndexProcessor extends Processor
             $database,
             $table
         );
+        if (!$table_definition) {
+            return new QueryResult([], []);
+        }
         $columns = [
             'Table' => new Column\Varchar(255),
             'Non_unique' => new Column\TinyInt(true, 1),
             'Key_name' => new Column\Varchar(255),
-            'Seq_in_index' => new Column\intColumn(true, 4),
+            'Seq_in_index' => new Column\IntColumn(true, 4),
             'Column_name' => new Column\Varchar(255),
             'Collation' => new Column\Char(1),
-            'Cardinality' => new Column\intColumn(true, 4),
-            'Sub_part' => new Column\intColumn(true, 4),
+            'Cardinality' => new Column\IntColumn(true, 4),
+            'Sub_part' => new Column\IntColumn(true, 4),
             'Packed' => new Column\TinyInt(true, 1),
             'Null' => new Column\Varchar(3),
             'Index_type' => new Column\Varchar(5),
@@ -42,7 +46,7 @@ class ShowIndexProcessor extends Processor
                     'Table' => $table_definition->name,
                     'Non_unique' => $index->type === 'INDEX' ? 1 : 0,
                     'Key_name' => $name,
-                    'Seq_in_index' => $i + 1,
+                    'Seq_in_index' => 1 + (int) $i,
                     'Column_name' => $column,
                     // because Index does not have "direction" (in the $cols of CreateIndex)
                     'Collation' => null,

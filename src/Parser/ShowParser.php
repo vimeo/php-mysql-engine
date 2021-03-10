@@ -88,7 +88,7 @@ final class ShowParser
         }
         $this->pointer++;
         $token = $this->tokens[$this->pointer];
-        if ($token === null || $token->type !== TokenType::IDENTIFIER) {
+        if ($token->type !== TokenType::IDENTIFIER) {
             throw new ParserException("Expected table name after FROM");
         }
 

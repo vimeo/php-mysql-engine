@@ -2,15 +2,14 @@
 namespace Vimeo\MysqlEngine\Parser;
 
 use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\{
-    SelectQuery,
+use Vimeo\MysqlEngine\Query\{SelectQuery,
     DeleteQuery,
+    ShowIndexQuery,
     TruncateQuery,
     InsertQuery,
     UpdateQuery,
     DropTableQuery,
-    ShowTablesQuery
-};
+    ShowTablesQuery};
 
 final class SQLParser
 {
@@ -142,10 +141,11 @@ final class SQLParser
         'TABLES' => true,
     ];
 
+    /** @var array<SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery> */
     private static $cache = [];
 
     /**
-     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery
+     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery
      */
     public static function parse(string $sql)
     {
@@ -157,7 +157,7 @@ final class SQLParser
     }
 
     /**
-     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery
+     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery
      */
     private static function parseImpl(string $sql)
     {
