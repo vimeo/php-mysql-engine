@@ -49,11 +49,21 @@ abstract class DecimalPointColumn extends \Vimeo\MysqlEngine\Schema\Column imple
 
     public function getPhpCode() : string
     {
+        $default = '';
+
+        if ($this->hasDefault()) {
+            $default = '->setDefault('
+                . ($this->getDefault() === null
+                    ? 'null'
+                    : '\'' . $this->getDefault() . '\'')
+                . ')';
+        }
+
         return '(new \\' . static::class . '('
             . $this->precision
             . ', ' . $this->scale
             . '))'
-            . ($this->hasDefault() ? '->setDefault(\'' . $this->getDefault() . '\')' : '')
+            . $default
             . $this->getNullablePhp();
     }
 }

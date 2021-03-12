@@ -46,6 +46,7 @@ CREATE TABLE `transactions` (
 	`id` int(10) NOT NULL AUTO_INCREMENT,
 	`total` DECIMAL(12, 2) NOT NULL,
 	`tax` DECIMAL(12, 2) NOT NULL,
+	`other_tax` DECIMAL(12, 2) DEFAULT NULL,
 	PRIMARY KEY (`id`)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
