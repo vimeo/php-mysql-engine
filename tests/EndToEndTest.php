@@ -901,6 +901,17 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $query->fetchColumn($columnIndex);
     }
 
+    public function testFetchWithColumnMode()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare('SELECT `id` FROM `video_game_characters` WHERE id=2 LIMIT 1');
+
+        $query->execute();
+
+        self::assertEquals(2, $query->fetch(\PDO::FETCH_COLUMN));
+    }
+
     public function dataProviderTruncateForms(): \Generator
     {
         foreach ([
