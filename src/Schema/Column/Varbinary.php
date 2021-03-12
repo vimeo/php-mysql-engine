@@ -9,4 +9,12 @@ class Varbinary extends CharacterColumn implements BlobColumn, Defaultable
     {
         parent::__construct($max_string_length, 'binary', '_bin');
     }
+
+    public function getPhpCode() : string
+    {
+        return '(new \\' . static::class . '('
+            . $this->max_string_length
+            . '))'
+            . $this->getNullablePhp();
+    }
 }

@@ -57,7 +57,6 @@ final class ShowParser
             default:
                 throw new ParserException("Parser error: expected SHOW TABLES");
         }
-
     }
 
     private function parseShowTables(): ShowTablesQuery

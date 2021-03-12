@@ -6,6 +6,7 @@ use Pov\Definition\MySqlDefinition;
 class MediumText extends CharacterColumn
 {
     use TextTrait;
+    use MySqlDefaultTrait;
 
     /**
      * @var string

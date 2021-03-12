@@ -29,9 +29,13 @@ trait IntegerColumnTrait
         return $this->integer_display_width;
     }
 
-    public function autoIncrement() : void
+    /**
+     * @return static
+     */
+    public function autoIncrement()
     {
         $this->auto_increment = true;
+        return $this;
     }
 
     public function isAutoIncrement() : bool
@@ -50,5 +54,26 @@ trait IntegerColumnTrait
     public function getPhpType() : string
     {
         return 'int';
+    }
+
+    public function getPhpCode() : string
+    {
+        $default = '';
+
+        if ($this instanceof Defaultable && $this->hasDefault()) {
+            $default = '->setDefault('
+                . ($this->getDefault() === null
+                    ? 'null'
+                    : '\'' . $this->getDefault() . '\'')
+                . ')';
+        }
+
+        return '(new \\' . static::class . '('
+            . ($this->unsigned ? 'true' : 'false')
+            . ', ' . $this->integer_display_width
+            . '))'
+            . $default
+            . $this->getNullablePhp()
+            . ($this->isAutoIncrement() ? '->autoIncrement()' : '');
     }
 }

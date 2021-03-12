@@ -3,7 +3,6 @@
 
 namespace Vimeo\MysqlEngine\Processor;
 
-
 use Vimeo\MysqlEngine\FakePdoInterface;
 use Vimeo\MysqlEngine\Query\ShowIndexQuery;
 use Vimeo\MysqlEngine\Schema\Column;
@@ -59,7 +58,7 @@ class ShowIndexProcessor extends Processor
                     'Sub_part' => null,
                     // because PACK_KEYS is not implemented
                     'Packed' => null,
-                    'Null' => $table_definition->columns[$column]->isNullable ? 'YES' : '',
+                    'Null' => $table_definition->columns[$column]->isNullable() ? 'YES' : '',
                     // because Index does not have $mode (in the CreateIndex)
                     'Index_type' => null,
                     // because DISABLE KEYS is not implemented

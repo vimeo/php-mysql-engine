@@ -67,7 +67,7 @@ final class CreateProcessor
         foreach ($stmt->fields as $field) {
             $definition_columns[$field->name] = $column = self::getDefinitionColumn($field->type);
 
-            $column->isNullable = (bool) $field->type->null;
+            $column->setNullable((bool) $field->type->null);
 
             if ($field->auto_increment && $column instanceof Column\IntegerColumn) {
                 $column->autoIncrement();

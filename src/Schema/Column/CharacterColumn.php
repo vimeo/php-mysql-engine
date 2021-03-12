@@ -54,4 +54,27 @@ abstract class CharacterColumn extends \Vimeo\MysqlEngine\Schema\Column
     {
         return 'string';
     }
+
+    public function getPhpCode() : string
+    {
+        $default = '';
+
+        if ($this instanceof Defaultable && $this->hasDefault()) {
+            if ($this->getDefault() === null) {
+                $default = '->setDefault(null)';
+            } else {
+                $use_quotes = $this->getPhpType() === 'string';
+                $default = '->setDefault(\'' . $this->getDefault() . '\')';
+            }
+        }
+
+        return '(new \\' . static::class . '('
+            . $this->max_string_length
+            . ($this->character_set !== null && $this->collation !== null
+                ? ', \'' . $this->character_set . '\'' . ', \'' . $this->collation . '\''
+                : '')
+            . '))'
+            . $default
+            . $this->getNullablePhp();
+    }
 }

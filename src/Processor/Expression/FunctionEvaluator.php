@@ -121,7 +121,7 @@ final class FunctionEvaluator
                     $column = new Column\BigInt(false, 10);
                 }
 
-                $column->isNullable = true;
+                $column->setNullable(true);
                 return $column;
 
             case 'MOD':
@@ -148,7 +148,7 @@ final class FunctionEvaluator
                 }
 
                 $if = clone $if;
-                $if->isNullable = false;
+                $if->setNullable(false);
 
                 if ($if->getPhpType() === 'string') {
                     return $if;
@@ -209,8 +209,8 @@ final class FunctionEvaluator
 
                 $date = new Column\Date();
 
-                if ($arg->isNullable) {
-                    $date->isNullable = true;
+                if ($arg->isNullable()) {
+                    $date->setNullable(true);
                 }
 
                 return $date;

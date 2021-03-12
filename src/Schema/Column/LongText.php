@@ -6,6 +6,7 @@ use Pov\Definition\MySqlDefinition;
 class LongText extends CharacterColumn implements StringColumn
 {
     use TextTrait;
+    use MySqlDefaultTrait;
 
     /**
      * @var string

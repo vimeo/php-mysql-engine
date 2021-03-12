@@ -44,6 +44,7 @@ class TableDefinition
     public $autoIncrementOffsets = [];
 
     /**
+     * @param array<string, Column> $columns
      * @param array<string, Index> $indexes
      */
     public function __construct(
@@ -64,5 +65,35 @@ class TableDefinition
         $this->primaryKeyColumns = $primaryKeyColumns;
         $this->indexes = $indexes;
         $this->autoIncrementOffsets = $autoIncrementOffsets;
+    }
+
+    public function getPhpCode() : string
+    {
+        $columns = [];
+
+        foreach ($this->columns as $name => $column) {
+            $columns[] = '\'' . $name . '\' => ' . $column->getPhpCode();
+        }
+
+        $indexes = [];
+
+        foreach ($this->indexes as $name => $index) {
+            $indexes[] = '\'' . $name . '\' => new \\'
+                . \get_class($index) . '(\'' . $index->type
+                . '\', [\'' . \implode('\', \'', $index->columns) . '\'])';
+        }
+
+        return 'new \\' . self::class . '('
+            . '\'' . $this->name . '\''
+            . ', \'' . $this->databaseName . '\''
+            . ', [' . \implode(', ', $columns) . ']'
+            . ', \'' . $this->defaultCharacterSet . '\''
+            . ', \'' . $this->defaultCollation . '\''
+            . ', ['
+            . ($this->primaryKeyColumns ? '\'' . \implode('\', \'', $this->primaryKeyColumns) . '\'' : '')
+            . ']'
+            . ', [' . \implode(', ', $indexes) . ']'
+            . ', ' . \var_export($this->autoIncrementOffsets, true)
+            . ')';
     }
 }

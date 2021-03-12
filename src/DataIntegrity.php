@@ -63,7 +63,7 @@ final class DataIntegrity
     ) {
         foreach ($table_definition->columns as $column_name => $column) {
             $php_type = $column->getPhpType();
-            $column_nullable = $column->isNullable;
+            $column_nullable = $column->isNullable();
 
             $column_default = $column instanceof Schema\Column\Defaultable ? $column->getDefault() : null;
 
@@ -151,7 +151,7 @@ final class DataIntegrity
     ) {
         $php_type = $column->getPhpType();
 
-        if ($column->isNullable && $value === null) {
+        if ($column->isNullable() && $value === null) {
             return null;
         }
 

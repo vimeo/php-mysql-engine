@@ -290,13 +290,13 @@ class Evaluator
 
             if ($type_0_null) {
                 $type = clone $types[1];
-                $type->isNullable = true;
+                $type->setNullable(true);
                 return $type;
             }
 
             if ($type_1_null) {
                 $type = clone $types[0];
-                $type->isNullable = true;
+                $type->setNullable(true);
                 return $type;
             }
         }
@@ -311,7 +311,7 @@ class Evaluator
         $non_null_types = [];
 
         foreach ($types as $type) {
-            if ($type->isNullable) {
+            if ($type->isNullable()) {
                 $is_nullable = true;
             }
 
@@ -326,7 +326,7 @@ class Evaluator
 
         if (count($non_null_types) === 1) {
             $type = clone $non_null_types[0];
-            $type->isNullable = true;
+            $type->setNullable(true);
             return $type;
         }
 
@@ -357,7 +357,7 @@ class Evaluator
         }
 
         if ($is_nullable) {
-            $column->isNullable = true;
+            $column->setNullable(true);
         }
 
         return $column;

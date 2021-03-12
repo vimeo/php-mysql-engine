@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<files psalm-version="4.4.1@9fd7a7d885b3a216cff8dec9d8c21a132f275224">
+<files psalm-version="4.6.2@bca09d74adc704c4eaee36a3c3e9d379e290fc3b">
   <file src="src/DataIntegrity.php">
     <MissingParamType occurrences="1">
       <code>$value</code>
@@ -7,16 +7,8 @@
     <MixedArgument occurrences="1">
       <code>$column_default</code>
     </MixedArgument>
-    <MixedArrayOffset occurrences="5">
-      <code>$existing_row[$field]</code>
-      <code>$existing_row[$key]</code>
-      <code>$new_row[$key]</code>
-      <code>$new_row[$key]</code>
-      <code>$new_row[$key]</code>
-    </MixedArrayOffset>
-    <MixedAssignment occurrences="4">
+    <MixedAssignment occurrences="3">
       <code>$column_default</code>
-      <code>$key</code>
       <code>$row[$column_name]</code>
       <code>$value</code>
     </MixedAssignment>
@@ -162,14 +154,6 @@
     </PossiblyNullArgument>
   </file>
   <file src="src/Parser/SQLLexer.php">
-    <ArgumentTypeCoercion occurrences="1">
-      <code>\PREG_SPLIT_DELIM_CAPTURE | \PREG_SPLIT_NO_EMPTY | \PREG_SPLIT_OFFSET_CAPTURE</code>
-    </ArgumentTypeCoercion>
-    <InvalidArgument occurrences="3">
-      <code>$tokens</code>
-      <code>$tokens</code>
-      <code>$tokens</code>
-    </InvalidArgument>
     <PossiblyNullArrayOffset occurrences="1">
       <code>$tokens</code>
     </PossiblyNullArrayOffset>
@@ -178,24 +162,6 @@
     <DocblockTypeContradiction occurrences="1">
       <code>$next === null</code>
     </DocblockTypeContradiction>
-    <MissingPropertyType occurrences="1">
-      <code>$cache</code>
-    </MissingPropertyType>
-    <MixedArgument occurrences="1">
-      <code>self::$cache</code>
-    </MixedArgument>
-    <MixedArrayAccess occurrences="1">
-      <code>self::$cache[$sql]</code>
-    </MixedArrayAccess>
-    <MixedArrayAssignment occurrences="1">
-      <code>self::$cache[$sql]</code>
-    </MixedArrayAssignment>
-    <MixedInferredReturnType occurrences="1">
-      <code>SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery</code>
-    </MixedInferredReturnType>
-    <MixedReturnStatement occurrences="1">
-      <code>self::$cache[$sql]</code>
-    </MixedReturnStatement>
     <MixedReturnTypeCoercion occurrences="2">
       <code>$out</code>
       <code>array&lt;int, Token&gt;</code>
@@ -205,11 +171,6 @@
     <ArgumentTypeCoercion occurrences="1">
       <code>$type</code>
     </ArgumentTypeCoercion>
-  </file>
-  <file src="src/Parser/TruncateParser.php">
-    <DocblockTypeContradiction occurrences="1">
-      <code>$token === null</code>
-    </DocblockTypeContradiction>
   </file>
   <file src="src/Parser/UpdateParser.php">
     <DocblockTypeContradiction occurrences="1">
@@ -231,9 +192,7 @@
       <code>$stmt-&gt;values</code>
       <code>$stmt-&gt;values</code>
     </MixedArgumentTypeCoercion>
-    <PossiblyNullArgument occurrences="5">
-      <code>$conn-&gt;getDatabaseName()</code>
-      <code>$conn-&gt;getDatabaseName()</code>
+    <PossiblyNullArgument occurrences="3">
       <code>$stmt-&gt;decimals</code>
       <code>$stmt-&gt;length</code>
       <code>$stmt-&gt;length</code>
@@ -671,11 +630,20 @@
       <code>$values</code>
     </MissingConstructor>
   </file>
+  <file src="src/Schema/Column/Blob.php">
+    <MixedOperand occurrences="1">
+      <code>$this-&gt;getDefault()</code>
+    </MixedOperand>
+  </file>
   <file src="src/Schema/Column/CharacterColumn.php">
-    <PossiblyNullPropertyAssignmentValue occurrences="2">
-      <code>$character_set</code>
-      <code>$collation</code>
-    </PossiblyNullPropertyAssignmentValue>
+    <MixedOperand occurrences="1">
+      <code>$this-&gt;getDefault()</code>
+    </MixedOperand>
+  </file>
+  <file src="src/Schema/Column/DecimalPointColumn.php">
+    <MixedOperand occurrences="1">
+      <code>$this-&gt;getDefault()</code>
+    </MixedOperand>
   </file>
   <file src="src/Schema/Column/Defaultable.php">
     <MissingParamType occurrences="1">
@@ -685,10 +653,35 @@
       <code>getDefault</code>
     </MissingReturnType>
   </file>
+  <file src="src/Schema/Column/EmptyConstructorTrait.php">
+    <MixedOperand occurrences="1">
+      <code>$this-&gt;getDefault()</code>
+    </MixedOperand>
+  </file>
+  <file src="src/Schema/Column/HasOptionsTrait.php">
+    <MixedOperand occurrences="1">
+      <code>$this-&gt;getDefault()</code>
+    </MixedOperand>
+  </file>
   <file src="src/Schema/Column/IntegerColumn.php">
     <MissingParamType occurrences="1">
       <code>$mysql_default</code>
     </MissingParamType>
+  </file>
+  <file src="src/Schema/Column/IntegerColumnTrait.php">
+    <MixedOperand occurrences="1">
+      <code>$this-&gt;getDefault()</code>
+    </MixedOperand>
+  </file>
+  <file src="src/Schema/Column/LongBlob.php">
+    <MixedOperand occurrences="1">
+      <code>$this-&gt;getDefault()</code>
+    </MixedOperand>
+  </file>
+  <file src="src/Schema/Column/MediumBlob.php">
+    <MixedOperand occurrences="1">
+      <code>$this-&gt;getDefault()</code>
+    </MixedOperand>
   </file>
   <file src="src/Schema/Column/MySqlDefaultTrait.php">
     <MissingParamType occurrences="1">
@@ -699,6 +692,16 @@
     <MissingParamType occurrences="1">
       <code>$mysql_default</code>
     </MissingParamType>
+  </file>
+  <file src="src/Schema/Column/TextTrait.php">
+    <MixedOperand occurrences="1">
+      <code>$this-&gt;getDefault()</code>
+    </MixedOperand>
+  </file>
+  <file src="src/Schema/Column/TinyBlob.php">
+    <MixedOperand occurrences="1">
+      <code>$this-&gt;getDefault()</code>
+    </MixedOperand>
   </file>
   <file src="src/Schema/TableDefinition.php">
     <MixedPropertyTypeCoercion occurrences="2">

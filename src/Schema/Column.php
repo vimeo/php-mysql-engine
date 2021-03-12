@@ -6,10 +6,31 @@ abstract class Column
     /**
      * @var bool
      */
-    public $isNullable = true;
+    private $isNullable = true;
+
+    public function isNullable() : bool
+    {
+        return $this->isNullable;
+    }
+
+    /**
+     * @return static
+     */
+    public function setNullable(bool $is_nullable)
+    {
+        $this->isNullable = $is_nullable;
+        return $this;
+    }
+
+    public function getNullablePhp() : string
+    {
+        return '->setNullable(' . ($this->isNullable() ? 'true' : 'false') . ')';
+    }
 
     /**
      * @return 'int'|'string'|'float'|'null'
      */
     abstract public function getPhpType() : string;
+
+    abstract public function getPhpCode() : string;
 }

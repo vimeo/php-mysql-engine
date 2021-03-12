@@ -59,5 +59,4 @@ class ShowIndexParseTest extends TestCase
         $this->assertInstanceOf(ShowIndexQuery::class, $show_query);
         $this->assertSame('foo', $show_query->table);
     }
-
 }

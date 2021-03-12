@@ -63,7 +63,7 @@ final class JoinProcessor
                     $parts = explode('.%.', $name);
                     $null_placeholder[$right_table_name . '.%.' . end($parts)] = null;
                     $column = clone $column;
-                    $column->isNullable = true;
+                    $column->setNullable(true);
                     $right_result->columns[$name] = $column;
                 }
 

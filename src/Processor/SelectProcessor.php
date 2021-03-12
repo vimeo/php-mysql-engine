@@ -512,7 +512,7 @@ final class SelectProcessor extends Processor
                         $use_cache
                     );
 
-                    $columns[$expr->name]->isNullable = true;
+                    $columns[$expr->name]->setNullable(true);
                 }
             }
         }
@@ -622,7 +622,7 @@ final class SelectProcessor extends Processor
                         if (isset($subquery_result->columns[$column_name])
                             && (\get_class($subquery_result->columns[$column_name])
                                 !== \get_class($column)
-                                || $subquery_result->columns[$column_name]->isNullable !== $column->isNullable)
+                                || $subquery_result->columns[$column_name]->isNullable() !== $column->isNullable())
                         ) {
                             $columns[$column_name] = Expression\Evaluator::combineColumnTypes([
                                 $subquery_result->columns[$column_name],

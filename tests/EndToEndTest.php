@@ -148,6 +148,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $pdo = self::getConnectionToFullDB(false);
 
         $query = $pdo->prepare("SELECT SUM(`a`) FROM (SELECT `id` as `a` FROM `video_game_characters`) `foo`");
+
         $query->bindValue(':id', 14);
         $query->execute();
 

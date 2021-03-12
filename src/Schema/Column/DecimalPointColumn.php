@@ -46,4 +46,14 @@ abstract class DecimalPointColumn extends \Vimeo\MysqlEngine\Schema\Column imple
     {
         return 'float';
     }
+
+    public function getPhpCode() : string
+    {
+        return '(new \\' . static::class . '('
+            . $this->precision
+            . ', ' . $this->scale
+            . '))'
+            . ($this->hasDefault() ? '->setDefault(\'' . $this->getDefault() . '\')' : '')
+            . $this->getNullablePhp();
+    }
 }

@@ -6,6 +6,8 @@ namespace Vimeo\MysqlEngine\Schema\Column;
  */
 class NullColumn extends \Vimeo\MysqlEngine\Schema\Column
 {
+    use EmptyConstructorTrait;
+
     public function getPhpType() : string
     {
         return 'null';
