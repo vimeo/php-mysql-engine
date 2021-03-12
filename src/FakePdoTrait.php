@@ -29,7 +29,7 @@ trait FakePdoTrait
     public $lowercaseResultKeys = false;
 
     /** @var ?int */
-    private $default_fetch_mode = null;
+    private $defaultFetchMode = null;
 
     /**
      * @var bool
@@ -74,7 +74,7 @@ trait FakePdoTrait
         }
 
         if ($key === \PDO::ATTR_DEFAULT_FETCH_MODE && is_int($value)) {
-            $this->default_fetch_mode = $value;
+            $this->defaultFetchMode = $value;
         }
 
         if ($this->real && $key !== \PDO::ATTR_STATEMENT_CLASS) {
