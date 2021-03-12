@@ -9,12 +9,13 @@ class Index
     public $type;
 
     /**
-     * @var array
+     * @var array<string>
      */
     public $columns;
 
     /**
      * @param 'INDEX'|'UNIQUE'|'PRIMARY'|'FULLTEXT'|'SPATIAL' $type
+     * @param array<string> $columns
      */
     public function __construct(
         string $type,
