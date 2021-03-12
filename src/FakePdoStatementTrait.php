@@ -26,7 +26,7 @@ trait FakePdoStatementTrait
     /**
      * @var int
      */
-    private $fetchMode = \PDO::ATTR_DEFAULT_FETCH_MODE;
+    private $fetchMode = \PDO::FETCH_BOTH;
 
     private $fetchArgument;
 
