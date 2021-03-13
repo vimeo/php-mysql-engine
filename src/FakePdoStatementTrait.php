@@ -336,6 +336,12 @@ trait FakePdoStatementTrait
             return \array_values($row);
         }
 
+        if ($fetch_style === \PDO::FETCH_COLUMN) {
+            $this->resultCursor++;
+
+            return \array_values($row)[0] ?? null;
+        }
+
         if ($fetch_style === \PDO::FETCH_BOTH) {
             $this->resultCursor++;
 
