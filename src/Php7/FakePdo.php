@@ -16,7 +16,11 @@ class FakePdo extends PDO implements FakePdoInterface
      */
     public function prepare($statement, $options = [])
     {
-        return new FakePdoStatement($this, $statement, $this->real);
+        $stmt = new FakePdoStatement($this, $statement, $this->real);
+        if ($this->defaultFetchMode) {
+            $stmt->setFetchMode($this->defaultFetchMode);
+        }
+        return $stmt;
     }
 
     /**

@@ -28,6 +28,9 @@ trait FakePdoTrait
      */
     public $lowercaseResultKeys = false;
 
+    /** @var ?int */
+    private $defaultFetchMode = null;
+
     /**
      * @var bool
      */
@@ -68,6 +71,13 @@ trait FakePdoTrait
 
         if ($key === \PDO::ATTR_CASE && $value === \PDO::CASE_LOWER) {
             $this->lowercaseResultKeys = true;
+        }
+
+        if ($key === \PDO::ATTR_DEFAULT_FETCH_MODE) {
+            if (!is_int($value)) {
+                throw new \PDOException("SQLSTATE[HY000]: General error: invalid fetch mode type");
+            }
+            $this->defaultFetchMode = $value;
         }
 
         if ($this->real && $key !== \PDO::ATTR_STATEMENT_CLASS) {
