@@ -17,6 +17,7 @@ final class SQLLexer
      */
     public function lex(string $sql)
     {
+        /** @var list<array{string, int}>|false $tokens */
         $tokens = preg_split(
             self::TOKEN_SPLIT_REGEX,
             $sql,
