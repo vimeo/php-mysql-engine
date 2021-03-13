@@ -14,14 +14,18 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Cache Composer packages
+    - name: Get Composer Cache Directory
       id: composer-cache
+      run: |
+        echo "::set-output name=dir::$(composer config cache-files-dir)"
+
+    - name: Cache Composer packages
       uses: actions/cache@v2
       with:
-        path: vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.*') }}
+        path: ${{ steps.composer-cache.outputs.dir }}
+        key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
-          ${{ runner.os }}-php-
+          ${{ runner.os }}-composer-
 
     - name: Install dependencies
       if: steps.composer-cache.outputs.cache-hit != 'true'
