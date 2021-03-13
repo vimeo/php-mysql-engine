@@ -704,9 +704,8 @@
     </MixedOperand>
   </file>
   <file src="src/Schema/TableDefinition.php">
-    <MixedPropertyTypeCoercion occurrences="2">
+    <MixedPropertyTypeCoercion occurrences="1">
       <code>$autoIncrementOffsets</code>
-      <code>$columns</code>
     </MixedPropertyTypeCoercion>
   </file>
 </files>
