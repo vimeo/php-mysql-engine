@@ -78,17 +78,17 @@ final class InsertProcessor extends Processor
                 $column = $table_definition->columns[$column_name];
 
                 if ($column instanceof IntegerColumn && $column->isAutoIncrement()) {
-                    $conn->getServer()->addAutoIncrementMinValue(
+                    $last_incremented_value = $conn->getServer()->addAutoIncrementMinValue(
                         $database,
                         $table_name,
                         $column_name,
                         $value
                     );
-                }
-            }
 
-            if (\count($table_definition->primaryKeyColumns) === 1 && $conn->lastInsertId() === "0") {
-                $conn->setLastInsertId((string) $row[$table_definition->primaryKeyColumns[0]]);
+                    if ($conn->lastInsertId() === "0") {
+                        $conn->setLastInsertId((string)$last_incremented_value);
+                    }
+                }
             }
 
             $table[] = $row;

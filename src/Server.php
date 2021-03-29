@@ -241,7 +241,7 @@ final class Server
         string $table_name,
         string $column_name,
         int $value
-    ) : void {
+    ) : int {
         $table_definition = $this->getTableDefinition($database_name, $table_name);
         $table = $this->databases[$database_name][$table_name] ?? null;
 
@@ -253,7 +253,7 @@ final class Server
             $table = $this->databases[$database_name][$table_name] = new TableData();
         }
 
-        $table->autoIncrementCursors[$column_name] = max(
+        return $table->autoIncrementCursors[$column_name] = max(
             $table->autoIncrementCursors[$column_name] ?? 0,
             $value
         );
