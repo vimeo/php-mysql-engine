@@ -250,17 +250,13 @@ abstract class Processor
                 $column = $table_definition->columns[$column_name];
 
                 if ($column instanceof IntegerColumn && $column->isAutoIncrement()) {
-                    $conn->getServer()->addAutoIncrementMinValue(
+                    $last_insert_id = $conn->getServer()->addAutoIncrementMinValue(
                         $database,
                         $table_name,
                         $column_name,
                         $value
                     );
                 }
-            }
-
-            if (\count($table_definition->primaryKeyColumns) === 1) {
-                $last_insert_id = $row[$table_definition->primaryKeyColumns[0]];
             }
 
             $result = DataIntegrity::checkUniqueConstraints($original_table, $row, $table_definition, null);
