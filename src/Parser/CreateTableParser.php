@@ -117,7 +117,7 @@ final class CreateTableParser
                 }
                 continue;
             }
-            $match = \preg_match('!(\d+\.?\d*|\.\d+)!A', $sql, $matches, 0, $pos);
+            \preg_match('!(\d+\.?\d*|\.\d+)!A', $sql, $matches, 0, $pos);
             if ($matches) {
                 $source_map[] = [$pos, \strlen($matches[0])];
                 $pos += \strlen($matches[0]);
@@ -159,7 +159,7 @@ final class CreateTableParser
         $temp = [];
         $start = 0;
 
-        foreach ($tokens as $i => $t) {
+        foreach ($tokens as $i => $_t) {
             $t = $tokens[$i];
             if ($t === ';') {
                 if (\count($temp)) {
@@ -293,12 +293,8 @@ final class CreateTableParser
      */
     private static function parseFieldOrKey(array &$tokens, array &$fields, array &$indexes)
     {
-        $has_constraint = false;
-        $constraint = null;
 
         if ($tokens[0] === 'CONSTRAINT') {
-            $has_constraint = true;
-
             if ($tokens[1] === 'PRIMARY KEY'
                 || $tokens[1] === 'UNIQUE'
                 || $tokens[1] === 'UNIQUE KEY'
@@ -308,7 +304,7 @@ final class CreateTableParser
                 \array_shift($tokens);
             } else {
                 \array_shift($tokens);
-                $constraint = \array_shift($tokens);
+                \array_shift($tokens);
             }
         }
 

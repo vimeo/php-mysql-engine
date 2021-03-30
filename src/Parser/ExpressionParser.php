@@ -291,7 +291,6 @@ final class ExpressionParser
     public function build()
     {
         $token = $this->nextToken();
-        $break_while = false;
         while ($token !== null) {
             switch ($token->type) {
                 case TokenType::PAREN:
@@ -303,7 +302,6 @@ final class ExpressionParser
                     }
 
                     $this->pointer = $close;
-                    $expr = new StubExpression();
 
                     if ($arg_tokens[0]->value === 'SELECT') {
                         $subquery_sql = \implode(

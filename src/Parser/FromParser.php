@@ -185,7 +185,7 @@ final class FromParser
             throw new ParserException("Empty parentheses found");
         }
         $this->pointer = $close;
-        $expr = new StubExpression();
+
         $subquery_sql = \implode(
             ' ',
             \array_map(

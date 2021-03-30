@@ -58,7 +58,7 @@ final class SetParser
                         throw new ParserException("Expected , between expressions in SET clause");
                     }
                     $expression_parser = new ExpressionParser($this->tokens, $this->pointer - 1);
-                    $start = $this->pointer;
+
                     list($this->pointer, $expression) = $expression_parser->buildWithPointer();
 
                     if (!$expression instanceof BinaryOperatorExpression || $expression->operator !== '=') {

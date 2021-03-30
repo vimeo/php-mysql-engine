@@ -833,7 +833,7 @@ final class FunctionEvaluator
         }
 
         $final_concat = "";
-        foreach ($args as $k => $arg) {
+        foreach ($args as $arg) {
             $val = (string) Evaluator::evaluate($conn, $scope, $arg, $row, $result);
             $final_concat .= $val;
         }

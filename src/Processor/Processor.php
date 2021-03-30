@@ -93,7 +93,7 @@ abstract class Processor
         );
 
         $rows = [];
-        foreach ($rows_temp as $index => $item) {
+        foreach ($rows_temp as $item) {
             $rows[$item[0]] = $item[1];
         }
 
@@ -231,7 +231,6 @@ abstract class Processor
                 }
             }
         } else {
-            $changes_found = true;
             $row = [];
 
             foreach ($set_clauses as $clause) {

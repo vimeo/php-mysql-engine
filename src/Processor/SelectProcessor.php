@@ -204,7 +204,7 @@ final class SelectProcessor extends Processor
 
         $out_groups = [];
 
-        foreach ($result->grouped_rows as $group_id => $rows) {
+        foreach ($result->grouped_rows as $rows) {
             $group_result = new QueryResult($rows, $result->columns);
 
             $first_row = reset($rows);
@@ -279,7 +279,7 @@ final class SelectProcessor extends Processor
 
         $have_reevaluated_columns = false;
 
-        foreach ($grouped_rows as $group_id => $rows) {
+        foreach ($grouped_rows as $rows) {
             $group_result = $result->grouped_rows !== null
                 ? new QueryResult($rows, $result->columns)
                 : $result;
@@ -392,20 +392,12 @@ final class SelectProcessor extends Processor
                 }
 
                 $out[$i][$name] = $val;
-
-                if ($expr->hasAggregate()) {
-                    $found_aggregate = true;
-                }
             }
         }
 
         $i = 0;
 
-        foreach ($grouped_rows as $group_id => $rows) {
-            $group_result = $result->grouped_rows !== null
-                ? new QueryResult($rows, $result->columns)
-                : $result;
-
+        foreach ($grouped_rows as $rows) {
             foreach ($rows as $row) {
                 $found_aggregate = false;
 
@@ -485,7 +477,7 @@ final class SelectProcessor extends Processor
                     $parts = \explode(".", $column_id);
 
                     if ($expr_table_name = $expr->tableName()) {
-                        list($column_table_name, $column_name) = $parts;
+                        list($column_table_name) = $parts;
 
                         if ($column_table_name === $expr_table_name) {
                             $columns[$column_id] = $from_column;

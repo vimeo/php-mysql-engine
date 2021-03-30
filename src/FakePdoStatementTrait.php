@@ -405,8 +405,6 @@ trait FakePdoStatementTrait
                 },
                 $this->result ?: []
             );
-
-            return $this->result ?: [];
         }
 
         if ($fetch_style === \PDO::FETCH_NUM) {

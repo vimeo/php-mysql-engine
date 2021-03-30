@@ -25,9 +25,7 @@ final class InsertProcessor extends Processor
 
         $rows_affected = 0;
 
-        $row = [];
 
-        $last_insert_id = null;
 
         $conn->setLastInsertId("0");
 
@@ -98,7 +96,7 @@ final class InsertProcessor extends Processor
         $conn->getServer()->saveTable($database, $table_name, $table);
 
         if ($stmt->setClause) {
-            list($set_rows_affected) = self::applySet(
+            list($rows_affected) = self::applySet(
                 $conn,
                 $scope,
                 $database,

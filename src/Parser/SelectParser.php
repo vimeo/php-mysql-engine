@@ -71,7 +71,6 @@ final class SelectParser
 
         if (\array_key_exists($this->pointer, $this->tokens)) {
             $next = $this->tokens[$this->pointer] ?? null;
-            $val = $next ? $next->value : 'null';
             while ($next !== null
                 && ($next->value === 'UNION' || $next->value === 'INTERSECT' || $next->value === 'EXCEPT')
             ) {
@@ -180,7 +179,7 @@ final class SelectParser
                             $this->pointer++;
                             $next = $this->tokens[$this->pointer] ?? null;
                             $expressions = [];
-                            $sort_directions = [];
+
                             if ($next === null || $next->value !== 'BY') {
                                 throw new ParserException("Expected BY after GROUP");
                             }
@@ -224,7 +223,7 @@ final class SelectParser
                         case 'EXCEPT':
                         case 'INTERSECT':
                             return $query;
-                        break;
+
                         default:
                             throw new ParserException("Unexpected {$token->value}");
                     }

@@ -77,7 +77,6 @@ final class InsertParser
         $query = new InsertQuery($token->value, $this->sql, $ignore_dupes);
         $count = \count($this->tokens);
         $needs_comma = false;
-        $end_of_set = false;
 
         while ($this->pointer < $count) {
             $token = $this->tokens[$this->pointer];
@@ -221,7 +220,6 @@ final class InsertParser
         $count = \count($tokens);
         $expressions = [];
         $needs_comma = false;
-        $end_of_set = false;
         while ($pointer < $count) {
             $token = $tokens[$pointer];
             switch ($token->type) {
@@ -238,7 +236,7 @@ final class InsertParser
                         );
                     }
                     $expression_parser = new ExpressionParser($tokens, $pointer - 1);
-                    $start = $pointer;
+
                     list($pointer, $expression) = $expression_parser->buildWithPointer();
                     $expressions[] = $expression;
                     $needs_comma = true;

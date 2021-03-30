@@ -63,7 +63,6 @@ abstract class CharacterColumn extends \Vimeo\MysqlEngine\Schema\Column
             if ($this->getDefault() === null) {
                 $default = '->setDefault(null)';
             } else {
-                $use_quotes = $this->getPhpType() === 'string';
                 $default = '->setDefault(\'' . $this->getDefault() . '\')';
             }
         }

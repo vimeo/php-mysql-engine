@@ -306,7 +306,6 @@ class Evaluator
         $has_floating_point = false;
         $has_integer = false;
         $has_string = false;
-        $has_date = false;
 
         $non_null_types = [];
 

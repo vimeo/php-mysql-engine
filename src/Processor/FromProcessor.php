@@ -11,8 +11,6 @@ final class FromProcessor
         Scope $scope,
         FromClause $stmt
     ) : QueryResult {
-        $is_first_table = true;
-        $left_column_list = [];
 
         $result = null;
 

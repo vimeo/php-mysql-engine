@@ -246,7 +246,6 @@ final class BinaryOperatorEvaluator
                 throw new ProcessorException("Operator recognized but not implemented");
 
             case 'LIKE':
-                $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $result);
                 $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
 
                 $left_string = (string) Evaluator::evaluate($conn, $scope, $left, $row, $result);
@@ -356,8 +355,6 @@ final class BinaryOperatorEvaluator
         if ($right instanceof IntervalOperatorExpression
             && ($expr->operator === '+' || $expr->operator === '-')
         ) {
-            $functionName = $expr->operator === '+' ? 'DATE_ADD' : 'DATE_SUB';
-
             return new Column\DateTime();
         }
 
@@ -486,7 +483,6 @@ final class BinaryOperatorEvaluator
             throw new ProcessorException("Mismatched column count in row comparison expression");
         }
         $last_index = \array_key_last($left_elems);
-        $match = true;
         foreach ($left_elems as $index => $le) {
             $re = $right_elems[$index];
             if ($le == $re && $index !== $last_index) {

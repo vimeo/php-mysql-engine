@@ -27,6 +27,6 @@ class CreateTableParseTest extends \PHPUnit\Framework\TestCase
             $new_table = eval('return ' . $new_table_php_code . ';');
 
             $this->assertSame(\var_export($table, true), \var_export($new_table, true));
-        }        
+        }
     }
 }

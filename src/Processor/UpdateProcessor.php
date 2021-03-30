@@ -10,8 +10,6 @@ final class UpdateProcessor extends Processor
     ) : int {
         list($table_name, $database) = self::processUpdateClause($conn, $stmt);
 
-        $table_definition = $conn->getServer()->getTableDefinition($database, $table_name);
-
         $existing_rows = $conn->getServer()->getTable($database, $table_name) ?: [];
 
         //Metrics::trackQuery(QueryType::UPDATE, $conn->getServer()->name, $table_name, $this->sql);

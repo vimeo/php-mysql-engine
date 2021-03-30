@@ -39,7 +39,6 @@ final class JoinProcessor
 
                 foreach ($left_result->rows as $row) {
                     foreach ($right_result->rows as $r) {
-                        $left_row = $row;
                         $candidate_row = \array_merge($row, $r);
                         if (!$filter
                             || ExpressionEvaluator::evaluate(
@@ -95,41 +94,7 @@ final class JoinProcessor
                 break;
 
             case JoinType::RIGHT:
-                $null_placeholder = [];
-
-                foreach ($right_result->columns as $name => $_) {
-                    $parts = explode('.%.', $name);
-                    $null_placeholder[$right_table_name . '.%.' . end($parts)] = null;
-                }
-
-                $joined_columns = array_merge($left_result->columns, $right_result->columns);
-
-                foreach ($right_result->rows as $raw) {
-                    $any_match = false;
-
-                    foreach ($left_result->rows as $row) {
-                        $left_row = $row;
-                        $candidate_row = \array_merge($left_row, $raw);
-
-                        if (!$filter
-                            || ExpressionEvaluator::evaluate(
-                                $conn,
-                                $scope,
-                                $filter,
-                                $candidate_row,
-                                new QueryResult([], $joined_columns)
-                            )
-                        ) {
-                            $rows[] = $candidate_row;
-                            $any_match = true;
-                        }
-                    }
-
-                    if (!$any_match) {
-                        $rows[] = $raw;
-                    }
-                }
-                break;
+                throw new \Exception('Right joins are currently unsupported');
 
             case JoinType::CROSS:
                 $joined_columns = array_merge($left_result->columns, $right_result->columns);
@@ -185,10 +150,10 @@ final class JoinProcessor
             throw new ParserException("Attempted NATURAL join with no data present");
         }
 
-        foreach ($left as $column => $val) {
+        foreach ($left as $column => $_val) {
             $name_parts = \explode('.%.', $column);
             $name = end($name_parts);
-            foreach ($right as $col => $v) {
+            foreach ($right as $col => $_v) {
                 $col_parts = \explode('.%.', $col);
                 $colname = end($col_parts);
                 if ($colname === $name) {

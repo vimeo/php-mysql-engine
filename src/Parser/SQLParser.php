@@ -400,7 +400,6 @@ final class SQLParser
     {
         $paren_count = 0;
         $remaining_tokens = \array_slice($tokens, $pointer);
-        $token_count = \count($remaining_tokens);
         foreach ($remaining_tokens as $i => $token) {
             if ($token->type === TokenType::PAREN) {
                 $paren_count++;
@@ -425,7 +424,6 @@ final class SQLParser
     {
         $paren_count = 0;
         $remaining_tokens = \array_slice($tokens, $pointer);
-        $token_count = \count($remaining_tokens);
         foreach ($remaining_tokens as $i => $token) {
             if ($token->type === TokenType::OPERATOR
                 && $token->value === 'CASE'
