@@ -143,6 +143,7 @@ final class CreateProcessor
             case DataType::TINYINT:
             case DataType::SMALLINT:
             case DataType::INT:
+            case DataType::INTEGER:
             case DataType::BIT:
             case DataType::MEDIUMINT:
             case DataType::BIGINT:
@@ -240,6 +241,7 @@ final class CreateProcessor
                 return new Column\SmallInt($unsigned, $display_width);
 
             case DataType::INT:
+            case DataType::INTEGER:
                 return new Column\IntColumn($unsigned, $display_width);
 
             case DataType::BIT:

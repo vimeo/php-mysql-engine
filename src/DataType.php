@@ -9,6 +9,7 @@ final class DataType
     const TINYINT = 'TINYINT';
     const SMALLINT = 'SMALLINT';
     const INT = 'INT';
+    const INTEGER = 'INTEGER';
     const BIT = 'BIT';
     const MEDIUMINT = 'MEDIUMINT';
     const BIGINT = 'BIGINT';
