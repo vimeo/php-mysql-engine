@@ -147,6 +147,10 @@ final class CreateProcessor
             case DataType::BIT:
             case DataType::MEDIUMINT:
             case DataType::BIGINT:
+                if ($stmt->null === null) {
+                    $stmt->null = true;
+                }
+
                 return self::getIntegerDefinitionColumn($stmt);
 
             case DataType::FLOAT:

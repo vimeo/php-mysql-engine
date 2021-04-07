@@ -983,6 +983,30 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testSelectNullableFields()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare("SELECT nullable_field, nullable_field_default_0 FROM `video_game_characters` WHERE `id` = 1");
+        $query->execute();
+
+        $this->assertSame(
+            ['nullable_field' => null, 'nullable_field_default_0' => 0],
+            $query->fetch(\PDO::FETCH_ASSOC)
+        );
+
+        $query = $pdo->prepare("UPDATE `video_game_characters` SET `nullable_field_default_0` = NULL, `nullable_field` = NULL WHERE `id` = 1");
+        $query->execute();
+
+        $query = $pdo->prepare("SELECT nullable_field, nullable_field_default_0 FROM `video_game_characters` WHERE `id` = 1");
+        $query->execute();
+
+        $this->assertSame(
+            ['nullable_field' => null, 'nullable_field_default_0' => null],
+            $query->fetch(\PDO::FETCH_ASSOC)
+        );
+    }
+
     private static function getPdo(string $connection_string, bool $strict_mode = false) : \PDO
     {
         $options = $strict_mode ? [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="STRICT_ALL_TABLES"'] : [];
