@@ -14,7 +14,7 @@ class CreateTableParseTest extends \PHPUnit\Framework\TestCase
 
         $create_queries = (new \Vimeo\MysqlEngine\Parser\CreateTableParser)->parse($query);
 
-        $this->assertCount(4, $create_queries);
+        $this->assertCount(5, $create_queries);
 
         foreach ($create_queries as $create_query) {
             $table = \Vimeo\MysqlEngine\Processor\CreateProcessor::makeTableDefinition(

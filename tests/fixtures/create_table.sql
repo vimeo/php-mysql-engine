@@ -13,7 +13,7 @@ CREATE TABLE `video_game_characters` (
 	`nullable_field_default_0` tinyint(3) DEFAULT '0',
 	`some_float` float DEFAULT '0.00',
 	`total_games` int(11) UNSIGNED NOT NULL DEFAULT '0',
-	`lives` int(11) UNSIGNED NOT NULL DEFAULT 0,
+	`lives` int(11) UNSIGNED NOT NULL DEFAULT '0',
 	`created_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`modified_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	`deleted_on` timestamp NULL DEFAULT NULL,
@@ -51,3 +51,13 @@ CREATE TABLE `transactions` (
 	PRIMARY KEY (`id`)
 )
 ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+CREATE TABLE `orders`
+(
+	`id` INTEGER(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`user_id` INTEGER(11) UNSIGNED,
+	`price` INTEGER(11) UNSIGNED NOT NULL DEFAULT 0,
+	`created_on`  timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	`modified_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	PRIMARY KEY (`id`)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
