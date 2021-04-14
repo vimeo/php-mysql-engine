@@ -669,7 +669,8 @@ final class CreateTableParser
         $i = 0;
         $len = \count($source_map);
         while ($i < $len) {
-            $token = \substr($sql, $source_map[$i][0], $source_map[$i][1]) ?: '';
+            $token = \substr($sql, $source_map[$i][0], $source_map[$i][1]);
+            $token = $token !== false ? $token : '';
             $tokenUpper = \strtoupper($token);
             if (\array_key_exists($tokenUpper, $maps)) {
                 $found = false;
