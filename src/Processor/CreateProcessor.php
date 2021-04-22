@@ -163,7 +163,17 @@ final class CreateProcessor
                 return new Column\Decimal($stmt->length, $stmt->decimals);
 
             case DataType::BINARY:
+                if ($stmt->length === null) {
+                    throw new \UnexpectedValueException('length should not be null');
+                }
+
+                return new Column\Binary($stmt->length, 'binary', 'binary');
+
             case DataType::CHAR:
+                if ($stmt->length === null) {
+                    throw new \UnexpectedValueException('length should not be null');
+                }
+
                 return new Column\Char($stmt->length);
 
             case DataType::ENUM:
