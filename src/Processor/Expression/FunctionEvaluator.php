@@ -96,6 +96,8 @@ final class FunctionEvaluator
                 return self::sqlLastDay($conn, $scope, $expr, $row, $result);
             case 'CURDATE':
                 return self::sqlCurDate($expr);
+            case 'WEEKDAY':
+                return self::sqlWeekDay($conn, $scope, $expr, $row, $result);
         }
 
         throw new ProcessorException("Function " . $expr->functionName . " not implemented yet");
@@ -235,6 +237,7 @@ final class FunctionEvaluator
 
             case 'DATEDIFF':
             case 'DAY':
+            case 'WEEKDAY':
                 return new Column\IntColumn(false, 10);
         }
 
@@ -1024,6 +1027,35 @@ final class FunctionEvaluator
         }
 
         return (new \DateTimeImmutable())->format('Y-m-d');
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function sqlWeekDay(
+        FakePdoInterface $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        QueryResult $result
+    ) : ?int {
+        $args = $expr->args;
+
+        if (\count($args) !== 1) {
+            throw new ProcessorException("MySQL WEEKDAY() function must be called with one argument");
+        }
+
+        $subject = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
+
+        if (!is_string($subject)) {
+            throw new \TypeError('Failed assertion');
+        }
+
+        if (!$subject || \strpos($subject, '0000-00-00') === 0) {
+            return null;
+        }
+
+        return (int)(new \DateTimeImmutable($subject))->format('N');
     }
 
     /**
