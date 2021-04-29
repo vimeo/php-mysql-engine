@@ -463,6 +463,23 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testCurDateFunction()
+    {
+        $pdo = self::getPdo('mysql:foo');
+
+        $query = $pdo->prepare('SELECT CURDATE() AS date');
+
+        $query->execute();
+        $current_date = date('Y-m-d');
+
+        $this->assertSame(
+            [[
+                'date' => $current_date,
+            ]],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     public function testInOperator()
     {
         $pdo = self::getPdo('mysql:foo');

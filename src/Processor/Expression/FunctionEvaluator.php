@@ -94,6 +94,8 @@ final class FunctionEvaluator
                 return self::sqlDay($conn, $scope, $expr, $row, $result);
             case 'LAST_DAY':
                 return self::sqlLastDay($conn, $scope, $expr, $row, $result);
+            case 'CURDATE':
+                return self::sqlCurDate($expr);
         }
 
         throw new ProcessorException("Function " . $expr->functionName . " not implemented yet");
@@ -202,6 +204,9 @@ final class FunctionEvaluator
 
             case 'NOW':
                 return new Column\DateTime();
+
+            case 'CURDATE':
+                return new Column\Date();
 
             case 'DATE':
             case 'LAST_DAY':
@@ -1005,6 +1010,20 @@ final class FunctionEvaluator
         }
 
         return (new \DateTimeImmutable($subject))->format('Y-m-t');
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function sqlCurDate(FunctionExpression $expr): string
+    {
+        $args = $expr->args;
+
+        if (\count($args) !== 0) {
+            throw new ProcessorException("MySQL CURDATE() function takes no arguments.");
+        }
+
+        return (new \DateTimeImmutable())->format('Y-m-d');
     }
 
     /**
