@@ -522,6 +522,26 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testRound()
+    {
+        $pdo = self::getPdo('mysql:foo');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare('SELECT ROUND(3.141592) AS a, ROUND(3.141592, 2) AS b');
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                [
+                    'a' => 3,
+                    'b' => 3.14,
+                ],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     public function testIsInFullSubquery()
     {
         $pdo = self::getConnectionToFullDB(false);
