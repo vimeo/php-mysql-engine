@@ -469,7 +469,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
     {
         $pdo = self::getPdo('mysql:foo');
 
-        $query = $pdo->prepare('SELECT CURDATE() AS date');
+        $query = $pdo->prepare('SELECT CURDATE() AS date, CURRENT_DATE() AS date1');
 
         $query->execute();
         $current_date = date('Y-m-d');
@@ -477,6 +477,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(
             [[
                 'date' => $current_date,
+                'date1' => $current_date,
             ]],
             $query->fetchAll(\PDO::FETCH_ASSOC)
         );

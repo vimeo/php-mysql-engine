@@ -95,6 +95,7 @@ final class FunctionEvaluator
             case 'LAST_DAY':
                 return self::sqlLastDay($conn, $scope, $expr, $row, $result);
             case 'CURDATE':
+            case 'CURRENT_DATE':
                 return self::sqlCurDate($expr);
             case 'WEEKDAY':
                 return self::sqlWeekDay($conn, $scope, $expr, $row, $result);
@@ -208,6 +209,7 @@ final class FunctionEvaluator
                 return new Column\DateTime();
 
             case 'CURDATE':
+            case 'CURRENT_DATE':
                 return new Column\Date();
 
             case 'DATE':
