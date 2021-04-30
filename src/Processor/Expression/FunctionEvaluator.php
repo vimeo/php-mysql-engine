@@ -2,10 +2,11 @@
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\FakePdoInterface;
+use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Processor\QueryResult;
 use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
+use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
 use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
 use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
@@ -235,6 +236,19 @@ final class FunctionEvaluator
                 return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
 
             case 'ROUND':
+                $precision = 0;
+
+                if (isset($expr->args[1])) {
+                    /** @var ConstantExpression $arg */
+                    $arg = $expr->args[1];
+
+                    $precision = (int)$arg->value;
+                }
+
+                if ($precision === 0) {
+                    return new Column\IntColumn(false, 10);
+                }
+
                 return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
 
             case 'DATEDIFF':
@@ -1239,6 +1253,8 @@ final class FunctionEvaluator
 
     /**
      * @param array<string, mixed> $row
+     *
+     * @return float|int
      */
     private static function sqlRound(
         FakePdoInterface $conn,
@@ -1246,17 +1262,22 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array $row,
         QueryResult $result
-    ) : float {
+    ) {
         $args = $expr->args;
 
-        if (\count($args) !== 2) {
-            throw new ProcessorException("MySQL ROUND() function must be called with one arguments");
+        if (\count($args) !== 1 && \count($args) !== 2) {
+            throw new ProcessorException("MySQL ROUND() function must be called with one or two arguments");
         }
 
-        $first = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
-        $second = Evaluator::evaluate($conn, $scope, $args[1], $row, $result);
+        $number = (float)Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
 
-        return \round($first, $second);
+        if (!isset($args[1])) {
+            return \round($number);
+        }
+
+        $precision = (int)Evaluator::evaluate($conn, $scope, $args[1], $row, $result);
+
+        return \round($number, $precision);
     }
 
     private static function getPhpIntervalFromExpression(
