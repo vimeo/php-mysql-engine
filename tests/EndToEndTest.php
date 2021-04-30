@@ -441,7 +441,8 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
                     DATE_ADD(\'2020-02-29 12:31:00\', INTERVAL 1 YEAR) as `g`,
                     DATE_ADD(\'2020-02-29 12:31:00\', INTERVAL 4 YEAR) as `h`,
                     DATE_SUB(\'2020-03-30\', INTERVAL 1 MONTH) As `i`,
-                    DATE_SUB(\'2020-03-01\', INTERVAL 1 MONTH) As `j`'
+                    DATE_SUB(\'2020-03-01\', INTERVAL 1 MONTH) As `j`,
+                    WEEKDAY(\'2021-04-29\') AS `k`'
         );
 
         $query->execute();
@@ -458,6 +459,25 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
                 'h' => '2024-02-29 12:31:00',
                 'i' => '2020-02-29',
                 'j' => '2020-02-01',
+                'k' => 4,
+            ]],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testCurDateFunction()
+    {
+        $pdo = self::getPdo('mysql:foo');
+
+        $query = $pdo->prepare('SELECT CURDATE() AS date, CURRENT_DATE() AS date1');
+
+        $query->execute();
+        $current_date = date('Y-m-d');
+
+        $this->assertSame(
+            [[
+                'date' => $current_date,
+                'date1' => $current_date,
             ]],
             $query->fetchAll(\PDO::FETCH_ASSOC)
         );
