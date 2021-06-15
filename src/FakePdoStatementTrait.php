@@ -601,4 +601,9 @@ trait FakePdoStatementTrait
 
         return $sql;
     }
+
+    public function errorInfo(): array
+    {
+        return ['00000', 0, 'PHP MySQL Engine: errorInfo() not supported.'];
+    }
 }
