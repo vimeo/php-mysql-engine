@@ -1,6 +1,8 @@
 <?php
 namespace Vimeo\MysqlEngine;
 
+use PDO;
+
 trait FakePdoStatementTrait
 {
     /**
@@ -70,8 +72,9 @@ trait FakePdoStatementTrait
      * @param string|int $key
      * @param scalar $value
      * @param int $type
+     * @return bool
      */
-    public function bindValue($key, $value, $type = \PDO::PARAM_STR) : void
+    public function bindValue($key, $value, $type = \PDO::PARAM_STR) : bool
     {
         if (\is_string($key) && $key[0] !== ':') {
             $key = ':' . $key;
@@ -83,8 +86,35 @@ trait FakePdoStatementTrait
         $this->boundValues[$key] = $value;
 
         if ($this->realStatement) {
-            $this->realStatement->bindValue($key, $value, $type);
+            return $this->realStatement->bindValue($key, $value, $type);
         }
+        return true;
+    }
+
+    /**
+     * @param string|int $key
+     * @param scalar $value
+     * @param int $type
+     * @param int $maxLength
+     * @param mixed $driverOptions
+     * @return bool
+     */
+    public function bindParam($key, &$value, $type = PDO::PARAM_STR, $maxLength = null, $driverOptions = null): bool
+    {
+        if (\is_string($key) && $key[0] !== ':') {
+            $key = ':' . $key;
+        } elseif (\is_int($key)) {
+            // Parameter offsets start at 1, which is weird.
+            --$key;
+        }
+        $this->boundValues[$key] = &$value;
+        if ($this->realStatement) {
+            /**
+             * @psalm-suppress PossiblyNullArgument
+             */
+            return $this->realStatement->bindParam($key, $value, $type, $maxLength, $driverOptions);
+        }
+        return true;
     }
 
     /**
