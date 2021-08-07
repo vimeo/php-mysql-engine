@@ -389,7 +389,7 @@ trait FakePdoStatementTrait
 
     /**
      * @param int $column
-     * @return mixed
+     * @return null|scalar
      */
     public function fetchColumn($column = 0)
     {

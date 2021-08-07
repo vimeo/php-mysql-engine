@@ -39,7 +39,5 @@ final class UnaryEvaluator
             default:
                 throw new ProcessorException("Unimplemented unary operand {$expr->name}");
         }
-
-        return $val;
     }
 }

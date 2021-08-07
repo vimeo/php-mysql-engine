@@ -197,7 +197,6 @@ final class SQLParser
             default:
                 throw new ParserException("Unexpected {$token->value}");
         }
-        throw new ParserException("Parse error: unexpected end of input");
     }
 
     /**
