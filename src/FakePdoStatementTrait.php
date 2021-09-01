@@ -393,7 +393,7 @@ trait FakePdoStatementTrait
      */
     public function fetchColumn($column = 0)
     {
-        /** @var array|false $row */
+        /** @var array<int, scalar>|false $row */
         $row = $this->fetch(\PDO::FETCH_NUM);
         if ($row === false) {
             return $row;
