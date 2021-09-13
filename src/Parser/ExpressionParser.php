@@ -547,7 +547,6 @@ final class ExpressionParser
                             );
                         } elseif ($operator === 'UNARY_MINUS'
                             || $operator === 'UNARY_PLUS'
-                            || $operator === '~'
                             || $operator === '!'
                         ) {
                             if (!$this->expression instanceof StubExpression) {
@@ -555,6 +554,14 @@ final class ExpressionParser
                             }
 
                             $this->expression = new UnaryExpression($operator, $token);
+                        } elseif ($operator === '~') {
+                            if ($this->expression instanceof StubExpression) {
+                                $this->expression = new UnaryExpression($operator, $token);
+                            } elseif ($this->expression instanceof BinaryOperatorExpression) {
+                                $this->expression->setOperator($operator);
+                            } else {
+                                throw new \TypeError('Failed assertion');
+                            }
                         } else {
                             if (!$this->expression instanceof BinaryOperatorExpression) {
                                 throw new \TypeError(
