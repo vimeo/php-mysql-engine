@@ -52,7 +52,7 @@ trait FakePdoTrait
         $dsn = \Nyholm\Dsn\DsnParser::parse($dsn);
         $host = $dsn->getHost();
 
-        if (preg_match('/dbname=([a-zA-Z0-9_]+);/', $host, $matches)) {
+        if (preg_match('/dbname=([a-zA-Z0-9_]+)(?:;|$)/', $host, $matches)) {
             $this->databaseName = $matches[1];
         }
 
@@ -85,6 +85,16 @@ trait FakePdoTrait
         }
 
         return true;
+    }
+
+    public function getAttribute($key)
+    {
+        switch ($key) {
+            case \PDO::ATTR_CASE:
+                $value = $this->lowercaseResultKeys ? \PDO::CASE_LOWER : \PDO::CASE_UPPER;
+        }
+
+        return $value;
     }
 
     public function getServer() : Server

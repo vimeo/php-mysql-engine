@@ -2,9 +2,10 @@
 
 namespace Vimeo\MysqlEngine\Parser;
 
+use Vimeo\MysqlEngine\Query\ShowColumnsQuery;
 use Vimeo\MysqlEngine\Query\ShowIndexQuery;
-use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Query\ShowTablesQuery;
+use Vimeo\MysqlEngine\TokenType;
 
 /**
  * Very limited parser for SHOW TABLES LIKE 'foo'
@@ -47,6 +48,12 @@ final class ShowParser
 
         $this->pointer++;
 
+        // For case with TABLES and COLUMNS could be optinaly used argument FULL.
+        if ($this->tokens[$this->pointer]->value === 'FULL') {
+            $isFull = true;
+            $this->pointer++;
+        }
+
         switch ($this->tokens[$this->pointer]->value) {
             case 'TABLES':
                 return $this->parseShowTables();
@@ -54,6 +61,8 @@ final class ShowParser
             case 'INDEXES':
             case 'KEYS':
                 return $this->parseShowIndex();
+            case 'COLUMNS':
+                return $this->parseShowColumns($isFull ?? false);
             default:
                 throw new ParserException("Parser error: expected SHOW TABLES");
         }
@@ -64,7 +73,7 @@ final class ShowParser
         $this->pointer++;
 
         if ($this->tokens[$this->pointer]->value !== 'LIKE') {
-            throw new ParserException("Parser error: expected SHOW TABLES LIKE");
+            throw new ParserException("Parser error: expected SHOW [FULL] TABLES LIKE");
         }
 
         $this->pointer++;
@@ -102,6 +111,38 @@ final class ShowParser
             list($this->pointer, $expression) = $expression_parser->buildWithPointer();
             $query->whereClause = $expression;
         }
+
+        return $query;
+    }
+
+    private function parseShowColumns(bool $isFull): ShowColumnsQuery
+    {
+        $this->pointer++;
+
+        if ($this->tokens[$this->pointer]->value !== 'FROM') {
+            throw new ParserException("Parser error: expected SHOW [FULL] COLUMNS FROM");
+        }
+
+        $this->pointer++;
+
+        $token = $this->tokens[$this->pointer];
+        if ($token->type !== TokenType::IDENTIFIER) {
+            throw new ParserException("Expected table name after FROM");
+        }
+
+        $query = new ShowColumnsQuery($token->value, $this->sql);
+        $query->isFull = $isFull;
+        $this->pointer++;
+
+        if ($this->pointer < count($this->tokens)) {
+            if ($this->tokens[$this->pointer]->value !== 'WHERE') {
+                throw new ParserException("Parser error: expected SHOW [FULL] COLUMNS FROM [TABLE_NAME] WHERE");
+            }
+            $expression_parser = new ExpressionParser($this->tokens, $this->pointer);
+            list($this->pointer, $expression) = $expression_parser->buildWithPointer();
+            $query->whereClause = $expression;
+        }
+
         return $query;
     }
 }

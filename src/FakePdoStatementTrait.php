@@ -137,13 +137,35 @@ trait FakePdoStatementTrait
             $create_queries = (new Parser\CreateTableParser())->parse($sql);
 
             foreach ($create_queries as $create_query) {
+                if (strpos($create_query->name, '.')) {
+                    list($databaseName, $tableName) = explode('.', $create_query->name, 2);
+                } else {
+                    $databaseName = $this->conn->getDatabaseName();
+                    $tableName = $create_query->name;
+                }
                 $this->conn->getServer()->addTableDefinition(
-                    $this->conn->getDatabaseName(),
-                    $create_query->name,
+                    $databaseName,
+                    $tableName,
                     Processor\CreateProcessor::makeTableDefinition(
                         $create_query,
-                        $this->conn->getDatabaseName()
+                        $databaseName
                     )
+                );
+            }
+
+            return true;
+        }
+
+        // Check that there are multiple INSERT commands in the sql.
+        $insertPos1 = stripos($sql, 'INSERT INTO');
+        $insertPos2 = strripos($sql, 'INSERT INTO');
+        if (false !== $insertPos1 && $insertPos1 !== $insertPos2) {
+            $insert_queries = (new Parser\InsertMultipleParser())->parse($sql);
+            foreach ($insert_queries as $insert_query) {
+                $this->affectedRows += Processor\InsertProcessor::process(
+                    $this->conn,
+                    new Processor\Scope($this->boundValues),
+                    $insert_query
                 );
             }
 
@@ -277,6 +299,17 @@ trait FakePdoStatementTrait
                 $this->result = self::processResult(
                     $this->conn,
                     Processor\ShowIndexProcessor::process(
+                        $this->conn,
+                        new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
+                        $parsed_query
+                    )
+                );
+                break;
+
+            case Query\ShowColumnsQuery::class:
+                $this->result = self::processResult(
+                    $this->conn,
+                    Processor\ShowColumnsProcessor::process(
                         $this->conn,
                         new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
                         $parsed_query

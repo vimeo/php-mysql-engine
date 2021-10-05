@@ -9,7 +9,9 @@ use Vimeo\MysqlEngine\Query\{SelectQuery,
     InsertQuery,
     UpdateQuery,
     DropTableQuery,
-    ShowTablesQuery};
+    ShowTablesQuery,
+    ShowColumnsQuery
+};
 
 final class SQLParser
 {
@@ -141,11 +143,11 @@ final class SQLParser
         'TABLES' => true,
     ];
 
-    /** @var array<SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery> */
+    /** @var array<SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery|ShowColumnsQuery> */
     private static $cache = [];
 
     /**
-     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery
+     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery|ShowColumnsQuery
      */
     public static function parse(string $sql)
     {
@@ -157,7 +159,7 @@ final class SQLParser
     }
 
     /**
-     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery
+     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery|ShowColumnsQuery
      */
     private static function parseImpl(string $sql)
     {
