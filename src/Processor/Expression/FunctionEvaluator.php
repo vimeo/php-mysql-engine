@@ -587,7 +587,7 @@ final class FunctionEvaluator
         $delim = (string) Evaluator::evaluate($conn, $scope, $delimiter, $row, $result);
         $pos = $args[2];
 
-        if ($pos !== null) {
+        if ($pos !== null && $delim !== '') {
             $count = (int) Evaluator::evaluate($conn, $scope, $pos, $row, $result);
             $parts = \explode($delim, $string);
 

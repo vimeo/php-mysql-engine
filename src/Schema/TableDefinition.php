@@ -29,7 +29,7 @@ class TableDefinition
     public $columns;
 
     /**
-     * @var array
+     * @var array<string>
      */
     public $primaryKeyColumns;
 
@@ -46,6 +46,7 @@ class TableDefinition
     /**
      * @param array<string, Column> $columns
      * @param array<string, Index> $indexes
+     * @param array<string> $primaryKeyColumns
      */
     public function __construct(
         string $name,
