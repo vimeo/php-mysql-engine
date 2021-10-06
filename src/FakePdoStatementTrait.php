@@ -172,6 +172,10 @@ trait FakePdoStatementTrait
             return true;
         }
 
+        if(false !== stripos($sql, 'SET')){
+            return true;
+        }
+
         //echo "\n" . $sql . "\n";
 
         try {
@@ -304,6 +308,7 @@ trait FakePdoStatementTrait
                         $parsed_query
                     )
                 );
+
                 break;
 
             case Query\ShowColumnsQuery::class:
@@ -315,6 +320,19 @@ trait FakePdoStatementTrait
                         $parsed_query
                     )
                 );
+
+                break;
+
+            case Query\AlterTableAutoincrementQuery::class:
+                [$databaseName, $tableName] = Processor\Processor::parseTableName($this->conn, $parsed_query->table);
+                $td = $this->conn->getServer()->getTableDefinition($databaseName, $tableName);
+
+                foreach ($td->columns as $columnName => $column) {
+                    if ($column instanceof Schema\Column\IntegerColumn && $column->isAutoIncrement()) {
+                        $td->autoIncrementOffsets[$columnName] = $parsed_query->value - 1;
+                    }
+                }
+
                 break;
 
             default:

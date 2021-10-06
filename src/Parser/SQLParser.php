@@ -2,7 +2,8 @@
 namespace Vimeo\MysqlEngine\Parser;
 
 use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\{SelectQuery,
+use Vimeo\MysqlEngine\Query\{AlterTableAutoincrementQuery,
+    SelectQuery,
     DeleteQuery,
     ShowIndexQuery,
     TruncateQuery,
@@ -10,8 +11,7 @@ use Vimeo\MysqlEngine\Query\{SelectQuery,
     UpdateQuery,
     DropTableQuery,
     ShowTablesQuery,
-    ShowColumnsQuery
-};
+    ShowColumnsQuery};
 
 final class SQLParser
 {
@@ -159,7 +159,7 @@ final class SQLParser
     }
 
     /**
-     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery|ShowColumnsQuery
+     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery|ShowColumnsQuery|AlterTableAutoincrementQuery
      */
     private static function parseImpl(string $sql)
     {
@@ -171,10 +171,20 @@ final class SQLParser
             $tokens = \array_slice($tokens, 1, $close - 1);
             $token = $tokens[0];
         }
-        if ($token->type !== TokenType::CLAUSE) {
+        if ($token->type === TokenType::CLAUSE) {
+            $command = $token->value;
+        } elseif ($token->type === TokenType::IDENTIFIER) {
+            $nextToken = $tokens[1];
+            if ($nextToken->type === TokenType::RESERVED) {
+                $command = $token->value . ' ' . $nextToken->value;
+            } else {
+                throw new ParserException("Unexpected {$token->value}");
+            }
+        } else {
             throw new ParserException("Unexpected {$token->value}");
         }
-        switch ($token->value) {
+
+        switch ($command) {
             case 'SELECT':
                 $select = new SelectParser(0, $tokens, $sql);
                 return $select->parse();
@@ -191,11 +201,14 @@ final class SQLParser
                 $truncate = new TruncateParser($tokens, $sql);
                 return $truncate->parse();
             case 'DROP':
-                $truncate = new DropParser($tokens, $sql);
-                return $truncate->parse();
+                $drop = new DropParser($tokens, $sql);
+                return $drop->parse();
             case 'SHOW':
-                $truncate = new ShowParser($tokens, $sql);
-                return $truncate->parse();
+                $show = new ShowParser($tokens, $sql);
+                return $show->parse();
+            case 'ALTER TABLE':
+                $alter = new AlterTableParser($tokens, $sql);
+                return $alter->parse();
             default:
                 throw new ParserException("Unexpected {$token->value}");
         }
