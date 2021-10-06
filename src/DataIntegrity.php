@@ -215,7 +215,7 @@ final class DataIntegrity
                         $value .= ' 00:00:00';
                     }
 
-                    if ($value[0] === '-' || $value === '') {
+                    if ($value === '' || $value[0] === '-') {
                         $value = '0000-00-00 00:00:00';
                     } elseif (\preg_match(
                         '/^([0-9]{2,4}-[0-1][0-9]-[0-3][0-9]|[0-9]+)$/',
