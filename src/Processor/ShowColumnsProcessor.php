@@ -31,7 +31,7 @@ class ShowColumnsProcessor extends Processor
             'Key' => new Column\Enum(['PRI']),
             'Default' => new Column\Varchar(255),
             'Extra' => new Column\Enum(['auto_increment']),
-            'Privilegies' => new Column\Varchar(255),
+            'Privileges' => new Column\Varchar(255),
             'Comment' => new Column\Varchar(255),
         ];
         $rows = [];
@@ -44,7 +44,7 @@ class ShowColumnsProcessor extends Processor
                 'Key' => in_array($name, $table_definition->primaryKeyColumns) ? 'PRI' : '',
                 'Default' => $column->getDefault(),
                 'Extra' => self::resolveExtra($column),
-                'Privilegies' => 'select,insert,update,references',
+                'Privileges' => 'select,insert,update,references',
                 'Comment' => '',
             ];
         }
