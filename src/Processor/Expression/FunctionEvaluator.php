@@ -100,6 +100,10 @@ final class FunctionEvaluator
                 return self::sqlCurDate($expr);
             case 'WEEKDAY':
                 return self::sqlWeekDay($conn, $scope, $expr, $row, $result);
+            case 'INET_ATON':
+                return self::sqlInetAton($conn, $scope, $expr, $row, $result);
+            case 'INET_NTOA':
+                return self::sqlInetNtoa($conn, $scope, $expr, $row, $result);
         }
 
         throw new ProcessorException("Function " . $expr->functionName . " not implemented yet");
@@ -250,6 +254,9 @@ final class FunctionEvaluator
                 }
 
                 return Evaluator::getColumnSchema($expr->args[0], $scope, $columns);
+
+            case 'INET_ATON':
+                return new Column\IntColumn(true, 15);
 
             case 'DATEDIFF':
             case 'DAY':
@@ -1278,6 +1285,68 @@ final class FunctionEvaluator
         $precision = (int)Evaluator::evaluate($conn, $scope, $args[1], $row, $result);
 
         return \round($number, $precision);
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return float|null
+     */
+    private static function sqlInetAton(
+        FakePdoInterface $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        QueryResult $result
+    ) : ?float {
+        $args = $expr->args;
+
+        if (\count($args) !== 1) {
+            throw new ProcessorException("MySQL INET_ATON() function must be called with one argument");
+        }
+
+        $subject = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
+
+        if (!is_string($subject)) {
+            // INET_ATON() returns NULL if it does not understand its argument.
+            return null;
+        }
+
+        $value = ip2long($subject);
+
+        if (!$value) {
+            return null;
+        }
+
+        // https://www.php.net/manual/en/function.ip2long.php - this comes as a signed int
+        //use %u to convert this to an unsigned long, then cast it as a float
+        return floatval(sprintf('%u', $value));
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return string
+     */
+    private static function sqlInetNtoa(
+        FakePdoInterface $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        QueryResult $result
+    ) : ?string {
+        $args = $expr->args;
+
+        if (\count($args) !== 1) {
+            throw new ProcessorException("MySQL INET_NTOA() function must be called with one argument");
+        }
+
+        $subject = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
+
+        if (!is_numeric($subject)) {
+            // INET_NTOA() returns NULL if it does not understand its argument
+            return null;
+        }
+
+        return long2ip((int)$subject);
     }
 
     private static function getPhpIntervalFromExpression(
