@@ -129,7 +129,7 @@ trait FakePdoStatementTrait
         if ($this->realStatement) {
             if ($this->realStatement->execute($params) === false) {
                 var_dump($this->sql);
-                throw new \UnexpectedValueException($this->realStatement->errorInfo()[2]);
+                throw new \UnexpectedValueException((string)$this->realStatement->errorInfo()[2]);
             }
         }
 
@@ -632,6 +632,9 @@ trait FakePdoStatementTrait
         return $sql;
     }
 
+    /**
+     * @return array{0: null|string, 1: int|null, 2: null|string, 3?: mixed, 4?: mixed}
+     */
     public function errorInfo(): array
     {
         return ['00000', 0, 'PHP MySQL Engine: errorInfo() not supported.'];

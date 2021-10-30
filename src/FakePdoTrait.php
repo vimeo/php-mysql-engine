@@ -213,6 +213,9 @@ trait FakePdoTrait
         return "{$quotes[0]}{$quoted}{$quotes[1]}";
     }
 
+    /**
+     * @return array{0: null|string, 1: int|null, 2: null|string, 3?: mixed, 4?: mixed}
+     */
     public function errorInfo(): array
     {
         return ['00000', 0, 'PHP MySQL Engine: errorInfo() not supported.'];
