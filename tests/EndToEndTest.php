@@ -542,6 +542,51 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testInetAtoN()
+    {
+        $pdo = self::getPdo('mysql:foo');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare("SELECT INET_ATON('255.255.255.255') AS a, INET_ATON('192.168.1.1') AS b, INET_ATON('127.0.0.1') AS c, INET_ATON('not an ip') AS d, INET_ATON(NULL) as e");
+        $query->execute();
+        $this->assertSame(
+            [
+                [
+                    'a' => 4294967295,
+                    'b' => 3232235777,
+                    'c' => 2130706433,
+                    'd' => NULL,
+                    'e' => NULL,
+                ],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+
+    public function testInetNtoA()
+    {
+        $pdo = self::getPdo('mysql:foo');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare("SELECT INET_NTOA(4294967295) AS a, INET_NTOA(3232235777) AS b, INET_NTOA(2130706433) AS c, INET_NTOA(NULL) as d, INET_NTOA('not a number') as e");
+        $query->execute();
+
+        $this->assertSame(
+            [
+                [
+                    'a' => '255.255.255.255',
+                    'b' => '192.168.1.1',
+                    'c' => '127.0.0.1',
+                    'd' => NULL,
+                    'e' => NULL,
+                ],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+
     public function testRound()
     {
         $pdo = self::getPdo('mysql:foo');
