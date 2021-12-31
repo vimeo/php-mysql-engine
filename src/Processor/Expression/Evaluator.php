@@ -1,13 +1,13 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor\Expression;
+namespace MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Expression;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
-use Vimeo\MysqlEngine\Processor\QueryResult;
-use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
-use Vimeo\MysqlEngine\Schema\Column;
-use Vimeo\MysqlEngine\TokenType;
+use MysqlEngine\Expression;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Processor\QueryResult;
+use MysqlEngine\Processor\Scope;
+use MysqlEngine\Query\Expression\FunctionExpression;
+use MysqlEngine\Schema\Column;
+use MysqlEngine\TokenType;
 
 class Evaluator
 {
@@ -17,9 +17,9 @@ class Evaluator
      * @return mixed
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
-        \Vimeo\MysqlEngine\Query\Expression\Expression $expr,
+        \MysqlEngine\Query\Expression\Expression $expr,
         array $row,
         QueryResult $result
     ) {
@@ -28,41 +28,41 @@ class Evaluator
         }
 
         switch (get_class($expr)) {
-            case \Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression::class:
+            case \MysqlEngine\Query\Expression\BetweenOperatorExpression::class:
                 return BetweenOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            case \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class:
+            case \MysqlEngine\Query\Expression\BinaryOperatorExpression::class:
                 return BinaryOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            case \Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression::class:
+            case \MysqlEngine\Query\Expression\CaseOperatorExpression::class:
                 return CaseOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            case \Vimeo\MysqlEngine\Query\Expression\ColumnExpression::class:
+            case \MysqlEngine\Query\Expression\ColumnExpression::class:
                 return ColumnEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            case \Vimeo\MysqlEngine\Query\Expression\ConstantExpression::class:
+            case \MysqlEngine\Query\Expression\ConstantExpression::class:
                 return $expr->value;
 
-            case \Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression::class:
+            case \MysqlEngine\Query\Expression\ExistsOperatorExpression::class:
                 return ExistsOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
             case FunctionExpression::class:
                 return FunctionEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            case \Vimeo\MysqlEngine\Query\Expression\InOperatorExpression::class:
+            case \MysqlEngine\Query\Expression\InOperatorExpression::class:
                 return InOperatorEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            case \Vimeo\MysqlEngine\Query\Expression\StubExpression::class:
+            case \MysqlEngine\Query\Expression\StubExpression::class:
                 throw new ProcessorException("Attempted to evaluate placeholder expression!");
 
-            case \Vimeo\MysqlEngine\Query\Expression\PositionExpression::class:
+            case \MysqlEngine\Query\Expression\PositionExpression::class:
                 return PositionEvaluator::evaluate($expr, $row);
 
-            case \Vimeo\MysqlEngine\Query\Expression\RowExpression::class:
+            case \MysqlEngine\Query\Expression\RowExpression::class:
                 return RowEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            case \Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class:
-                $subquery_result = \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+            case \MysqlEngine\Query\Expression\SubqueryExpression::class:
+                $subquery_result = \MysqlEngine\Processor\SelectProcessor::process(
                     $conn,
                     $scope,
                     $expr->query,
@@ -81,19 +81,19 @@ class Evaluator
 
                 return null;
 
-            case \Vimeo\MysqlEngine\Query\Expression\UnaryExpression::class:
+            case \MysqlEngine\Query\Expression\UnaryExpression::class:
                 return UnaryEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            case \Vimeo\MysqlEngine\Query\Expression\CastExpression::class:
+            case \MysqlEngine\Query\Expression\CastExpression::class:
                 return CastEvaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            case \Vimeo\MysqlEngine\Query\Expression\VariableExpression::class:
+            case \MysqlEngine\Query\Expression\VariableExpression::class:
                 return VariableEvaluator::evaluate($scope, $expr);
 
-            case \Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression::class:
+            case \MysqlEngine\Query\Expression\NamedPlaceholderExpression::class:
                 return NamedPlaceholderEvaluator::evaluate($scope, $expr);
 
-            case \Vimeo\MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression::class:
+            case \MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression::class:
                 return QuestionMarkPlaceholderEvaluator::evaluate($scope, $expr);
 
             default:
@@ -106,7 +106,7 @@ class Evaluator
      * @return Column
      */
     public static function getColumnSchema(
-        \Vimeo\MysqlEngine\Query\Expression\Expression $expr,
+        \MysqlEngine\Query\Expression\Expression $expr,
         Scope $scope,
         array $columns,
         bool $use_cache = true
@@ -120,13 +120,13 @@ class Evaluator
         }
 
         switch (get_class($expr)) {
-            case \Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression::class:
+            case \MysqlEngine\Query\Expression\BetweenOperatorExpression::class:
                 return $expr->column = new Column\TinyInt(true, 1);
 
-            case \Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression::class:
+            case \MysqlEngine\Query\Expression\BinaryOperatorExpression::class:
                 return $expr->column = BinaryOperatorEvaluator::getColumnSchema($expr, $scope, $columns);
 
-            case \Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression::class:
+            case \MysqlEngine\Query\Expression\CaseOperatorExpression::class:
                 $types = [];
 
                 foreach ($expr->whenExpressions as $when) {
@@ -137,10 +137,10 @@ class Evaluator
 
                 return $expr->column = self::combineColumnTypes($types);
 
-            case \Vimeo\MysqlEngine\Query\Expression\ColumnExpression::class:
+            case \MysqlEngine\Query\Expression\ColumnExpression::class:
                 return $expr->column = ColumnEvaluator::getColumnSchema($expr, $columns);
 
-            case \Vimeo\MysqlEngine\Query\Expression\ConstantExpression::class:
+            case \MysqlEngine\Query\Expression\ConstantExpression::class:
                 switch ($expr->getType()) {
                     case TokenType::NUMERIC_CONSTANT:
                         if (\strpos((string) $expr->value, '.') !== false) {
@@ -157,25 +157,25 @@ class Evaluator
                 }
                 break;
 
-            case \Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression::class:
+            case \MysqlEngine\Query\Expression\ExistsOperatorExpression::class:
                 return $expr->column = new Column\TinyInt(true, 1);
 
             case FunctionExpression::class:
                 return $expr->column = FunctionEvaluator::getColumnSchema($expr, $scope, $columns);
 
-            case \Vimeo\MysqlEngine\Query\Expression\InOperatorExpression::class:
+            case \MysqlEngine\Query\Expression\InOperatorExpression::class:
                 return $expr->column = new Column\TinyInt(true, 1);
 
-            case \Vimeo\MysqlEngine\Query\Expression\StubExpression::class:
+            case \MysqlEngine\Query\Expression\StubExpression::class:
                 throw new ProcessorException("Attempted to evaluate placeholder expression!");
 
-            case \Vimeo\MysqlEngine\Query\Expression\PositionExpression::class:
+            case \MysqlEngine\Query\Expression\PositionExpression::class:
                 break;
 
-            case \Vimeo\MysqlEngine\Query\Expression\RowExpression::class:
+            case \MysqlEngine\Query\Expression\RowExpression::class:
                 break;
 
-            case \Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class:
+            case \MysqlEngine\Query\Expression\SubqueryExpression::class:
                 if (\count($expr->query->selectExpressions) === 1) {
                     if ($expr->query->selectExpressions[0]->column) {
                         return $expr->query->selectExpressions[0]->column;
@@ -190,10 +190,10 @@ class Evaluator
 
                 return new Column\NullColumn();
 
-            case \Vimeo\MysqlEngine\Query\Expression\UnaryExpression::class:
+            case \MysqlEngine\Query\Expression\UnaryExpression::class:
                 break;
 
-            case \Vimeo\MysqlEngine\Query\Expression\CastExpression::class:
+            case \MysqlEngine\Query\Expression\CastExpression::class:
                 if ($expr->castType->type === 'UNSIGNED') {
                     return $expr->column = new Column\IntColumn(true, 10);
                 }
@@ -204,7 +204,7 @@ class Evaluator
 
                 break;
 
-            case \Vimeo\MysqlEngine\Query\Expression\VariableExpression::class:
+            case \MysqlEngine\Query\Expression\VariableExpression::class:
                 if (array_key_exists($expr->variableName, $scope->variables)) {
                     $value = $scope->variables[$expr->variableName];
 
@@ -227,7 +227,7 @@ class Evaluator
                 // it defaults to string
                 return new Column\Varchar(10);
 
-            case \Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression::class:
+            case \MysqlEngine\Query\Expression\NamedPlaceholderExpression::class:
                 if (\array_key_exists($expr->parameterName, $scope->parameters)) {
                     return self::getColumnTypeFromValue($expr, $scope->parameters[$expr->parameterName]);
                 }
@@ -236,7 +236,7 @@ class Evaluator
                 // it defaults to string
                 return new Column\Varchar(10);
 
-            case \Vimeo\MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression::class:
+            case \MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression::class:
                 if (\array_key_exists($expr->offset, $scope->parameters)) {
                     return self::getColumnTypeFromValue($expr, $scope->parameters[$expr->offset]);
                 }
@@ -253,7 +253,7 @@ class Evaluator
      * @param mixed $value
      */
     private static function getColumnTypeFromValue(
-        \Vimeo\MysqlEngine\Query\Expression\Expression $expr,
+        \MysqlEngine\Query\Expression\Expression $expr,
         $value
     ) : Column {
         if (\is_int($value)) {

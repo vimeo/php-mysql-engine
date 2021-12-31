@@ -1,27 +1,27 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\Query\CreateColumn;
-use Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\CastExpression;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
-use Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
-use Vimeo\MysqlEngine\Query\Expression\InOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\StubExpression;
-use Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression;
-use Vimeo\MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression;
-use Vimeo\MysqlEngine\Query\Expression\PositionExpression;
-use Vimeo\MysqlEngine\Query\Expression\RowExpression;
-use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
-use Vimeo\MysqlEngine\Query\Expression\UnaryExpression;
-use Vimeo\MysqlEngine\Query\Expression\VariableExpression;
-use Vimeo\MysqlEngine\TokenType;
+use MysqlEngine\Query\CreateColumn;
+use MysqlEngine\Query\Expression\BetweenOperatorExpression;
+use MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use MysqlEngine\Query\Expression\CaseOperatorExpression;
+use MysqlEngine\Query\Expression\CastExpression;
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Query\Expression\ConstantExpression;
+use MysqlEngine\Query\Expression\ExistsOperatorExpression;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\Expression\FunctionExpression;
+use MysqlEngine\Query\Expression\InOperatorExpression;
+use MysqlEngine\Query\Expression\IntervalOperatorExpression;
+use MysqlEngine\Query\Expression\StubExpression;
+use MysqlEngine\Query\Expression\NamedPlaceholderExpression;
+use MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression;
+use MysqlEngine\Query\Expression\PositionExpression;
+use MysqlEngine\Query\Expression\RowExpression;
+use MysqlEngine\Query\Expression\SubqueryExpression;
+use MysqlEngine\Query\Expression\UnaryExpression;
+use MysqlEngine\Query\Expression\VariableExpression;
+use MysqlEngine\TokenType;
 
 final class ExpressionParser
 {

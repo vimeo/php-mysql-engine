@@ -21,7 +21,7 @@
   },
   "autoload": {
     "psr-4": {
-        "Vimeo\\MysqlEngine\\": "src"
+        "MysqlEngine\\": "src"
     }
   },
   "require-dev": {

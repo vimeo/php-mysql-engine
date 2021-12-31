@@ -1,10 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
-use Vimeo\MysqlEngine\Query\Expression\PositionExpression;
-use Vimeo\MysqlEngine\TokenType;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\Expression\ConstantExpression;
+use MysqlEngine\Query\Expression\PositionExpression;
+use MysqlEngine\TokenType;
 
 final class OrderByParser
 {

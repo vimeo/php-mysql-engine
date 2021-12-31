@@ -1,10 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor\Expression;
+namespace MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Processor\QueryResult;
-use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
-use Vimeo\MysqlEngine\Query\Expression\BetweenOperatorExpression;
+use MysqlEngine\Processor\QueryResult;
+use MysqlEngine\Processor\Scope;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Query\Expression\BetweenOperatorExpression;
 
 final class BetweenOperatorEvaluator
 {
@@ -12,7 +12,7 @@ final class BetweenOperatorEvaluator
      * @param array<string, mixed> $row
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         BetweenOperatorExpression $expr,
         array $row,

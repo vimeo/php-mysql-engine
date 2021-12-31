@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
 trait HasOptionsTrait
 {
@@ -35,7 +35,8 @@ trait HasOptionsTrait
 
     public function getPhpCode() : string
     {
-        $default = $this->getDefault() !== null ? '\'' . $this->getDefault() . '\'' : 'null';
+        $mysqlDefault = $this->getDefault();
+        $default = $mysqlDefault !== null ? '\'' . $mysqlDefault . '\'' : 'null';
         
         return '(new \\' . static::class . '([\'' . \implode('\', \'', $this->options) . '\']))'
             . ($this->hasDefault() ? '->setDefault(' . $default . ')' : '')

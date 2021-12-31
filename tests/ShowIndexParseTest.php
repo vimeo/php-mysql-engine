@@ -1,11 +1,11 @@
 <?php
 
-namespace Vimeo\MysqlEngine\Tests;
+namespace MysqlEngine\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Vimeo\MysqlEngine\Parser\SQLParser;
-use Vimeo\MysqlEngine\Query\SelectQuery;
-use Vimeo\MysqlEngine\Query\ShowIndexQuery;
+use MysqlEngine\Parser\SQLParser;
+use MysqlEngine\Query\SelectQuery;
+use MysqlEngine\Query\ShowIndexQuery;
 
 class ShowIndexParseTest extends TestCase
 {
@@ -43,9 +43,9 @@ class ShowIndexParseTest extends TestCase
     {
         $query = 'SHOW INDEX FROM `foo';
 
-        $this->expectException(\Vimeo\MysqlEngine\Parser\LexerException::class);
+        $this->expectException(\MysqlEngine\Parser\LexerException::class);
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+        $select_query = \MysqlEngine\Parser\SQLParser::parse($query);
 
         $this->assertInstanceOf(SelectQuery::class, $select_query);
     }

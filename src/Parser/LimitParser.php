@@ -1,11 +1,11 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
-use Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression;
-use Vimeo\MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression;
-use Vimeo\MysqlEngine\Query\LimitClause;
+use MysqlEngine\TokenType;
+use MysqlEngine\Query\Expression\ConstantExpression;
+use MysqlEngine\Query\Expression\NamedPlaceholderExpression;
+use MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression;
+use MysqlEngine\Query\LimitClause;
 
 final class LimitParser
 {

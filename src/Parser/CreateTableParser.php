@@ -30,13 +30,13 @@
  * SOFTWARE.
 */
 
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\CreateColumn;
-use Vimeo\MysqlEngine\Query\CreateIndex;
-use Vimeo\MysqlEngine\Query\CreateQuery;
-use Vimeo\MysqlEngine\Query\MysqlColumnType;
+use MysqlEngine\TokenType;
+use MysqlEngine\Query\CreateColumn;
+use MysqlEngine\Query\CreateIndex;
+use MysqlEngine\Query\CreateQuery;
+use MysqlEngine\Query\MysqlColumnType;
 
 
 final class CreateTableParser
@@ -218,7 +218,13 @@ final class CreateTableParser
             \array_shift($tokens);
         }
 
-        $t = \array_shift($tokens);
+        // Extract [{database}.]{table}
+        if ($tokens[1] === '.') {
+            $t = \array_shift($tokens) . \array_shift($tokens) . \array_shift($tokens);
+        } else {
+            $t = \array_shift($tokens);
+        }
+
         $name = static::decodeIdentifier($t);
 
         if (static::nextTokenIs($tokens, 'LIKE')) {

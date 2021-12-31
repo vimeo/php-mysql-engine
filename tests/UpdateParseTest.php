@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Tests;
+namespace MysqlEngine\Tests;
 
 class UpdateParseTest extends \PHPUnit\Framework\TestCase
 {
@@ -7,8 +7,8 @@ class UpdateParseTest extends \PHPUnit\Framework\TestCase
     {
         $query = 'UPDATE `foo` SET `bar` = `bat` WHERE id = 1';
 
-        $update_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+        $update_query = \MysqlEngine\Parser\SQLParser::parse($query);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\UpdateQuery::class, $update_query);
+        $this->assertInstanceOf(\MysqlEngine\Query\UpdateQuery::class, $update_query);
     }
 }

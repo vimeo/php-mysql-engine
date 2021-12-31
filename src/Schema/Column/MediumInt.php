@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
-class MediumInt extends \Vimeo\MysqlEngine\Schema\Column implements NumberColumn, IntegerColumn, Defaultable
+class MediumInt extends \MysqlEngine\Schema\Column implements NumberColumn, IntegerColumn, DefaultTable
 {
     use IntegerColumnTrait;
     use MySqlDefaultTrait;

@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Tests;
+namespace MysqlEngine\Tests;
 
 class ShowTablesParseTest extends \PHPUnit\Framework\TestCase
 {
@@ -7,9 +7,9 @@ class ShowTablesParseTest extends \PHPUnit\Framework\TestCase
     {
         $query = 'SHOW TABLES LIKE \'foo\'';
 
-        $show_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+        $show_query = \MysqlEngine\Parser\SQLParser::parse($query);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\ShowTablesQuery::class, $show_query);
+        $this->assertInstanceOf(\MysqlEngine\Query\ShowTablesQuery::class, $show_query);
         $this->assertSame('foo', $show_query->pattern);
     }
 }

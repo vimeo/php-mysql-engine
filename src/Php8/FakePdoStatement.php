@@ -1,44 +1,52 @@
 <?php
-namespace Vimeo\MysqlEngine\Php8;
+
+namespace MysqlEngine\Php8;
+
+use Exception;
 
 class FakePdoStatement extends \PDOStatement
 {
-    use \Vimeo\MysqlEngine\FakePdoStatementTrait;
+    use \MysqlEngine\FakePdoStatementTrait;
 
     /**
      * Overriding execute method to add query logging
      * @param ?array $params
      * @return bool
      */
-    public function execute(?array $params = null)
+    public function execute(?array $params = null): bool
     {
         return $this->universalExecute($params);
     }
 
     /**
-     * @param  int $fetch_style
-     * @param  mixed      $args
+     * @param int $mode
+     * @param mixed ...$args
+     * @return array
+     * @throws Exception
+     * @psalm-suppress MethodSignatureMismatch
      */
-    public function fetchAll(int $fetch_style = -123, ...$args) : array
+    public function fetchAll(int $mode = -123, ...$args): array
     {
-        return $this->universalFetchAll($fetch_style, ...$args);
+        return $this->universalFetchAll($mode, ...$args);
     }
 
     /**
-     * @param  int $fetch_style
-     * @param  mixed      $args
+     * @param int $mode <p>
+     * @param null|string|object $className
+     * @param array $params
+     * @return bool
      */
-    public function setFetchMode(int $mode, ...$args) : bool
+    public function setFetchMode($mode, $className = null, ...$params): bool
     {
-        return $this->universalSetFetchMode($mode, ...$args);
+        return $this->universalSetFetchMode($mode, ...$params);
     }
 
     /**
      * @psalm-taint-sink callable $class
      *
      * @template T
-     * @param    class-string<T>|null $class
-     * @param    array|null $ctorArgs
+     * @param class-string<T>|null $class
+     * @param array|null $ctorArgs
      * @return   false|T
      */
     public function fetchObject(?string $class = \stdClass::class, ?array $ctorArgs = null)

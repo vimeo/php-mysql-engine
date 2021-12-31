@@ -1,22 +1,23 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
 
-abstract class CharacterColumn extends \Vimeo\MysqlEngine\Schema\Column
+namespace MysqlEngine\Schema\Column;
+
+abstract class CharacterColumn extends \MysqlEngine\Schema\Column
 {
     /**
      * @var int
      */
-    protected $max_string_length;
+    protected $maxStringLength;
 
     /**
      * @var ?int
      */
-    protected $max_truncated_length; // used for in-memory columns
+    protected $maxTruncatedLength; // used for in-memory columns
 
     /**
      * @var ?string
      */
-    protected $character_set;
+    protected $characterSet;
 
     /**
      * @var ?string
@@ -25,52 +26,51 @@ abstract class CharacterColumn extends \Vimeo\MysqlEngine\Schema\Column
 
     public function __construct(int $max_string_length, ?string $character_set = null, ?string $collation = null)
     {
-        $this->max_string_length = $max_string_length;
-        $this->character_set = $character_set;
+        $this->maxStringLength = $max_string_length;
+        $this->characterSet = $character_set;
         $this->collation = $collation;
     }
 
-    public function getMaxStringLength() : int
+    public function getMaxStringLength(): int
     {
-        return $this->max_string_length;
+        return $this->maxStringLength;
     }
 
-    public function getMaxTruncatedStringLength() : ?int
+    public function getMaxTruncatedStringLength(): ?int
     {
-        return $this->max_truncated_length;
+        return $this->maxTruncatedLength;
     }
 
-    public function getCharacterSet() : ?string
+    public function getCharacterSet(): ?string
     {
-        return $this->character_set;
+        return $this->characterSet;
     }
 
-    public function getCollation() : ?string
+    public function getCollation(): ?string
     {
         return $this->collation;
     }
 
-    public function getPhpType() : string
+    public function getPhpType(): string
     {
         return 'string';
     }
 
-    public function getPhpCode() : string
+    public function getPhpCode(): string
     {
         $default = '';
 
-        if ($this instanceof Defaultable && $this->hasDefault()) {
-            if ($this->getDefault() === null) {
-                $default = '->setDefault(null)';
-            } else {
-                $default = '->setDefault(\'' . $this->getDefault() . '\')';
-            }
+        if ($this instanceof DefaultTable && $this->hasDefault()) {
+            $mysqlDefault = $this->getDefault();
+            $default = $mysqlDefault === null
+                ? '->setDefault(null)'
+                : ('->setDefault(\'' . $mysqlDefault . '\')');
         }
 
         return '(new \\' . static::class . '('
-            . $this->max_string_length
-            . ($this->character_set !== null && $this->collation !== null
-                ? ', \'' . $this->character_set . '\'' . ', \'' . $this->collation . '\''
+            . $this->maxStringLength
+            . ($this->characterSet !== null && $this->collation !== null
+                ? ', \'' . $this->characterSet . '\'' . ', \'' . $this->collation . '\''
                 : '')
             . '))'
             . $default

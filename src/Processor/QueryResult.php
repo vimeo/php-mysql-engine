@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor;
+namespace MysqlEngine\Processor;
 
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\Schema\Column;
 
 class QueryResult
 {

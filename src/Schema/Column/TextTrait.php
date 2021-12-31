@@ -1,17 +1,21 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
 use Pov\Definition\MySqlDefinition;
 
 trait TextTrait
 {
+    /**
+     * @return string
+     */
     public function getPhpCode() : string
     {
-        $default = $this->getDefault() !== null ? '\'' . $this->getDefault() . '\'' : 'null';
+        $mysqlDefault = $this->getDefault();
+        $default = $mysqlDefault !== null ? '\'' . $mysqlDefault . '\'' : 'null';
         
         return '(new \\' . static::class . '('
-            . ($this->character_set !== null && $this->collation !== null
-                ? ', \'' . $this->character_set . '\'' . ', \'' . $this->collation . '\''
+            . ($this->characterSet !== null && $this->collation !== null
+                ? ', \'' . $this->characterSet . '\'' . ', \'' . $this->collation . '\''
                 : '')
             . '))'
             . ($this->hasDefault() ? '->setDefault(' . $default . ')' : '')

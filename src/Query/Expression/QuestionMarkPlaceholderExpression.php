@@ -1,8 +1,8 @@
 <?php
-namespace Vimeo\MysqlEngine\Query\Expression;
+namespace MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\Parser\Token;
-use Vimeo\MysqlEngine\TokenType;
+use MysqlEngine\Parser\Token;
+use MysqlEngine\TokenType;
 
 final class QuestionMarkPlaceholderExpression extends Expression
 {

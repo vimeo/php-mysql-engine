@@ -1,11 +1,11 @@
 <?php
-namespace Vimeo\MysqlEngine\Query\Expression;
+namespace MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\Parser\ExpressionParser;
-use Vimeo\MysqlEngine\Parser\Token;
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Parser\ParserException;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Parser\ExpressionParser;
+use MysqlEngine\Parser\Token;
+use MysqlEngine\TokenType;
+use MysqlEngine\Parser\ParserException;
+use MysqlEngine\Processor\ProcessorException;
 
 final class BetweenOperatorExpression extends Expression
 {

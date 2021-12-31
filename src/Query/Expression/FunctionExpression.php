@@ -1,9 +1,9 @@
 <?php
-namespace Vimeo\MysqlEngine\Query\Expression;
+namespace MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\Parser\Token;
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Parser\Token;
+use MysqlEngine\TokenType;
+use MysqlEngine\Processor\ProcessorException;
 
 final class FunctionExpression extends Expression
 {

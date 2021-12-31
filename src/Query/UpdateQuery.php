@@ -1,11 +1,11 @@
 <?php
-namespace Vimeo\MysqlEngine\Query;
+namespace MysqlEngine\Query;
 
-use Vimeo\MysqlEngine\JoinType;
-use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
-use Vimeo\MysqlEngine\Query\LimitClause;
+use MysqlEngine\JoinType;
+use MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\Expression\SubqueryExpression;
+use MysqlEngine\Query\LimitClause;
 
 final class UpdateQuery
 {

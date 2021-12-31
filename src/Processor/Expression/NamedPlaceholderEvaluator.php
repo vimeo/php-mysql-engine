@@ -1,9 +1,9 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor\Expression;
+namespace MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Processor\ProcessorException;
-use Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression;
-use Vimeo\MysqlEngine\Processor\Scope;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Query\Expression\NamedPlaceholderExpression;
+use MysqlEngine\Processor\Scope;
 
 final class NamedPlaceholderEvaluator
 {

@@ -1,17 +1,17 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor\Expression;
+namespace MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Processor\QueryResult;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
-use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\RowExpression;
-use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
-use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
-use Vimeo\MysqlEngine\Query\Expression\VariableExpression;
-use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Schema\Column;
-use Vimeo\MysqlEngine\TokenType;
+use MysqlEngine\Processor\QueryResult;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use MysqlEngine\Query\Expression\IntervalOperatorExpression;
+use MysqlEngine\Query\Expression\RowExpression;
+use MysqlEngine\Query\Expression\ConstantExpression;
+use MysqlEngine\Query\Expression\FunctionExpression;
+use MysqlEngine\Query\Expression\VariableExpression;
+use MysqlEngine\Processor\Scope;
+use MysqlEngine\Schema\Column;
+use MysqlEngine\TokenType;
 
 final class BinaryOperatorEvaluator
 {
@@ -20,7 +20,7 @@ final class BinaryOperatorEvaluator
      * @param array<string, Column> $columns
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         BinaryOperatorExpression $expr,
         array $row,
@@ -56,7 +56,7 @@ final class BinaryOperatorEvaluator
                 $conn,
                 $scope,
                 new FunctionExpression(
-                    new \Vimeo\MysqlEngine\Parser\Token(
+                    new \MysqlEngine\Parser\Token(
                         TokenType::SQLFUNCTION,
                         $functionName,
                         $functionName,
@@ -467,7 +467,7 @@ final class BinaryOperatorEvaluator
      * @return bool
      */
     private static function evaluateRowComparison(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         BinaryOperatorExpression $expr,
         RowExpression $left,

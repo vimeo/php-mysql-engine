@@ -1,10 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine\Tests;
+namespace MysqlEngine\Tests;
 
-use Vimeo\MysqlEngine\Query\SelectQuery;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use MysqlEngine\Query\SelectQuery;
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Query\Expression\CaseOperatorExpression;
+use MysqlEngine\Query\Expression\BinaryOperatorExpression;
 
 class CreateTableParseTest extends \PHPUnit\Framework\TestCase
 {
@@ -12,12 +12,12 @@ class CreateTableParseTest extends \PHPUnit\Framework\TestCase
     {
         $query = file_get_contents(__DIR__ . '/fixtures/create_table.sql');
 
-        $create_queries = (new \Vimeo\MysqlEngine\Parser\CreateTableParser)->parse($query);
+        $create_queries = (new \MysqlEngine\Parser\CreateTableParser)->parse($query);
 
         $this->assertCount(5, $create_queries);
 
         foreach ($create_queries as $create_query) {
-            $table = \Vimeo\MysqlEngine\Processor\CreateProcessor::makeTableDefinition(
+            $table = \MysqlEngine\Processor\CreateProcessor::makeTableDefinition(
                 $create_query,
                 'foo'
             );

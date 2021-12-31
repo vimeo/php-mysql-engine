@@ -1,10 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
 /**
  * Special class used when inferring from uninitialised temporary variables
  */
-class NullColumn extends \Vimeo\MysqlEngine\Schema\Column
+class NullColumn extends \MysqlEngine\Schema\Column
 {
     use EmptyConstructorTrait;
 

@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
-class TinyInt extends \Vimeo\MysqlEngine\Schema\Column implements NumberColumn, IntegerColumn, Defaultable
+class TinyInt extends \MysqlEngine\Schema\Column implements NumberColumn, IntegerColumn, DefaultTable
 {
     use IntegerColumnTrait;
     use MySqlDefaultTrait;

@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
-class Enum extends \Vimeo\MysqlEngine\Schema\Column implements Defaultable
+class Enum extends \MysqlEngine\Schema\Column implements DefaultTable
 {
     use MySqlDefaultTrait;
     use HasOptionsTrait;

@@ -1,9 +1,9 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
 use Pov\Definition\MySqlDefinition;
 
-class Binary extends CharacterColumn implements StringColumn, Defaultable
+class Binary extends CharacterColumn implements StringColumn, DefaultTable
 {
     use MySqlDefaultTrait;
 }

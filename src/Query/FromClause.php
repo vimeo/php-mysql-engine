@@ -1,10 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine\Query;
+namespace MysqlEngine\Query;
 
-use Vimeo\MysqlEngine\JoinType;
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
-use Vimeo\MysqlEngine\Parser\ParserException;
+use MysqlEngine\JoinType;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\Expression\SubqueryExpression;
+use MysqlEngine\Parser\ParserException;
 
 final class FromClause
 {

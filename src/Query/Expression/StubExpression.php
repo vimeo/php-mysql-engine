@@ -1,8 +1,8 @@
 <?php
-namespace Vimeo\MysqlEngine\Query\Expression;
+namespace MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\TokenType;
+use MysqlEngine\Processor\ProcessorException;
 
 final class StubExpression extends Expression
 {

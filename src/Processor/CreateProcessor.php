@@ -1,10 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor;
+namespace MysqlEngine\Processor;
 
-use Vimeo\MysqlEngine\DataType;
-use Vimeo\MysqlEngine\Query;
-use Vimeo\MysqlEngine\Schema\TableDefinition;
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\DataType;
+use MysqlEngine\Query;
+use MysqlEngine\Schema\TableDefinition;
+use MysqlEngine\Schema\Column;
 
 final class CreateProcessor
 {
@@ -73,7 +73,7 @@ final class CreateProcessor
                 $column->autoIncrement();
             }
 
-            if ($field->default !== null && $column instanceof Column\Defaultable) {
+            if ($field->default !== null && $column instanceof Column\DefaultTable) {
                 $column->setDefault(
                     $field->default === 'NULL' ? null : $field->default
                 );
@@ -92,7 +92,7 @@ final class CreateProcessor
                 $primary_key_columns = $columns;
             }
 
-            $indexes[$index->name ?: $index->type] = new \Vimeo\MysqlEngine\Schema\Index(
+            $indexes[$index->name ?: $index->type] = new \MysqlEngine\Schema\Index(
                 $index->type,
                 $columns
             );

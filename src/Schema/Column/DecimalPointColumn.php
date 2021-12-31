@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
-abstract class DecimalPointColumn extends \Vimeo\MysqlEngine\Schema\Column implements NumberColumn, Defaultable
+abstract class DecimalPointColumn extends \MysqlEngine\Schema\Column implements NumberColumn, DefaultTable
 {
     use NumberColumnTrait;
     use MySqlDefaultTrait;
@@ -50,12 +50,12 @@ abstract class DecimalPointColumn extends \Vimeo\MysqlEngine\Schema\Column imple
     public function getPhpCode() : string
     {
         $default = '';
-
+        $mysqlDefault = $this->getDefault();
         if ($this->hasDefault()) {
             $default = '->setDefault('
-                . ($this->getDefault() === null
+                . ($mysqlDefault === null
                     ? 'null'
-                    : '\'' . $this->getDefault() . '\'')
+                    : '\'' . $mysqlDefault . '\'')
                 . ')';
         }
 

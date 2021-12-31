@@ -1,8 +1,8 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\TruncateQuery;
+use MysqlEngine\TokenType;
+use MysqlEngine\Query\TruncateQuery;
 
 final class TruncateParser
 {

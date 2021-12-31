@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
-class DoubleColumn extends DecimalPointColumn implements Defaultable
+class DoubleColumn extends DecimalPointColumn implements DefaultTable
 {
     use NumberColumnTrait;
     use MySqlDefaultTrait;

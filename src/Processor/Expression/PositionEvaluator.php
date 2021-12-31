@@ -1,10 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor\Expression;
+namespace MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Processor\ProcessorException;
-use Vimeo\MysqlEngine\Query\Expression\PositionExpression;
-use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Query\Expression\PositionExpression;
+use MysqlEngine\Processor\Scope;
+use MysqlEngine\Schema\Column;
 
 final class PositionEvaluator
 {

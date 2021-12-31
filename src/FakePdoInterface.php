@@ -1,22 +1,24 @@
 <?php
-namespace Vimeo\MysqlEngine;
+namespace MysqlEngine;
 
 interface FakePdoInterface
 {
     public function getServer(): Server;
 
-    public function setLastInsertId(string $last_insert_id): void;
+    public function setLastInsertId(string $lastInsertId): void;
 
-    public function getDatabaseName(): ?string;
+    public function getDatabaseName(): string;
 
     public function shouldStringifyResult(): bool;
 
     public function shouldLowercaseResultKeys(): bool;
 
     /**
-     * @param  string $seqname
+     * @param $name
+     * @psalm-suppress MissingParamType
+     * @psalm-suppress MissingReturnType
      */
-    public function lastInsertId($seqname = null) : string;
+    public function lastInsertId($name = null);
 
     public function useStrictMode() : bool;
 }

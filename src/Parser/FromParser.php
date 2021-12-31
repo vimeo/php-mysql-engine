@@ -1,16 +1,16 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\JoinType;
-use Vimeo\MysqlEngine\JoinOperator;
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Parser\Token;
-use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\Expression\StubExpression;
-use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
-use Vimeo\MysqlEngine\Query\FromClause;
+use MysqlEngine\JoinType;
+use MysqlEngine\JoinOperator;
+use MysqlEngine\TokenType;
+use MysqlEngine\Parser\Token;
+use MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\Expression\StubExpression;
+use MysqlEngine\Query\Expression\SubqueryExpression;
+use MysqlEngine\Query\FromClause;
 
 final class FromParser
 {

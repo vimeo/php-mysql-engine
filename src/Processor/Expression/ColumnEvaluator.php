@@ -1,11 +1,11 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor\Expression;
+namespace MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Processor\QueryResult;
-use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\Processor\QueryResult;
+use MysqlEngine\Processor\Scope;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Schema\Column;
 
 final class ColumnEvaluator
 {
@@ -16,7 +16,7 @@ final class ColumnEvaluator
      * @return scalar|null
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         ColumnExpression $expr,
         array $row,

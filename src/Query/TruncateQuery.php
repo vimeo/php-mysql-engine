@@ -1,8 +1,8 @@
 <?php
-namespace Vimeo\MysqlEngine\Query;
+namespace MysqlEngine\Query;
 
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\LimitClause;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\LimitClause;
 
 final class TruncateQuery
 {

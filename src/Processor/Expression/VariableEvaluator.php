@@ -1,8 +1,8 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor\Expression;
+namespace MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Query\Expression\VariableExpression;
-use Vimeo\MysqlEngine\Processor\Scope;
+use MysqlEngine\Query\Expression\VariableExpression;
+use MysqlEngine\Processor\Scope;
 
 final class VariableEvaluator
 {

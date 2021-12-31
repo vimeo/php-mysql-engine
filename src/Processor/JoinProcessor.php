@@ -1,16 +1,16 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor;
+namespace MysqlEngine\Processor;
 
-use Vimeo\MysqlEngine\JoinType;
-use Vimeo\MysqlEngine\Parser\ParserException;
-use Vimeo\MysqlEngine\Parser\Token;
-use Vimeo\MysqlEngine\Processor\Expression\Evaluator as ExpressionEvaluator;
-use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Schema\Column;
-use Vimeo\MysqlEngine\TokenType;
+use MysqlEngine\JoinType;
+use MysqlEngine\Parser\ParserException;
+use MysqlEngine\Parser\Token;
+use MysqlEngine\Processor\Expression\Evaluator as ExpressionEvaluator;
+use MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Query\Expression\ConstantExpression;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Schema\Column;
+use MysqlEngine\TokenType;
 
 final class JoinProcessor
 {
@@ -21,7 +21,7 @@ final class JoinProcessor
      * @return QueryResult
      */
     public static function process(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         QueryResult $left_result,
         QueryResult $right_result,

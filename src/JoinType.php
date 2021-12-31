@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine;
+namespace MysqlEngine;
 
 /**
  * Generated enum class, do not extend

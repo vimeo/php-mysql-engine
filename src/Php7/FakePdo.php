@@ -1,10 +1,14 @@
 <?php
-namespace Vimeo\MysqlEngine\Php7;
+namespace MysqlEngine\Php7;
 
 use PDO;
-use Vimeo\MysqlEngine\FakePdoInterface;
-use Vimeo\MysqlEngine\FakePdoTrait;
+use MysqlEngine\FakePdoInterface;
+use MysqlEngine\FakePdoTrait;
 
+/**
+ * Class FakePdo
+ * @package MysqlEngine\Php7
+ */
 class FakePdo extends PDO implements FakePdoInterface
 {
     use FakePdoTrait;

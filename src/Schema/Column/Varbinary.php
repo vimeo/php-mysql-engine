@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
-class Varbinary extends CharacterColumn implements BlobColumn, Defaultable
+class Varbinary extends CharacterColumn implements BlobColumn, DefaultTable
 {
     use MySqlDefaultTrait;
 
@@ -13,7 +13,7 @@ class Varbinary extends CharacterColumn implements BlobColumn, Defaultable
     public function getPhpCode() : string
     {
         return '(new \\' . static::class . '('
-            . $this->max_string_length
+            . $this->maxStringLength
             . '))'
             . $this->getNullablePhp();
     }

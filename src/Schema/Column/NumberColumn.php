@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
 interface NumberColumn
 {
@@ -14,5 +14,5 @@ interface NumberColumn
     public function getMinValue();
 
     /** @return static */
-    public function setDefault($mysql_default);
+    public function setDefault(?string $mysqlDefault);
 }

@@ -1,10 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine\Tests;
+namespace MysqlEngine\Tests;
 
-use Vimeo\MysqlEngine\Query\SelectQuery;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\Expression\CaseOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use MysqlEngine\Query\SelectQuery;
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Query\Expression\CaseOperatorExpression;
+use MysqlEngine\Query\Expression\BinaryOperatorExpression;
 
 class SelectProcessorTest extends \PHPUnit\Framework\TestCase
 {
@@ -12,17 +12,17 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
     {
         $query = 'SELECT CAST(1 + 2 AS UNSIGNED) as `a`';
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+        $select_query = \MysqlEngine\Parser\SQLParser::parse($query);
 
         $this->assertInstanceOf(SelectQuery::class, $select_query);
 
-        $conn = self::getPdo('mysql:foo');
+        $conn = self::getPdo('mysql:foo;dbname=test;');
 
         $this->assertSame(
             [['a' => 3]],
-            \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+            \MysqlEngine\Processor\SelectProcessor::process(
                 $conn,
-                new \Vimeo\MysqlEngine\Processor\Scope([]),
+                new \MysqlEngine\Processor\Scope([]),
                 $select_query,
                 null
             )->rows
@@ -33,17 +33,17 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
     {
         $query = 'SELECT (SELECT 2) + (SELECT 3) as `a`';
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+        $select_query = \MysqlEngine\Parser\SQLParser::parse($query);
 
         $this->assertInstanceOf(SelectQuery::class, $select_query);
 
-        $conn = self::getPdo('mysql:foo');
+        $conn = self::getPdo('mysql:foo;dbname=test;');
 
         $this->assertSame(
             [['a' => 5]],
-            \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+            \MysqlEngine\Processor\SelectProcessor::process(
                 $conn,
-                new \Vimeo\MysqlEngine\Processor\Scope([]),
+                new \MysqlEngine\Processor\Scope([]),
                 $select_query,
                 null
             )->rows
@@ -54,17 +54,17 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
     {
         $query = 'SELECT ("0.00" > 0) as `a`';
 
-        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+        $select_query = \MysqlEngine\Parser\SQLParser::parse($query);
 
         $this->assertInstanceOf(SelectQuery::class, $select_query);
 
-        $conn = self::getPdo('mysql:foo');
+        $conn = self::getPdo('mysql:foo;dbname=test;');
 
         $this->assertSame(
             [['a' => 0]],
-            \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+            \MysqlEngine\Processor\SelectProcessor::process(
                 $conn,
-                new \Vimeo\MysqlEngine\Processor\Scope([]),
+                new \MysqlEngine\Processor\Scope([]),
                 $select_query,
                 null
             )->rows
@@ -74,9 +74,9 @@ class SelectProcessorTest extends \PHPUnit\Framework\TestCase
     private static function getPdo(string $connection_string) : \PDO
     {
         if (\PHP_MAJOR_VERSION === 8) {
-            return new \Vimeo\MysqlEngine\Php8\FakePdo($connection_string);
+            return new \MysqlEngine\Php8\FakePdo($connection_string);
         }
 
-        return new \Vimeo\MysqlEngine\Php7\FakePdo($connection_string);
+        return new \MysqlEngine\Php7\FakePdo($connection_string);
     }
 }

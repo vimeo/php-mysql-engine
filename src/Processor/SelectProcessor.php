@@ -1,13 +1,13 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor;
+namespace MysqlEngine\Processor;
 
-use Vimeo\MysqlEngine\Query\SelectQuery;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
-use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
-use Vimeo\MysqlEngine\FakePdoInterface;
-use Vimeo\MysqlEngine\MultiOperand;
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\Query\SelectQuery;
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Query\Expression\FunctionExpression;
+use MysqlEngine\Query\Expression\SubqueryExpression;
+use MysqlEngine\FakePdoInterface;
+use MysqlEngine\MultiOperand;
+use MysqlEngine\Schema\Column;
 
 final class SelectProcessor extends Processor
 {
@@ -187,7 +187,7 @@ final class SelectProcessor extends Processor
     protected static function applyHaving(
         FakePdoInterface $conn,
         Scope $scope,
-        \Vimeo\MysqlEngine\Query\Expression\Expression $havingClause,
+        \MysqlEngine\Query\Expression\Expression $havingClause,
         QueryResult $result
     ) : QueryResult {
         if ($result->grouped_rows === null) {

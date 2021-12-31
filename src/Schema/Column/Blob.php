@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
-class Blob extends CharacterColumn implements BlobColumn, Defaultable
+class Blob extends CharacterColumn implements BlobColumn, DefaultTable
 {
     use MySqlDefaultTrait;
 
@@ -12,7 +12,8 @@ class Blob extends CharacterColumn implements BlobColumn, Defaultable
 
     public function getPhpCode() : string
     {
-        $default = $this->getDefault() !== null ? '\'' . $this->getDefault() . '\'' : 'null';
+        $mysqlDefault = $this->getDefault();
+        $default = $mysqlDefault !== null ? '\'' . $mysqlDefault . '\'' : 'null';
         
         return '(new \\' . static::class . '())'
             . ($this->hasDefault() ? '->setDefault(' . $default . ')' : '')

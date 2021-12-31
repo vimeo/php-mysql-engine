@@ -1,16 +1,29 @@
 <?php
-namespace Vimeo\MysqlEngine\Tests;
 
-use PDOException;
+use PHPUnit\Framework\TestCase;
 
-class EndToEndTest extends \PHPUnit\Framework\TestCase
+/**
+ * Class EndToEndTest
+ */
+class EndToEndTest extends TestCase
 {
+    /**
+     * @return void
+     */
     public function tearDown() : void
     {
-        \Vimeo\MysqlEngine\Server::reset();
+        \MysqlEngine\Server::reset();
     }
 
-    public function testSelectEmptyResults()
+    public function setUp() : void
+    {
+        \MysqlEngine\Server::reset();
+    }
+
+    /**
+     * @return void
+     */
+    public function testSelectEmptyResults(): void
     {
         $pdo = self::getConnectionToFullDB();
 
@@ -21,7 +34,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame([], $query->fetchAll(\PDO::FETCH_ASSOC));
     }
 
-    public function testInvalidQuery()
+    /**
+     * @return void
+     */
+    public function testInvalidQuery(): void
     {
         $pdo = self::getConnectionToFullDB();
 
@@ -34,7 +50,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame([], $query->fetchAll(\PDO::FETCH_ASSOC));
     }
 
-    public function testSelectFetchAssoc()
+    /**
+     * @return void
+     */
+    public function testSelectFetchAssoc(): void
     {
         $pdo = self::getConnectionToFullDB();
 
@@ -51,7 +70,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testSelectFetchAssocConverted()
+    /**
+     * @return void
+     */
+    public function testSelectFetchAssocConverted(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -68,7 +90,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testPlaceholders()
+    /**
+     * @return void
+     */
+    public function testPlaceholders(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -95,7 +120,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testSumEmptySet()
+    /**
+     * @return void
+     */
+    public function testSumEmptySet(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -106,7 +134,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame([['SUM(`id`)' => null]], $query->fetchAll(\PDO::FETCH_ASSOC));
     }
 
-    public function testDefaultNullTimestamp()
+    /**
+     * @return void
+     */
+    public function testDefaultNullTimestamp(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -122,7 +153,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testSelectCountFullResults()
+    /**
+     * @return void
+     */
+    public function testSelectCountFullResults(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -132,7 +166,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame([['COUNT(*)' => 16]], $query->fetchAll(\PDO::FETCH_ASSOC));
     }
 
-    public function testSelectCountEmptyResults()
+    /**
+     * @return void
+     */
+    public function testSelectCountEmptyResults(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -143,7 +180,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame([['COUNT(*)' => 0]], $query->fetchAll(\PDO::FETCH_ASSOC));
     }
 
-    public function testAliasWithType()
+    /**
+     * @return void
+     */
+    public function testAliasWithType(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -160,7 +200,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testAliasName()
+    /**
+     * @return void
+     */
+    public function testAliasName(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -176,7 +219,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testLeftJoinWithSum()
+    /**
+     * @return void
+     */
+    public function testLeftJoinWithSum(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -195,7 +241,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testLeftJoinWithCount()
+    /**
+     * @return void
+     */
+    public function testLeftJoinWithCount(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -225,7 +274,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testMaxValueAliasedToColumnName()
+    /**
+     * @return void
+     */
+    public function testMaxValueAliasedToColumnName(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -247,7 +299,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testIncrementCounter()
+    /**
+     * @return void
+     */
+    public function testIncrementCounter(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -271,7 +326,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testAssignUndefinedIntToVariable()
+    /**
+     * @return void
+     */
+    public function testAssignUndefinedIntToVariable(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -293,7 +351,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testConditionallyIncrementedCounter()
+    /**
+     * @return void
+     */
+    public function testConditionallyIncrementedCounter(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -318,7 +379,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testPreviousCurrentTempVariables()
+    /**
+     * @return void
+     */
+    public function testPreviousCurrentTempVariables(): void
     {
         $pdo = self::getConnectionToFullDB(false);
 
@@ -428,7 +492,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
     public function testDateArithhmetic()
     {
-        $pdo = self::getPdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo;dbname=test;');
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
         $query = $pdo->prepare(
@@ -467,7 +531,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
     public function testCurDateFunction()
     {
-        $pdo = self::getPdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo;dbname=test;');
 
         $query = $pdo->prepare('SELECT CURDATE() AS date, CURRENT_DATE() AS date1');
 
@@ -485,7 +549,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
     public function testInOperator()
     {
-        $pdo = self::getPdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo;dbname=test;');
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
         $query = $pdo->prepare(
@@ -504,7 +568,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
     public function testEmptyStringEqualsZero()
     {
-        $pdo = self::getPdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo;dbname=test;');
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
         $query = $pdo->prepare(
@@ -544,7 +608,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
     public function testInetAtoN()
     {
-        $pdo = self::getPdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo;dbname=test;');
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
         $query = $pdo->prepare("SELECT INET_ATON('255.255.255.255') AS a, INET_ATON('192.168.1.1') AS b, INET_ATON('127.0.0.1') AS c, INET_ATON('not an ip') AS d, INET_ATON(NULL) as e");
@@ -566,7 +630,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
     public function testInetNtoA()
     {
-        $pdo = self::getPdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo;dbname=test;');
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
         $query = $pdo->prepare("SELECT INET_NTOA(4294967295) AS a, INET_NTOA(3232235777) AS b, INET_NTOA(2130706433) AS c, INET_NTOA(NULL) as d, INET_NTOA('not a number') as e");
@@ -589,7 +653,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
     public function testRound()
     {
-        $pdo = self::getPdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo;dbname=test;');
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
         $query = $pdo->prepare('SELECT ROUND(3.141592) AS a, ROUND(3.141592, 2) AS b');
@@ -931,7 +995,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
                 ('wario','villain','plumber','nes','1','-4','{\"magic\":0, \"speed\":0, \"strength\":0, \"weapons\":0}', NOW())"
         );
 
-        $this->expectException(\Vimeo\MysqlEngine\Processor\InvalidValueException::class);
+        $this->expectException(\MysqlEngine\Processor\InvalidValueException::class);
 
         $query->execute();
     }
@@ -1097,10 +1161,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $options = $strict_mode ? [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="STRICT_ALL_TABLES"'] : [];
 
         if (\PHP_MAJOR_VERSION === 8) {
-            return new \Vimeo\MysqlEngine\Php8\FakePdo($connection_string, '', '', $options);
+            return new \MysqlEngine\Php8\FakePdo($connection_string, '', '', $options);
         }
 
-        return new \Vimeo\MysqlEngine\Php7\FakePdo($connection_string, '', '', $options);
+        return new \MysqlEngine\Php7\FakePdo($connection_string, '', '', $options);
     }
 
     private static function getConnectionToFullDB(bool $emulate_prepares = true, bool $strict_mode = false) : \PDO

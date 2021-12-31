@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
-class Year extends \Vimeo\MysqlEngine\Schema\Column implements ChronologicalColumn, Defaultable
+class Year extends \MysqlEngine\Schema\Column implements ChronologicalColumn, DefaultTable
 {
     use MySqlDefaultTrait;
     use EmptyConstructorTrait;

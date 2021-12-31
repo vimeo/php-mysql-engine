@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine;
+namespace MysqlEngine;
 
 final class ServerConfig
 {

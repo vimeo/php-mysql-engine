@@ -1,18 +1,25 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
-class TinyBlob extends CharacterColumn implements BlobColumn, Defaultable
+class TinyBlob extends CharacterColumn implements BlobColumn, DefaultTable
 {
     use MySqlDefaultTrait;
 
+    /**
+     * TinyBlob constructor.
+     */
     public function __construct()
     {
         parent::__construct(255, 'binary', '_bin');
     }
 
+    /**
+     * @return string
+     */
     public function getPhpCode() : string
     {
-        $default = $this->getDefault() !== null ? '\'' . $this->getDefault() . '\'' : 'null';
+        $mysqlDefault = $this->getDefault();
+        $default = $mysqlDefault !== null ? '\'' . $mysqlDefault . '\'' : 'null';
         
         return '(new \\' . static::class . '())'
             . ($this->hasDefault() ? '->setDefault(' . $default . ')' : '')

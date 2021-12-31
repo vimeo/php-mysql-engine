@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine;
+namespace MysqlEngine;
 
 final class DataIntegrity
 {
@@ -65,7 +65,7 @@ final class DataIntegrity
             $php_type = $column->getPhpType();
             $column_nullable = $column->isNullable();
 
-            $column_default = $column instanceof Schema\Column\Defaultable ? $column->getDefault() : null;
+            $column_default = $column instanceof Schema\Column\DefaultTable ? $column->getDefault() : null;
 
             if (!array_key_exists($column_name, $row)) {
                 $row[$column_name] = self::getDefaultValueForColumn(

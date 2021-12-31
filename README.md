@@ -61,7 +61,7 @@ You can instantiate the subclass as you would `PDO`, and use dependency injectio
 
 ```php
 // use a class specific to your current PHP version (APIs changed in major versions)
-$pdo = new \Vimeo\MysqlEngine\Php8\FakePdo($dsn, $user, $password);
+$pdo = new \MysqlEngine\Php8\FakePdo($dsn, $user, $password);
 // currently supported attributes
 $pdo->setAttribute(\PDO::ATTR_CASE, \PDO::CASE_LOWER);
 $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);

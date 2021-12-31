@@ -1,10 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine\Query;
+namespace MysqlEngine\Query;
 
-use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression;
-use Vimeo\MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression;
+use MysqlEngine\Query\Expression\ConstantExpression;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\Expression\NamedPlaceholderExpression;
+use MysqlEngine\Query\Expression\QuestionMarkPlaceholderExpression;
 
 final class LimitClause
 {

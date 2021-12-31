@@ -1,12 +1,12 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\Expression\StubExpression;
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
+use MysqlEngine\TokenType;
+use MysqlEngine\Query\Expression\StubExpression;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Query\Expression\ConstantExpression;
 
 final class SetParser
 {

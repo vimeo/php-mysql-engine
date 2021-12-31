@@ -1,9 +1,9 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\InsertQuery;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\TokenType;
+use MysqlEngine\Query\InsertQuery;
 
 final class InsertParser
 {

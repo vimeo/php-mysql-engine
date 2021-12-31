@@ -1,11 +1,11 @@
 <?php
-namespace Vimeo\MysqlEngine\Query\Expression;
+namespace MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Parser\ExpressionParser;
-use Vimeo\MysqlEngine\Parser\ParserException;
-use Vimeo\MysqlEngine\Parser\Token;
-use Vimeo\MysqlEngine\TokenType;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Parser\ExpressionParser;
+use MysqlEngine\Parser\ParserException;
+use MysqlEngine\Parser\Token;
+use MysqlEngine\TokenType;
 
 final class IntervalOperatorExpression extends Expression
 {

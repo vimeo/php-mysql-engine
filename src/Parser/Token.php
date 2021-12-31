@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\TokenType;
+use MysqlEngine\TokenType;
 
 class Token
 {
@@ -36,7 +36,11 @@ class Token
     public $parameterOffset;
 
     /**
+     * Token constructor.
      * @param TokenType::* $type
+     * @param string $value
+     * @param string $raw
+     * @param int $start
      */
     public function __construct(
         string $type,

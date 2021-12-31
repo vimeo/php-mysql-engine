@@ -1,7 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine;
 
+namespace MysqlEngine;
+
+use Exception;
 use PDO;
+use PDOStatement;
 
 trait FakePdoStatementTrait
 {
@@ -28,7 +31,7 @@ trait FakePdoStatementTrait
     /**
      * @var int
      */
-    private $fetchMode = \PDO::FETCH_BOTH;
+    private $fetchMode = PDO::FETCH_BOTH;
 
     private $fetchArgument;
 
@@ -43,12 +46,12 @@ trait FakePdoStatementTrait
     private $conn;
 
     /**
-     * @var ?\PDO
+     * @var ?PDO
      */
     private $real;
 
     /**
-     * @var ?\PDOStatement
+     * @var ?PDOStatement
      */
     private $realStatement = null;
 
@@ -57,7 +60,7 @@ trait FakePdoStatementTrait
      */
     private $boundValues = [];
 
-    public function __construct(FakePdoInterface $conn, string $sql, ?\PDO $real)
+    public function __construct(FakePdoInterface $conn, string $sql, ?PDO $real)
     {
         $this->sql = $sql;
         $this->conn = $conn;
@@ -74,7 +77,7 @@ trait FakePdoStatementTrait
      * @param int $type
      * @return bool
      */
-    public function bindValue($key, $value, $type = \PDO::PARAM_STR) : bool
+    public function bindValue($key, $value, $type = PDO::PARAM_STR): bool
     {
         if (\is_string($key) && $key[0] !== ':') {
             $key = ':' . $key;
@@ -118,42 +121,65 @@ trait FakePdoStatementTrait
     }
 
     /**
-     * Overriding execute method to add query logging
-     * @param ?array $params
+     * @param array|null $params
      * @return bool
+     * @throws Processor\ProcessorException
+     * @throws Processor\SQLFakeUniqueKeyViolation
      */
-    public function universalExecute(?array $params = null)
+    public function universalExecute(?array $params = null): bool
     {
-        $sql = $this->sql;
-
-        if ($this->realStatement) {
-            if ($this->realStatement->execute($params) === false) {
-                var_dump($this->sql);
-                throw new \UnexpectedValueException((string)$this->realStatement->errorInfo()[2]);
+        $queries = explode(';', $this->sql);
+        $res = [];
+        foreach ($queries as $query) {
+            $query = trim($query);
+            if (empty($query)) {
+                continue;
             }
+            $res[] = (int)$this->universalExecute_($query, $params);
+        }
+        $unique = array_flip(array_flip($res));
+
+        return count($unique) !== 1 ? false : (bool)$unique[0];
+    }
+
+    /**
+     * @param string $sql
+     * @param array|null $params
+     * @return bool
+     * @throws Processor\ProcessorException
+     * @throws Processor\SQLFakeUniqueKeyViolation
+     */
+    public function universalExecute_(string $sql, ?array $params = null): bool
+    {
+        if ($this->realStatement && $this->realStatement->execute($params) === false) {
+            echo $sql;
+            throw new \UnexpectedValueException((string)$this->realStatement->errorInfo()[2]);
         }
 
         if (stripos($sql, 'CREATE TABLE') !== false) {
-            $create_queries = (new Parser\CreateTableParser())->parse($sql);
+            $createQueries = (new Parser\CreateTableParser())->parse($sql);
 
-            foreach ($create_queries as $create_query) {
+            foreach ($createQueries as $createQuery) {
+                if (strpos($createQuery->name, '.')) {
+                    [$databaseName, $tableName] = explode('.', $createQuery->name, 2);
+                } else {
+                    $databaseName = $this->conn->getDatabaseName();
+                    $tableName = $createQuery->name;
+                }
                 $this->conn->getServer()->addTableDefinition(
-                    $this->conn->getDatabaseName(),
-                    $create_query->name,
+                    $databaseName,
+                    $tableName,
                     Processor\CreateProcessor::makeTableDefinition(
-                        $create_query,
-                        $this->conn->getDatabaseName()
+                        $createQuery,
+                        $databaseName
                     )
                 );
             }
-
             return true;
         }
 
-        //echo "\n" . $sql . "\n";
-
         try {
-            $parsed_query = Parser\SQLParser::parse($sql);
+            $parsedQuery = Parser\SQLParser::parse($sql);
         } catch (Parser\LexerException $parse_exception) {
             throw new \UnexpectedValueException(
                 'The SQL code ' . $sql . ' could not be converted to parser tokens: ' . $parse_exception->getMessage(),
@@ -172,13 +198,13 @@ trait FakePdoStatementTrait
         $this->resultCursor = 0;
         $this->affectedRows = 0;
 
-        switch (get_class($parsed_query)) {
+        switch (get_class($parsedQuery)) {
             case Query\SelectQuery::class:
                 try {
                     $raw_result = Processor\SelectProcessor::process(
                         $this->conn,
                         new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
-                        $parsed_query
+                        $parsedQuery
                     );
                 } catch (Processor\ProcessorException $runtime_exception) {
                     throw new \UnexpectedValueException(
@@ -192,7 +218,7 @@ trait FakePdoStatementTrait
 
                 if ($this->realStatement) {
                     $fake_result = $this->result;
-                    $real_result = $this->realStatement->fetchAll(\PDO::FETCH_ASSOC);
+                    $real_result = $this->realStatement->fetchAll(PDO::FETCH_ASSOC);
 
                     if ($fake_result) {
                         if ($this->conn->shouldStringifyResult()) {
@@ -226,7 +252,7 @@ trait FakePdoStatementTrait
                 $this->affectedRows = Processor\InsertProcessor::process(
                     $this->conn,
                     new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
-                    $parsed_query
+                    $parsedQuery
                 );
 
                 break;
@@ -235,7 +261,7 @@ trait FakePdoStatementTrait
                 $this->affectedRows = Processor\UpdateProcessor::process(
                     $this->conn,
                     new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
-                    $parsed_query
+                    $parsedQuery
                 );
 
                 break;
@@ -244,19 +270,19 @@ trait FakePdoStatementTrait
                 $this->affectedRows = Processor\DeleteProcessor::process(
                     $this->conn,
                     new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
-                    $parsed_query
+                    $parsedQuery
                 );
 
                 break;
 
             case Query\TruncateQuery::class:
-                [$databaseName, $tableName] = Processor\Processor::parseTableName($this->conn, $parsed_query->table);
+                [$databaseName, $tableName] = Processor\Processor::parseTableName($this->conn, $parsedQuery->table);
                 $this->conn->getServer()->resetTable($databaseName, $tableName);
 
                 break;
 
             case Query\DropTableQuery::class:
-                [$databaseName, $tableName] = Processor\Processor::parseTableName($this->conn, $parsed_query->table);
+                [$databaseName, $tableName] = Processor\Processor::parseTableName($this->conn, $parsedQuery->table);
                 $this->conn->getServer()->dropTable($databaseName, $tableName);
 
                 break;
@@ -264,9 +290,9 @@ trait FakePdoStatementTrait
             case Query\ShowTablesQuery::class:
                 if ($this->conn->getServer()->getTable(
                     $this->conn->getDatabaseName(),
-                    $parsed_query->pattern
+                    $parsedQuery->pattern
                 )) {
-                    $this->result = [[$parsed_query->sql => $parsed_query->pattern]];
+                    $this->result = [[$parsedQuery->sql => $parsedQuery->pattern]];
                 } else {
                     $this->result = [];
                 }
@@ -279,11 +305,35 @@ trait FakePdoStatementTrait
                     Processor\ShowIndexProcessor::process(
                         $this->conn,
                         new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
-                        $parsed_query
+                        $parsedQuery
                     )
                 );
                 break;
 
+            case Query\ShowColumnsQuery::class:
+                $this->result = self::processResult(
+                    $this->conn,
+                    Processor\ShowColumnsProcessor::process(
+                        $this->conn,
+                        new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
+                        $parsedQuery
+                    )
+                );
+
+                break;
+
+            case Query\AlterTableAutoincrementQuery::class:
+                [$databaseName, $tableName] = Processor\Processor::parseTableName($this->conn, $parsedQuery->table);
+                $td = $this->conn->getServer()->getTableDefinition($databaseName, $tableName);
+                if (is_null($td)) {
+                    throw new \UnexpectedValueException('Unsupported operation type ' . $sql);
+                }
+                foreach ($td->columns as $columnName => $column) {
+                    if ($column instanceof Schema\Column\IntegerColumn && $column->isAutoIncrement()) {
+                        $td->autoIncrementOffsets[$columnName] = (int)$parsedQuery->value - 1;
+                    }
+                }
+                break;
             default:
                 throw new \UnexpectedValueException('Unsupported operation type ' . $sql);
         }
@@ -312,7 +362,7 @@ trait FakePdoStatementTrait
         return $result;
     }
 
-    public function columnCount() : int
+    public function columnCount(): int
     {
         if (!$this->result) {
             return 0;
@@ -321,23 +371,25 @@ trait FakePdoStatementTrait
         return \count(\reset($this->result));
     }
 
-    public function rowCount() : int
+    public function rowCount(): int
     {
         return $this->affectedRows;
     }
 
     /**
-     * @param int $fetch_style
-     * @param int $cursor_orientation
+     * @param int $fetchMode
+     * @param int $cursorOrientation
      * @param int $cursor_offset
+     * @return array|false|mixed|null[]|object|string[]|null
+     * @throws Exception
      */
     public function fetch(
-        $fetch_style = -123,
-        $cursor_orientation = \PDO::FETCH_ORI_NEXT,
+        $fetchMode = -123,
+        $cursorOrientation = PDO::FETCH_ORI_NEXT,
         $cursor_offset = 0
     ) {
-        if ($fetch_style === -123) {
-            $fetch_style = $this->fetchMode;
+        if ($fetchMode === -123) {
+            $fetchMode = $this->fetchMode;
         }
 
         $row = $this->result[$this->resultCursor + $cursor_offset] ?? null;
@@ -354,37 +406,37 @@ trait FakePdoStatementTrait
             $row = self::lowercaseKeys($row);
         }
 
-        if ($fetch_style === \PDO::FETCH_ASSOC) {
+        if ($fetchMode === PDO::FETCH_ASSOC) {
             $this->resultCursor++;
 
             return $row;
         }
 
-        if ($fetch_style === \PDO::FETCH_NUM) {
+        if ($fetchMode === PDO::FETCH_NUM) {
             $this->resultCursor++;
 
             return \array_values($row);
         }
 
-        if ($fetch_style === \PDO::FETCH_COLUMN) {
+        if ($fetchMode === PDO::FETCH_COLUMN) {
             $this->resultCursor++;
 
             return \array_values($row)[0] ?? null;
         }
 
-        if ($fetch_style === \PDO::FETCH_BOTH) {
+        if ($fetchMode === PDO::FETCH_BOTH) {
             $this->resultCursor++;
 
             return array_merge($row, \array_values($row));
         }
 
-        if ($fetch_style === \PDO::FETCH_CLASS) {
+        if ($fetchMode === PDO::FETCH_CLASS) {
             $this->resultCursor++;
 
             return self::convertRowToObject($row, $this->fetchArgument, $this->fetchConstructorArgs);
         }
 
-        throw new \Exception('not implemented');
+        throw new Exception('not implemented');
     }
 
     /**
@@ -394,7 +446,7 @@ trait FakePdoStatementTrait
     public function fetchColumn($column = 0)
     {
         /** @var array<int, scalar>|false $row */
-        $row = $this->fetch(\PDO::FETCH_NUM);
+        $row = $this->fetch(PDO::FETCH_NUM);
         if ($row === false) {
             return $row;
         }
@@ -406,13 +458,15 @@ trait FakePdoStatementTrait
     }
 
     /**
-     * @param  int $fetch_style
-     * @param  mixed      $args
+     * @param int $fetchMode
+     * @param mixed ...$args
+     * @return array
+     * @throws Exception
      */
-    public function universalFetchAll(int $fetch_style = -123, ...$args) : array
+    public function universalFetchAll(int $fetchMode = -123, ...$args): array
     {
-        if ($fetch_style === -123) {
-            $fetch_style = $this->fetchMode;
+        if ($fetchMode === -123) {
+            $fetchMode = $this->fetchMode;
             $fetch_argument = $this->fetchArgument;
             $ctor_args = $this->fetchConstructorArgs;
         } else {
@@ -420,7 +474,7 @@ trait FakePdoStatementTrait
             $ctor_args = $args[1] ?? [];
         }
 
-        if ($fetch_style === \PDO::FETCH_ASSOC) {
+        if ($fetchMode === PDO::FETCH_ASSOC) {
             return array_map(
                 function ($row) {
                     if ($this->conn->shouldStringifyResult()) {
@@ -437,7 +491,7 @@ trait FakePdoStatementTrait
             );
         }
 
-        if ($fetch_style === \PDO::FETCH_NUM) {
+        if ($fetchMode === PDO::FETCH_NUM) {
             return array_map(
                 function ($row) {
                     if ($this->conn->shouldStringifyResult()) {
@@ -450,7 +504,7 @@ trait FakePdoStatementTrait
             );
         }
 
-        if ($fetch_style === \PDO::FETCH_BOTH) {
+        if ($fetchMode === PDO::FETCH_BOTH) {
             return array_map(
                 function ($row) {
                     if ($this->conn->shouldStringifyResult()) {
@@ -467,7 +521,7 @@ trait FakePdoStatementTrait
             );
         }
 
-        if ($fetch_style === \PDO::FETCH_COLUMN && $fetch_argument !== null) {
+        if ($fetchMode === PDO::FETCH_COLUMN && $fetch_argument !== null) {
             return \array_column(
                 array_map(
                     function ($row) {
@@ -483,7 +537,7 @@ trait FakePdoStatementTrait
             );
         }
 
-        if ($fetch_style === \PDO::FETCH_CLASS) {
+        if ($fetchMode === PDO::FETCH_CLASS) {
             if (!$this->result) {
                 return [];
             }
@@ -503,15 +557,19 @@ trait FakePdoStatementTrait
                 $this->result
             );
         }
+        if ($fetchMode === PDO::FETCH_OBJ) {
+            $this->affectedRows++;
+            return [(object)$this->result];
+        }
 
-        throw new \Exception('Fetch style not implemented');
+        throw new Exception('Fetch style not implemented');
     }
 
     /**
-     * @param  int $fetch_style
-     * @param  mixed      $args
+     * @param int $fetch_style
+     * @param mixed $args
      */
-    public function universalSetFetchMode(int $mode, ...$args) : bool
+    public function universalSetFetchMode(int $mode, ...$args): bool
     {
         $fetch_argument = $args[0] ?? null;
         $ctorargs = $args[1] ?? [];
@@ -562,7 +620,7 @@ trait FakePdoStatementTrait
     {
         return \array_map(
             function ($value) {
-                return $value === null ? $value : (string) $value;
+                return $value === null ? $value : (string)$value;
             },
             $row
         );
@@ -589,16 +647,16 @@ trait FakePdoStatementTrait
      * @psalm-taint-sink callable $class
      *
      * @template T
-     * @param    class-string<T>|null $class
-     * @param    array|null $ctorArgs
+     * @param class-string<T>|null $class
+     * @param array|null $ctorArgs
      * @return   false|T
      */
     public function universalFetchObject(?string $class = \stdClass::class, ?array $ctorArgs = null)
     {
-        throw new \Exception('not implemented');
+        throw new Exception('not implemented');
     }
 
-    private function getExecutedSql(?array $params) : string
+    private function getExecutedSql(?array $params): string
     {
         if (!$params) {
             return $this->sql;
@@ -614,17 +672,17 @@ trait FakePdoStatementTrait
             $sql = preg_replace(
                 '/:' . $key . '(?![a-z_A-Z0-9])/',
                 \is_string($value) || \is_object($value)
-                    ? "'" . str_replace("'", "\\'", (string) $value) . "'"
+                    ? "'" . str_replace("'", "\\'", (string)$value) . "'"
                     : ($value === null
-                        ? 'NULL'
-                        : ($value === true
-                            ? 'TRUE'
-                            : ($value === false
-                                ? 'FALSE'
-                                : (string) $value
-                            )
+                    ? 'NULL'
+                    : ($value === true
+                        ? 'TRUE'
+                        : ($value === false
+                            ? 'FALSE'
+                            : (string)$value
                         )
-                    ),
+                    )
+                ),
                 $sql
             );
         }

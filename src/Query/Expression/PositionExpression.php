@@ -1,9 +1,9 @@
 <?php
-namespace Vimeo\MysqlEngine\Query\Expression;
+namespace MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\Parser\Token;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
-use Vimeo\MysqlEngine\TokenType;
+use MysqlEngine\Parser\Token;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\TokenType;
 
 final class PositionExpression extends Expression
 {

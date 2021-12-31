@@ -1,8 +1,8 @@
 <?php
-namespace Vimeo\MysqlEngine\Query;
+namespace MysqlEngine\Query;
 
-use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\Expression\BinaryOperatorExpression;
+use MysqlEngine\Query\Expression\Expression;
 
 final class InsertQuery
 {

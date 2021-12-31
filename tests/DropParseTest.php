@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Tests;
+namespace MysqlEngine\Tests;
 
 class DropParseTest extends \PHPUnit\Framework\TestCase
 {
@@ -7,9 +7,9 @@ class DropParseTest extends \PHPUnit\Framework\TestCase
     {
         $query = 'DROP TABLE IF EXISTS `video_game_characters`';
 
-        $drop_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($query);
+        $drop_query = \MysqlEngine\Parser\SQLParser::parse($query);
 
-        $this->assertInstanceOf(\Vimeo\MysqlEngine\Query\DropTableQuery::class, $drop_query);
+        $this->assertInstanceOf(\MysqlEngine\Query\DropTableQuery::class, $drop_query);
         $this->assertSame('video_game_characters', $drop_query->table);
     }
 }

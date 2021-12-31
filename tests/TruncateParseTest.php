@@ -1,13 +1,13 @@
 <?php
 
-namespace Vimeo\MysqlEngine\Tests;
+namespace MysqlEngine\Tests;
 
-use Vimeo\MysqlEngine\Parser\ParserException;
-use Vimeo\MysqlEngine\Parser\SQLParser;
-use Vimeo\MysqlEngine\Parser\Token;
-use Vimeo\MysqlEngine\Parser\TruncateParser;
-use Vimeo\MysqlEngine\Query\TruncateQuery;
-use Vimeo\MysqlEngine\TokenType;
+use MysqlEngine\Parser\ParserException;
+use MysqlEngine\Parser\SQLParser;
+use MysqlEngine\Parser\Token;
+use MysqlEngine\Parser\TruncateParser;
+use MysqlEngine\Query\TruncateQuery;
+use MysqlEngine\TokenType;
 
 use function array_shift;
 use function sprintf;

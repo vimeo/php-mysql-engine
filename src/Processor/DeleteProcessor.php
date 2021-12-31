@@ -1,14 +1,14 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor;
+namespace MysqlEngine\Processor;
 
-use Vimeo\MysqlEngine\Query\DeleteQuery;
+use MysqlEngine\Query\DeleteQuery;
 
 final class DeleteProcessor extends Processor
 {
     /**
      * @return int
      */
-    public static function process(\Vimeo\MysqlEngine\FakePdoInterface $conn, Scope $scope, DeleteQuery $stmt)
+    public static function process(\MysqlEngine\FakePdoInterface $conn, Scope $scope, DeleteQuery $stmt)
     {
         ($__tmp1__ = $stmt->fromClause) !== null ? $__tmp1__ : (function () {
             throw new \TypeError('Failed assertion');
@@ -57,7 +57,7 @@ final class DeleteProcessor extends Processor
      * @return int
      */
     protected static function applyDelete(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         string $database,
         string $table_name,
         array $filtered_rows,

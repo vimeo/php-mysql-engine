@@ -1,11 +1,11 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor\Expression;
+namespace MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Processor\ProcessorException;
-use Vimeo\MysqlEngine\Query\Expression\UnaryExpression;
-use Vimeo\MysqlEngine\Processor\QueryResult;
-use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Query\Expression\UnaryExpression;
+use MysqlEngine\Processor\QueryResult;
+use MysqlEngine\Processor\Scope;
+use MysqlEngine\Schema\Column;
 
 final class UnaryEvaluator
 {
@@ -15,7 +15,7 @@ final class UnaryEvaluator
      * @return mixed
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         UnaryExpression $expr,
         array $row,

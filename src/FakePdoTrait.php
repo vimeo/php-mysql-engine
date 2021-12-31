@@ -1,5 +1,8 @@
 <?php
-namespace Vimeo\MysqlEngine;
+
+namespace MysqlEngine;
+
+use UnexpectedValueException;
 
 trait FakePdoTrait
 {
@@ -37,23 +40,23 @@ trait FakePdoTrait
     public $strict_mode = false;
 
     /**
-     * @var ?string
+     * @var string
      * @readonly
      */
-    public $databaseName = null;
+    public $databaseName;
 
     /**
-     * @param array<string>  $options
+     * @param array<string> $options
      */
     public function __construct(string $dsn, string $username = '', string $passwd = '', array $options = [])
     {
-        //$this->real = new \PDO($dsn, $username, $passwd, $options);
-
         $dsn = \Nyholm\Dsn\DsnParser::parse($dsn);
         $host = $dsn->getHost();
 
-        if (preg_match('/dbname=([a-zA-Z0-9_]+);/', $host, $matches)) {
+        if (preg_match('/dbname=([a-zA-Z0-9_]+)(?:;|$)/', $host, $matches)) {
             $this->databaseName = $matches[1];
+        } else {
+            throw new \PDOException("SQLSTATE[HY000]: Invalid dbname");
         }
 
         // do a quick check for this string – hacky but fast
@@ -63,10 +66,15 @@ trait FakePdoTrait
         $this->server = Server::getOrCreate('primary');
     }
 
-    public function setAttribute($key, $value)
+    /**
+     * @param $key
+     * @param $value
+     * @return bool
+     */
+    public function setAttribute($key, $value): bool
     {
         if ($key === \PDO::ATTR_EMULATE_PREPARES) {
-            $this->stringifyResult = (bool) $value;
+            $this->stringifyResult = (bool)$value;
         }
 
         if ($key === \PDO::ATTR_CASE && $value === \PDO::CASE_LOWER) {
@@ -87,39 +95,79 @@ trait FakePdoTrait
         return true;
     }
 
-    public function getServer() : Server
+    /**
+     * @param $key
+     * @return int|string|null
+     * @psalm-suppress MissingParamType
+     */
+    public function getAttribute($key)
+    {
+        switch ($key) {
+            case \PDO::ATTR_CASE:
+                $value = $this->lowercaseResultKeys ? \PDO::CASE_LOWER : \PDO::CASE_UPPER;
+                break;
+            case \PDO::ATTR_SERVER_VERSION:
+                $value = '5.7.0';
+                break;
+            default:
+                $value = null;
+        }
+
+        return $value;
+    }
+
+
+    public function getServer(): Server
     {
         return $this->server;
     }
 
-    public function getDatabaseName() : ?string
+    /**
+     * @return string
+     */
+    public function getDatabaseName(): string
     {
         return $this->databaseName;
     }
 
+    /**
+     * @return bool
+     */
     public function shouldStringifyResult(): bool
     {
         return $this->stringifyResult;
     }
 
+    /**
+     * @return bool
+     */
     public function shouldLowercaseResultKeys(): bool
     {
         return $this->lowercaseResultKeys;
     }
 
-    public function setLastInsertId(string $last_insert_id) : void
+    /**
+     * @param string $lastInsertId
+     * @return void
+     */
+    public function setLastInsertId(string $lastInsertId): void
     {
-        $this->lastInsertId = $last_insert_id;
+        $this->lastInsertId = $lastInsertId;
     }
 
-    public function lastInsertId($seqname = null) : string
+    /**
+     * @param string $name [optional] <p>
+     * @psalm-suppress MissingParamType
+     * @psalm-suppress MissingReturnType
+     */
+    public function lastInsertId($name = null)
     {
         if ($this->real) {
-            $real_last_insert_id = $this->real->lastInsertId($seqname);
-            if ($this->lastInsertId !== $real_last_insert_id) {
-                throw new \UnexpectedValueException(
+            $realLastInsertId = $this->real->lastInsertId($name);
+            if ($this->lastInsertId !== $realLastInsertId) {
+                throw new UnexpectedValueException(
                     'different last insert id – saw ' . $this->lastInsertId
-                        . ' but MySQL produced ' . $real_last_insert_id
+                    . ' but MySQL produced ' . $realLastInsertId
                 );
             }
         }
@@ -127,12 +175,18 @@ trait FakePdoTrait
         return $this->lastInsertId;
     }
 
-    public function useStrictMode() : bool
+    /**
+     * @return bool
+     */
+    public function useStrictMode(): bool
     {
         return $this->strict_mode;
     }
 
-    public function beginTransaction()
+    /**
+     * @return bool
+     */
+    public function beginTransaction(): bool
     {
         if (Server::hasSnapshot('transaction')) {
             return false;
@@ -142,12 +196,19 @@ trait FakePdoTrait
         return true;
     }
 
-    public function commit()
+    /**
+     * @return bool
+     */
+    public function commit(): bool
     {
         return Server::deleteSnapshot('transaction');
     }
 
-    public function rollback()
+    /**
+     * @return bool
+     * @throws Processor\ProcessorException
+     */
+    public function rollback(): bool
     {
         if (!Server::hasSnapshot('transaction')) {
             return false;
@@ -157,7 +218,10 @@ trait FakePdoTrait
         return true;
     }
 
-    public function inTransaction()
+    /**
+     * @return bool
+     */
+    public function inTransaction(): bool
     {
         return Server::hasSnapshot('transaction');
     }
@@ -170,7 +234,7 @@ trait FakePdoTrait
     {
         $statement = trim($statement);
 
-        if (strpos($statement, 'SET ')===0) {
+        if (strpos($statement, 'SET ') === 0) {
             return false;
         }
 
@@ -188,7 +252,7 @@ trait FakePdoTrait
      * @param int $parameter_type
      * @return string
      */
-    public function quote($string, $parameter_type = \PDO::PARAM_STR)
+    public function quote($string, $parameter_type = \PDO::PARAM_STR): string
     {
         // @see https://github.com/php/php-src/blob/php-8.0.2/ext/mysqlnd/mysqlnd_charset.c#L860-L878
         $quoted = strtr($string, [

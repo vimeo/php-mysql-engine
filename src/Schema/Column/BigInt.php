@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
-class BigInt extends \Vimeo\MysqlEngine\Schema\Column implements NumberColumn, IntegerColumn, Defaultable
+class BigInt extends \MysqlEngine\Schema\Column implements NumberColumn, IntegerColumn, DefaultTable
 {
     use IntegerColumnTrait;
     use MySqlDefaultTrait;

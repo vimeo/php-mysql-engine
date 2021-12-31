@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
 trait NumberColumnTrait
 {

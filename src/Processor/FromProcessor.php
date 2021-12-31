@@ -1,13 +1,13 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor;
+namespace MysqlEngine\Processor;
 
-use Vimeo\MysqlEngine\Query\FromClause;
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\Query\FromClause;
+use MysqlEngine\Schema\Column;
 
 final class FromProcessor
 {
     public static function process(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         FromClause $stmt
     ) : QueryResult {
@@ -20,7 +20,7 @@ final class FromProcessor
 
         foreach ($stmt->tables as $table) {
             if (\array_key_exists('subquery', $table)) {
-                $subquery_result = \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+                $subquery_result = \MysqlEngine\Processor\SelectProcessor::process(
                     $conn,
                     $scope,
                     $table['subquery']->query

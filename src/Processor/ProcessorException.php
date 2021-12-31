@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor;
+namespace MysqlEngine\Processor;
 
 class ProcessorException extends \Exception
 {

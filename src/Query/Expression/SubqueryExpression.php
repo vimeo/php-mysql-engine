@@ -1,9 +1,9 @@
 <?php
-namespace Vimeo\MysqlEngine\Query\Expression;
+namespace MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\Query\SelectQuery;
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Processor\SelectProcessor;
+use MysqlEngine\Query\SelectQuery;
+use MysqlEngine\TokenType;
+use MysqlEngine\Processor\SelectProcessor;
 
 final class SubqueryExpression extends Expression
 {

@@ -1,28 +1,36 @@
 <?php
-namespace Vimeo\MysqlEngine\Php7;
+namespace MysqlEngine\Php7;
+
+use Exception;
+use MysqlEngine\FakePdoStatementTrait;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Processor\SQLFakeUniqueKeyViolation;
 
 class FakePdoStatement extends \PDOStatement
 {
-    use \Vimeo\MysqlEngine\FakePdoStatementTrait;
+    use FakePdoStatementTrait;
 
     /**
      * Overriding execute method to add query logging
      * @param ?array $params
      * @return bool
+     * @throws ProcessorException|SQLFakeUniqueKeyViolation
      */
-    public function execute($params = null)
+    public function execute($params = null): bool
     {
         return $this->universalExecute($params);
     }
 
     /**
-     * @param  int $fetch_style
-     * @param  string $fetch_argument
-     * @param  array $ctor_args
+     * @param int $mode
+     * @param mixed $fetch_argument
+     * @param mixed $args
+     * @return array
+     * @throws Exception
      */
-    public function fetchAll($fetch_style = -123, $fetch_argument = null, $ctor_args = null) : array
+    public function fetchAll($mode = -123, $fetch_argument = null, $args = null): array
     {
-        return $this->universalFetchAll($fetch_style, $fetch_argument, $ctor_args);
+        return $this->universalFetchAll($mode, $fetch_argument, $args);
     }
 
     /**

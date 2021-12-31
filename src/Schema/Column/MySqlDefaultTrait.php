@@ -1,38 +1,48 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
 
+namespace MysqlEngine\Schema\Column;
+
+/**
+ * Trait MySqlDefaultTrait
+ * @package MysqlEngine\Schema\Column
+ */
 trait MySqlDefaultTrait
 {
     /**
-     * @var mixed
+     * @var ?string
      */
-    protected $mysql_default = null;
+    protected $mysqlDefault;
 
     /**
      * @var bool
      */
-    protected $has_mysql_default = false;
+    protected $hasMysqlDefault = false;
 
     /**
+     * @param string|null $mysqlDefault
      * @return static
      */
-    public function setDefault($mysql_default)
+    public function setDefault(?string $mysqlDefault)
     {
-        $this->mysql_default = $mysql_default;
-        $this->has_mysql_default = true;
+        $this->mysqlDefault = $mysqlDefault;
+        $this->hasMysqlDefault = true;
+
         return $this;
     }
 
-    public function hasDefault() : bool
+    /**
+     * @return bool
+     */
+    public function hasDefault(): bool
     {
-        return $this->has_mysql_default;
+        return $this->hasMysqlDefault;
     }
 
     /**
-     * @return mixed
+     * @return string|null
      */
-    public function getDefault()
+    public function getDefault(): ?string
     {
-        return $this->mysql_default;
+        return $this->mysqlDefault;
     }
 }

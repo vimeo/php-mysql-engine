@@ -1,11 +1,11 @@
 <?php
 
 
-namespace Vimeo\MysqlEngine\Processor;
+namespace MysqlEngine\Processor;
 
-use Vimeo\MysqlEngine\FakePdoInterface;
-use Vimeo\MysqlEngine\Query\ShowIndexQuery;
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\FakePdoInterface;
+use MysqlEngine\Query\ShowIndexQuery;
+use MysqlEngine\Schema\Column;
 use function PHPUnit\Framework\assertIsArray;
 
 class ShowIndexProcessor extends Processor

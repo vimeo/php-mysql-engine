@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
 trait IntegerColumnTrait
 {
@@ -18,6 +18,11 @@ trait IntegerColumnTrait
      */
     protected $unsigned = false;
 
+    /**
+     * IntegerColumnTrait constructor.
+     * @param bool $unsigned
+     * @param int $integer_display_width
+     */
     public function __construct(bool $unsigned, int $integer_display_width)
     {
         $this->unsigned = $unsigned;
@@ -59,12 +64,12 @@ trait IntegerColumnTrait
     public function getPhpCode() : string
     {
         $default = '';
-
-        if ($this instanceof Defaultable && $this->hasDefault()) {
+        $mysqlDefault = $this->getDefault();
+        if ($this instanceof DefaultTable && $this->hasDefault()) {
             $default = '->setDefault('
-                . ($this->getDefault() === null
+                . ($mysqlDefault === null
                     ? 'null'
-                    : '\'' . $this->getDefault() . '\'')
+                    : '\'' . $mysqlDefault . '\'')
                 . ')';
         }
 

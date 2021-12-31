@@ -1,15 +1,15 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor;
+namespace MysqlEngine\Processor;
 
-use Vimeo\MysqlEngine\DataIntegrity;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\InsertQuery;
-use Vimeo\MysqlEngine\Schema\Column\IntegerColumn;
+use MysqlEngine\DataIntegrity;
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Query\InsertQuery;
+use MysqlEngine\Schema\Column\IntegerColumn;
 
 final class InsertProcessor extends Processor
 {
     public static function process(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         InsertQuery $stmt
     ) : int {

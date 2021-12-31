@@ -1,23 +1,28 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor;
+namespace MysqlEngine\Processor;
 
-use Vimeo\MysqlEngine\DataIntegrity;
-use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
-use Vimeo\MysqlEngine\Query\Expression\NamedPlaceholderExpression;
-use Vimeo\MysqlEngine\Query\LimitClause;
-use Vimeo\MysqlEngine\Schema\Column\IntegerColumn;
-use Vimeo\MysqlEngine\Schema\TableDefinition;
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\DataIntegrity;
+use MysqlEngine\Processor\Expression\Evaluator;
+use MysqlEngine\Processor\Expression\NamedPlaceholderEvaluator;
+use MysqlEngine\Processor\Expression\QuestionMarkPlaceholderEvaluator;
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Query\Expression\ConstantExpression;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\Expression\NamedPlaceholderExpression;
+use MysqlEngine\Query\LimitClause;
+use MysqlEngine\Schema\Column\IntegerColumn;
+use MysqlEngine\Schema\TableDefinition;
 
 abstract class Processor
 {
+    /**
+     * @throws ProcessorException
+     */
     protected static function applyWhere(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
-        Scope $scope,
-        ?\Vimeo\MysqlEngine\Query\Expression\Expression $where,
-        QueryResult $result
+        \MysqlEngine\FakePdoInterface $conn,
+        Scope                               $scope,
+        ?Expression                         $where,
+        QueryResult                         $result
     ) : QueryResult {
         if (!$where) {
             return $result;
@@ -26,7 +31,7 @@ abstract class Processor
         $rows = [];
 
         foreach ($result->rows as $i => $row) {
-            if (Expression\Evaluator::evaluate($conn, $scope, $where, $row, $result)) {
+            if (Evaluator::evaluate($conn, $scope, $where, $row, $result)) {
                 $rows[$i] = $row;
             }
         }
@@ -35,10 +40,10 @@ abstract class Processor
     }
 
     /**
-     * @param ?array<int, array{expression: \Vimeo\MysqlEngine\Query\Expression\Expression, direction: string}> $orders
+     * @param ?array<int, array{expression: Expression, direction: string}> $orders
      */
     protected static function applyOrderBy(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         ?array $orders,
         QueryResult $result
@@ -60,8 +65,8 @@ abstract class Processor
 
         $sort_fun = function (array $a, array $b) use ($conn, $scope, $orders, $result): int {
             foreach ($orders as $rule) {
-                $value_a = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $a, $result);
-                $value_b = Expression\Evaluator::evaluate($conn, $scope, $rule['expression'], $b, $result);
+                $value_a = Evaluator::evaluate($conn, $scope, $rule['expression'], $a, $result);
+                $value_b = Evaluator::evaluate($conn, $scope, $rule['expression'], $b, $result);
 
                 if ($value_a != $value_b) {
                     if ((\is_int($value_a) || \is_float($value_a)) && (\is_int($value_b) || \is_float($value_b))) {
@@ -111,17 +116,17 @@ abstract class Processor
         } elseif ($limit->offset instanceof ConstantExpression) {
             $offset = (int) $limit->offset->value;
         } elseif ($limit->offset instanceof NamedPlaceholderExpression) {
-            $offset = (int) Expression\NamedPlaceholderEvaluator::evaluate($scope, $limit->offset);
+            $offset = (int) NamedPlaceholderEvaluator::evaluate($scope, $limit->offset);
         } else {
-            $offset = (int) Expression\QuestionMarkPlaceholderEvaluator::evaluate($scope, $limit->offset);
+            $offset = (int) QuestionMarkPlaceholderEvaluator::evaluate($scope, $limit->offset);
         }
 
         if ($limit->rowcount instanceof ConstantExpression) {
             $rowcount = (int) $limit->rowcount->value;
         } elseif ($limit->rowcount instanceof NamedPlaceholderExpression) {
-            $rowcount = (int) Expression\NamedPlaceholderEvaluator::evaluate($scope, $limit->rowcount);
+            $rowcount = (int) NamedPlaceholderEvaluator::evaluate($scope, $limit->rowcount);
         } else {
-            $rowcount = (int) Expression\QuestionMarkPlaceholderEvaluator::evaluate($scope, $limit->rowcount);
+            $rowcount = (int) QuestionMarkPlaceholderEvaluator::evaluate($scope, $limit->rowcount);
         }
 
         return new QueryResult(
@@ -133,7 +138,7 @@ abstract class Processor
     /**
      * @return array{0:string, 1:string}
      */
-    public static function parseTableName(\Vimeo\MysqlEngine\FakePdoInterface $conn, string $table)
+    public static function parseTableName(\MysqlEngine\FakePdoInterface $conn, string $table)
     {
         if (\strpos($table, '.')) {
             $parts = \explode('.', $table);
@@ -151,13 +156,13 @@ abstract class Processor
     /**
      * @param array<int, array<string, mixed>>                                   $filtered_rows
      * @param array<int, array<string, mixed>>                                   $original_table
-     * @param list<\Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression> $set_clause
+     * @param list<\MysqlEngine\Query\Expression\BinaryOperatorExpression> $set_clause
      * @param array<string, mixed>|null                                          $values
      *
      * @return array{0:int, 1:array<int, array<string, mixed>>}
      */
     protected static function applySet(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         string $database,
         string $table_name,
@@ -204,7 +209,7 @@ abstract class Processor
 
                 foreach ($set_clauses as $clause) {
                     $existing_value = $row[$clause['column']] ?? null;
-                    $new_value = Expression\Evaluator::evaluate(
+                    $new_value = Evaluator::evaluate(
                         $conn,
                         $scope,
                         $clause['expression'],
@@ -234,7 +239,7 @@ abstract class Processor
             $row = [];
 
             foreach ($set_clauses as $clause) {
-                $row[$clause['column']] = Expression\Evaluator::evaluate(
+                $row[$clause['column']] = Evaluator::evaluate(
                     $conn,
                     $scope,
                     $clause['expression'],

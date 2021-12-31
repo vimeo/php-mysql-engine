@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema;
+namespace MysqlEngine\Schema;
 
 class Index
 {

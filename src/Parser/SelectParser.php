@@ -1,14 +1,15 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
-use Vimeo\MysqlEngine\Query\SelectQuery;
-use Vimeo\MysqlEngine\TokenType;
+namespace MysqlEngine\Parser;
+
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Query\Expression\ConstantExpression;
+use MysqlEngine\Query\SelectQuery;
+use MysqlEngine\TokenType;
 
 final class SelectParser
 {
-    const CLAUSE_ORDER = [
+    public const CLAUSE_ORDER = [
         'SELECT' => 1,
         'FROM' => 2,
         'WHERE' => 3,
@@ -18,24 +19,16 @@ final class SelectParser
         'LIMIT' => 7
     ];
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $currentClause = 'SELECT';
 
-    /**
-     * @var int
-     */
+    /** @var int */
     private $pointer;
 
-    /**
-     * @var array<int, Token>
-     */
+    /** @var array<int, Token> */
     private $tokens;
 
-    /**
-     * @var string
-     */
+    /** @var string */
     private $sql;
 
     /**
@@ -48,19 +41,23 @@ final class SelectParser
         $this->sql = $sql;
     }
 
-    public function parse() : SelectQuery
+    /**
+     * @return SelectQuery
+     * @throws ParserException
+     */
+    public function parse(): SelectQuery
     {
         // if the first part of this query is nested, we should be able to unwrap it safely
         while ($this->tokens[$this->pointer]->value === '(') {
             $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
 
-            $subquery_tokens = \array_slice(
+            $subQueryTokens = \array_slice(
                 $this->tokens,
                 $this->pointer + 1,
                 $close - $this->pointer - 1
             );
 
-            array_splice($this->tokens, $this->pointer, $close - $this->pointer + 1, $subquery_tokens);
+            array_splice($this->tokens, $this->pointer, $close - $this->pointer + 1, $subQueryTokens);
         }
 
         if ($this->tokens[$this->pointer]->value !== 'SELECT') {
@@ -94,7 +91,7 @@ final class SelectParser
         return $query;
     }
 
-    private function parseMainSelect() : SelectQuery
+    private function parseMainSelect(): SelectQuery
     {
         $query = new SelectQuery($this->sql, $this->tokens[$this->pointer]->start);
         $this->pointer++;
@@ -118,7 +115,7 @@ final class SelectParser
 
                     if ($query->needsSeparator) {
                         if (($token->type === TokenType::IDENTIFIER || $token->type === TokenType::STRING_CONSTANT)
-                        && !$query->mostRecentHasAlias
+                            && !$query->mostRecentHasAlias
                         ) {
                             $query->aliasRecentExpression($token->value);
                             break;
@@ -159,7 +156,7 @@ final class SelectParser
                     break;
                 case TokenType::CLAUSE:
                     if (\array_key_exists($token->value, self::CLAUSE_ORDER)
-                    && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token->value]
+                        && self::CLAUSE_ORDER[$this->currentClause] >= self::CLAUSE_ORDER[$token->value]
                     ) {
                         throw new ParserException("Unexpected {$token->value}");
                     }
@@ -167,7 +164,7 @@ final class SelectParser
                     switch ($token->value) {
                         case 'FROM':
                             $from = new FromParser($this->pointer, $this->tokens);
-                            list($this->pointer, $fromClause) = $from->parse();
+                            [$this->pointer, $fromClause] = $from->parse();
                             $query->fromClause = $fromClause;
                             break;
                         case 'WHERE':
@@ -186,9 +183,9 @@ final class SelectParser
                             while (true) {
                                 $expression_parser = new ExpressionParser($this->tokens, $this->pointer);
                                 $expression_parser->setSelectExpressions($query->selectExpressions);
-                                list($this->pointer, $expression) = $expression_parser->buildWithPointer();
+                                [$this->pointer, $expression] = $expression_parser->buildWithPointer();
                                 if ($expression instanceof ConstantExpression) {
-                                    $position = (int) $expression->value - 1;
+                                    $position = (int)$expression->value - 1;
                                     $expression = $query->selectExpressions[$position] ?? null;
                                     if ($expression === null) {
                                         throw new ParserException(
@@ -207,17 +204,17 @@ final class SelectParser
                             break;
                         case 'ORDER':
                             $p = new OrderByParser($this->pointer, $this->tokens, $query->selectExpressions);
-                            list($this->pointer, $query->orderBy) = $p->parse();
+                            [$this->pointer, $query->orderBy] = $p->parse();
                             break;
                         case 'HAVING':
                             $expression_parser = new ExpressionParser($this->tokens, $this->pointer);
                             $expression_parser->setSelectExpressions($query->selectExpressions);
-                            list($this->pointer, $expression) = $expression_parser->buildWithPointer();
+                            [$this->pointer, $expression] = $expression_parser->buildWithPointer();
                             $query->havingClause = $expression;
                             break;
                         case 'LIMIT':
                             $p = new LimitParser($this->pointer, $this->tokens);
-                            list($this->pointer, $query->limitClause) = $p->parse();
+                            [$this->pointer, $query->limitClause] = $p->parse();
                             break;
                         case 'UNION':
                         case 'EXCEPT':

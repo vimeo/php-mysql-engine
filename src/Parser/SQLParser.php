@@ -1,22 +1,26 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\{SelectQuery,
+namespace MysqlEngine\Parser;
+
+use MysqlEngine\TokenType;
+use MysqlEngine\Query\{AlterTableAutoincrementQuery,
+    SelectQuery,
     DeleteQuery,
     ShowIndexQuery,
     TruncateQuery,
     InsertQuery,
     UpdateQuery,
     DropTableQuery,
-    ShowTablesQuery};
+    ShowTablesQuery,
+    ShowColumnsQuery
+};
 
 final class SQLParser
 {
     /**
      * @var array<string, string>
      */
-    const CLAUSES = [
+    public const CLAUSES = [
         'SELECT' => true,
         'FROM' => true,
         'WHERE' => true,
@@ -40,7 +44,7 @@ final class SQLParser
     /**
      * @var array<string, string>
      */
-    const SEPARATORS = [
+    public const SEPARATORS = [
         ')' => true,
         ',' => true,
         ';' => true
@@ -49,7 +53,7 @@ final class SQLParser
     /**
      * @var array<string, string>
      */
-    const OPERATORS = [
+    public const OPERATORS = [
         'INTERVAL' => true,
         'COLLATE' => true,
         '!' => true,
@@ -97,7 +101,7 @@ final class SQLParser
     /**
      * @var array<string, string>
      */
-    const RESERVED_WORDS = [
+    public const RESERVED_WORDS = [
         'ASC' => true,
         'DESC' => true,
         'AS' => true,
@@ -141,11 +145,14 @@ final class SQLParser
         'TABLES' => true,
     ];
 
-    /** @var array<SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery> */
+    /** @var array<SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery|ShowColumnsQuery|AlterTableAutoincrementQuery> */
     private static $cache = [];
 
     /**
-     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery
+     * @param string $sql
+     * @return AlterTableAutoincrementQuery|DeleteQuery|DropTableQuery|InsertQuery|SelectQuery|ShowColumnsQuery|ShowIndexQuery|ShowTablesQuery|TruncateQuery|UpdateQuery
+     * @throws LexerException
+     * @throws ParserException
      */
     public static function parse(string $sql)
     {
@@ -157,43 +164,51 @@ final class SQLParser
     }
 
     /**
-     * @return SelectQuery|InsertQuery|UpdateQuery|TruncateQuery|DeleteQuery|DropTableQuery|ShowTablesQuery|ShowIndexQuery
+     * @param string $sql
+     * @return AlterTableAutoincrementQuery|DeleteQuery|DropTableQuery|InsertQuery|SelectQuery|ShowColumnsQuery|ShowIndexQuery|ShowTablesQuery|TruncateQuery|UpdateQuery
+     * @throws LexerException
+     * @throws ParserException
      */
     private static function parseImpl(string $sql)
     {
         $tokens = (new SQLLexer())->lex($sql);
         $tokens = self::buildTokenListFromLexemes($tokens);
         $token = $tokens[0];
-        if ($token->value === TokenType::PAREN) {
+        if ($token->type === TokenType::PAREN) {
             $close = self::findMatchingParen(0, $tokens);
             $tokens = \array_slice($tokens, 1, $close - 1);
             $token = $tokens[0];
         }
-        if ($token->type !== TokenType::CLAUSE) {
+        if ($token->type === TokenType::CLAUSE) {
+            $command = $token->value;
+        } elseif ($token->type === TokenType::IDENTIFIER) {
+            $nextToken = $tokens[1];
+            if ($nextToken->type === TokenType::RESERVED) {
+                $command = $token->value . ' ' . $nextToken->value;
+            } else {
+                throw new ParserException("Unexpected {$token->value}");
+            }
+        } else {
             throw new ParserException("Unexpected {$token->value}");
         }
-        switch ($token->value) {
+
+        switch ($command) {
             case 'SELECT':
-                $select = new SelectParser(0, $tokens, $sql);
-                return $select->parse();
+                return (new SelectParser(0, $tokens, $sql))->parse();
             case 'UPDATE':
-                $update = new UpdateParser($tokens, $sql);
-                return $update->parse();
+                return (new UpdateParser($tokens, $sql))->parse();
             case 'DELETE':
-                $delete = new DeleteParser($tokens, $sql);
-                return $delete->parse();
+                return (new DeleteParser($tokens, $sql))->parse();
             case 'INSERT':
-                $insert = new InsertParser($tokens, $sql);
-                return $insert->parse();
+                return (new InsertParser($tokens, $sql))->parse();
             case 'TRUNCATE':
-                $truncate = new TruncateParser($tokens, $sql);
-                return $truncate->parse();
+                return (new TruncateParser($tokens, $sql))->parse();
             case 'DROP':
-                $truncate = new DropParser($tokens, $sql);
-                return $truncate->parse();
+                return (new DropParser($tokens, $sql))->parse();
             case 'SHOW':
-                $truncate = new ShowParser($tokens, $sql);
-                return $truncate->parse();
+                return (new ShowParser($tokens, $sql))->parse();
+            case 'ALTER TABLE':
+                return (new AlterTableParser($tokens, $sql))->parse();
             default:
                 throw new ParserException("Unexpected {$token->value}");
         }
@@ -394,46 +409,48 @@ final class SQLParser
      * @param array<int, Token> $tokens
      *
      * @return int
+     * @throws ParserException
      */
-    public static function findMatchingParen(int $pointer, array $tokens)
+    public static function findMatchingParen(int $pointer, array $tokens): int
     {
         $paren_count = 0;
-        $remaining_tokens = \array_slice($tokens, $pointer);
-        foreach ($remaining_tokens as $i => $token) {
+        $remainingTokens = \array_slice($tokens, $pointer);
+        foreach ($remainingTokens as $key => $token) {
             if ($token->type === TokenType::PAREN) {
                 $paren_count++;
-            } else {
-                if ($token->type === TokenType::SEPARATOR && $token->value === ')') {
-                    $paren_count--;
-                    if ($paren_count === 0) {
-                        return $pointer + $i;
-                    }
+                continue;
+            }
+            if ($token->type === TokenType::SEPARATOR && $token->value === ')') {
+                $paren_count--;
+                if ($paren_count === 0) {
+                    return $pointer + $key;
                 }
             }
+
         }
         throw new ParserException("Unclosed parentheses at index {$pointer}");
     }
 
     /**
+     * @param int $pointer
      * @param array<int, Token> $tokens
      *
      * @return int
+     * @throws ParserException
      */
-    public static function findMatchingEnd(int $pointer, array $tokens)
+    public static function findMatchingEnd(int $pointer, array $tokens): int
     {
         $paren_count = 0;
         $remaining_tokens = \array_slice($tokens, $pointer);
         foreach ($remaining_tokens as $i => $token) {
-            if ($token->type === TokenType::OPERATOR
-                && $token->value === 'CASE'
-            ) {
+            if ($token->type === TokenType::OPERATOR && $token->value === 'CASE') {
                 $paren_count++;
-            } else {
-                if ($token->type === TokenType::OPERATOR && $token->value === 'END') {
-                    $paren_count--;
-                    if ($paren_count === 0) {
-                        return $pointer + $i;
-                    }
+                continue;
+            }
+            if ($token->type === TokenType::OPERATOR && $token->value === 'END') {
+                $paren_count--;
+                if ($paren_count === 0) {
+                    return $pointer + $i;
                 }
             }
         }
@@ -444,8 +461,10 @@ final class SQLParser
      * @param array<int, Token> $tokens
      *
      * @return int
+     * @throws ParserException
+     * @throws ParserException
      */
-    public static function skipIndexHints(int $pointer, array $tokens)
+    public static function skipIndexHints(int $pointer, array $tokens): int
     {
         $next_pointer = $pointer + 1;
         $next = $tokens[$next_pointer] ?? null;
@@ -563,6 +582,9 @@ final class SQLParser
         return $pointer;
     }
 
+    /**
+     * @return void
+     */
     public static function bustCache(): void
     {
         self::$cache = [];

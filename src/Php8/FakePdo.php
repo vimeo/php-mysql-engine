@@ -1,9 +1,9 @@
 <?php
-namespace Vimeo\MysqlEngine\Php8;
+namespace MysqlEngine\Php8;
 
 use PDO;
-use Vimeo\MysqlEngine\FakePdoInterface;
-use Vimeo\MysqlEngine\FakePdoTrait;
+use MysqlEngine\FakePdoInterface;
+use MysqlEngine\FakePdoTrait;
 
 class FakePdo extends PDO implements FakePdoInterface
 {

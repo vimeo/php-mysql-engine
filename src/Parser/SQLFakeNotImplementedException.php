@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
 class SQLFakeNotImplementedException extends \Exception
 {

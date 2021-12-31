@@ -1,9 +1,9 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\Query\DeleteQuery;
-use Vimeo\MysqlEngine\JoinType;
-use Vimeo\MysqlEngine\TokenType;
+use MysqlEngine\Query\DeleteQuery;
+use MysqlEngine\JoinType;
+use MysqlEngine\TokenType;
 
 final class DeleteParser
 {

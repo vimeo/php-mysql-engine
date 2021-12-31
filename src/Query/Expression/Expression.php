@@ -1,9 +1,9 @@
 <?php
-namespace Vimeo\MysqlEngine\Query\Expression;
+namespace MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\Parser\ParserException;
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Parser\Token;
+use MysqlEngine\Parser\ParserException;
+use MysqlEngine\TokenType;
+use MysqlEngine\Parser\Token;
 
 abstract class Expression
 {
@@ -38,7 +38,7 @@ abstract class Expression
     protected $evaluates_groups = false;
 
     /**
-     * @var ?\Vimeo\MysqlEngine\Schema\Column
+     * @var ?\MysqlEngine\Schema\Column
      */
     public $column;
 

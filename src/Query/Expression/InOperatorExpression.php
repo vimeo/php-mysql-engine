@@ -1,10 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine\Query\Expression;
+namespace MysqlEngine\Query\Expression;
 
-use Vimeo\MysqlEngine\Parser\ExpressionParser;
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
-use Vimeo\MysqlEngine\Parser\ParserException;
+use MysqlEngine\Parser\ExpressionParser;
+use MysqlEngine\TokenType;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Parser\ParserException;
 
 final class InOperatorExpression extends Expression
 {

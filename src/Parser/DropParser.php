@@ -1,8 +1,8 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\DropTableQuery;
+use MysqlEngine\TokenType;
+use MysqlEngine\Query\DropTableQuery;
 
 /**
  * Very limited parser for DROP TABLE [IF EXISTS] `table_name`

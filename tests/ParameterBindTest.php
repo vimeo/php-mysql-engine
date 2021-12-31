@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Vimeo\MysqlEngine\Tests;
+namespace MysqlEngine\Tests;
 
 use PHPUnit\Framework\TestCase;
 
@@ -55,9 +55,9 @@ class ParameterBindTest extends TestCase
     private static function getPdo(string $connection_string): \PDO
     {
         if (\PHP_MAJOR_VERSION === 8) {
-            return new \Vimeo\MysqlEngine\Php8\FakePdo($connection_string, '', '', []);
+            return new \MysqlEngine\Php8\FakePdo($connection_string, '', '', []);
         }
 
-        return new \Vimeo\MysqlEngine\Php7\FakePdo($connection_string, '', '', []);
+        return new \MysqlEngine\Php7\FakePdo($connection_string, '', '', []);
     }
 }

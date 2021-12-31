@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
 use function preg_split, preg_match;
 

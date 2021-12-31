@@ -1,10 +1,10 @@
 <?php
-namespace Vimeo\MysqlEngine\Query;
+namespace MysqlEngine\Query;
 
-use Vimeo\MysqlEngine\MultiOperand;
-use Vimeo\MysqlEngine\Parser\ParserException;
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\LimitClause;
+use MysqlEngine\MultiOperand;
+use MysqlEngine\Parser\ParserException;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\LimitClause;
 
 final class SelectQuery
 {

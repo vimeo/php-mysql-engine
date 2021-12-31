@@ -1,16 +1,16 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor\Expression;
+namespace MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\FakePdoInterface;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
-use Vimeo\MysqlEngine\Processor\QueryResult;
-use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\Expression\ConstantExpression;
-use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
-use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\FakePdoInterface;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Processor\QueryResult;
+use MysqlEngine\Processor\Scope;
+use MysqlEngine\Query\Expression\ColumnExpression;
+use MysqlEngine\Query\Expression\ConstantExpression;
+use MysqlEngine\Query\Expression\Expression;
+use MysqlEngine\Query\Expression\FunctionExpression;
+use MysqlEngine\Query\Expression\IntervalOperatorExpression;
+use MysqlEngine\Schema\Column;
 
 final class FunctionEvaluator
 {
@@ -364,7 +364,7 @@ final class FunctionEvaluator
                     return (float) $value;
 
                 case 'string':
-                    if ($column instanceof \Vimeo\MysqlEngine\Schema\Column\Decimal) {
+                    if ($column instanceof \MysqlEngine\Schema\Column\Decimal) {
                         /** @var numeric-string */
                         return \number_format((float) $value, $column->getDecimalScale(), '.', '');
                     }

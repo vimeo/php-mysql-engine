@@ -1,14 +1,15 @@
 <?php
 
-namespace Vimeo\MysqlEngine\Tests;
+namespace MysqlEngine\Tests;
 
+use PDO;
 use PDOException;
 
 class FakePdoTest extends \PHPUnit\Framework\TestCase
 {
     public function tearDown(): void
     {
-        \Vimeo\MysqlEngine\Server::reset();
+        \MysqlEngine\Server::reset();
     }
 
     public function testMinimalTransaction(): void
@@ -55,14 +56,19 @@ class FakePdoTest extends \PHPUnit\Framework\TestCase
         ];
     }
 
-    private static function getPdo(string $connection_string, bool $strict_mode = false) : \PDO
+    /**
+     * @param string $connectionString
+     * @param bool $strictMode
+     * @return PDO
+     */
+    private static function getPdo(string $connectionString, bool $strictMode = false) : PDO
     {
-        $options = $strict_mode ? [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="STRICT_ALL_TABLES"'] : [];
+        $options = $strictMode ? [PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="STRICT_ALL_TABLES"'] : [];
 
         if (\PHP_MAJOR_VERSION === 8) {
-            return new \Vimeo\MysqlEngine\Php8\FakePdo($connection_string, '', '', $options);
+            return new \MysqlEngine\Php8\FakePdo($connectionString, '', '', $options);
         }
 
-        return new \Vimeo\MysqlEngine\Php7\FakePdo($connection_string, '', '', $options);
+        return new \MysqlEngine\Php7\FakePdo($connectionString, '', '', $options);
     }
 }

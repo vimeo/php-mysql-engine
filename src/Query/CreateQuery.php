@@ -1,5 +1,5 @@
 <?php
-namespace Vimeo\MysqlEngine\Query;
+namespace MysqlEngine\Query;
 
 class CreateQuery
 {

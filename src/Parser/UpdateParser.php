@@ -1,9 +1,9 @@
 <?php
-namespace Vimeo\MysqlEngine\Parser;
+namespace MysqlEngine\Parser;
 
-use Vimeo\MysqlEngine\JoinType;
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Query\UpdateQuery;
+use MysqlEngine\JoinType;
+use MysqlEngine\TokenType;
+use MysqlEngine\Query\UpdateQuery;
 
 
 final class UpdateParser

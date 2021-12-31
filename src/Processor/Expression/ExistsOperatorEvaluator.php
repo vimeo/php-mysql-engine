@@ -1,12 +1,12 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor\Expression;
+namespace MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Parser\ParserException;
-use Vimeo\MysqlEngine\Query\Expression\ExistsOperatorExpression;
-use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
-use Vimeo\MysqlEngine\Processor\QueryResult;
-use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\Parser\ParserException;
+use MysqlEngine\Query\Expression\ExistsOperatorExpression;
+use MysqlEngine\Query\Expression\SubqueryExpression;
+use MysqlEngine\Processor\QueryResult;
+use MysqlEngine\Processor\Scope;
+use MysqlEngine\Schema\Column;
 
 final class ExistsOperatorEvaluator
 {
@@ -17,7 +17,7 @@ final class ExistsOperatorEvaluator
      * @return mixed
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         ExistsOperatorExpression $expr,
         array $row,
@@ -28,7 +28,7 @@ final class ExistsOperatorEvaluator
         }
 
         if ($expr->exists instanceof SubqueryExpression) {
-            $ret = \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+            $ret = \MysqlEngine\Processor\SelectProcessor::process(
                 $conn,
                 $scope,
                 $expr->exists->query,

@@ -1,18 +1,20 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor;
+namespace MysqlEngine\Processor;
 
 final class UpdateProcessor extends Processor
 {
+    /**
+     * @throws ProcessorException
+     * @throws SQLFakeUniqueKeyViolation
+     */
     public static function process(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
-        \Vimeo\MysqlEngine\Query\UpdateQuery $stmt
+        \MysqlEngine\Query\UpdateQuery $stmt
     ) : int {
-        list($table_name, $database) = self::processUpdateClause($conn, $stmt);
+        [$table_name, $database] = self::processUpdateClause($conn, $stmt);
 
         $existing_rows = $conn->getServer()->getTable($database, $table_name) ?: [];
-
-        //Metrics::trackQuery(QueryType::UPDATE, $conn->getServer()->name, $table_name, $this->sql);
 
         $table_definition = $conn->getServer()->getTableDefinition($database, $table_name);
 
@@ -54,10 +56,10 @@ final class UpdateProcessor extends Processor
      * @return array{0:string, 1:string}
      */
     protected static function processUpdateClause(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
-        \Vimeo\MysqlEngine\Query\UpdateQuery $stmt
+        \MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\Query\UpdateQuery $stmt
     ) : array {
-        list($database, $table_name) = self::parseTableName($conn, $stmt->tableName);
+        [$database, $table_name] = self::parseTableName($conn, $stmt->tableName);
         return [$table_name, $database];
     }
 }

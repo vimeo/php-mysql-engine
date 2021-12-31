@@ -1,7 +1,7 @@
 <?php
-namespace Vimeo\MysqlEngine\Schema\Column;
+namespace MysqlEngine\Schema\Column;
 
-class Timestamp extends \Vimeo\MysqlEngine\Schema\Column implements ChronologicalColumn, Defaultable
+class Timestamp extends \MysqlEngine\Schema\Column implements ChronologicalColumn, DefaultTable
 {
     use MySqlDefaultTrait;
     use EmptyConstructorTrait;

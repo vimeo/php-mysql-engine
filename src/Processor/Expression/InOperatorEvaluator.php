@@ -1,13 +1,13 @@
 <?php
-namespace Vimeo\MysqlEngine\Processor\Expression;
+namespace MysqlEngine\Processor\Expression;
 
-use Vimeo\MysqlEngine\Parser\ParserException;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
-use Vimeo\MysqlEngine\Query\Expression\SubqueryExpression;
-use Vimeo\MysqlEngine\Query\Expression\InOperatorExpression;
-use Vimeo\MysqlEngine\Processor\QueryResult;
-use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Schema\Column;
+use MysqlEngine\Parser\ParserException;
+use MysqlEngine\Processor\ProcessorException;
+use MysqlEngine\Query\Expression\SubqueryExpression;
+use MysqlEngine\Query\Expression\InOperatorExpression;
+use MysqlEngine\Processor\QueryResult;
+use MysqlEngine\Processor\Scope;
+use MysqlEngine\Schema\Column;
 
 final class InOperatorEvaluator
 {
@@ -17,7 +17,7 @@ final class InOperatorEvaluator
      * @return mixed
      */
     public static function evaluate(
-        \Vimeo\MysqlEngine\FakePdoInterface $conn,
+        \MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
         InOperatorExpression $expr,
         array $row,
@@ -37,7 +37,7 @@ final class InOperatorEvaluator
 
         foreach ($inList as $in_expr) {
             if ($in_expr instanceof SubqueryExpression) {
-                $subquery_result = \Vimeo\MysqlEngine\Processor\SelectProcessor::process(
+                $subquery_result = \MysqlEngine\Processor\SelectProcessor::process(
                     $conn,
                     $scope,
                     $in_expr->query,
