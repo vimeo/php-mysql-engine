@@ -71,6 +71,8 @@ final class FunctionEvaluator
                 return self::sqlBinary($conn, $scope, $expr, $row, $result);
             case 'FROM_UNIXTIME':
                 return self::sqlFromUnixtime($conn, $scope, $expr, $row, $result);
+            case 'UNIX_TIMESTAMP':
+                return self::sqlUnixTimestamp($conn, $scope, $expr, $row, $result);
             case 'GREATEST':
                 return self::sqlGreatest($conn, $scope, $expr, $row, $result);
             case 'VALUES':
@@ -843,6 +845,32 @@ final class FunctionEvaluator
         $column = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
 
         return \date('Y-m-d H:i:s', (int) $column);
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function sqlUnixTimestamp(
+        FakePdoInterface $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        QueryResult $result
+    ) : ?int {
+        $args = $expr->args;
+
+        switch (\count($args)) {
+            case 0:
+                return time();
+            case 1:
+                $column = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
+                if (!\is_string($column)) {
+                    return null;
+                }
+                return \strtotime($column) ?: null;
+            default:
+                throw new ProcessorException("MySQL UNIX_TIMESTAPM() SQLFake only implemented for 0 or 1 argument");
+        }
     }
 
     /**
