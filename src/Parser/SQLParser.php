@@ -225,6 +225,16 @@ final class SQLParser
                 continue;
             }
 
+            if ($token === 'true') {
+                $out[] = new Token(TokenType::NUMERIC_CONSTANT, '1', $token, $start);
+                continue;
+            }
+
+            if ($token === 'false') {
+                $out[] = new Token(TokenType::NUMERIC_CONSTANT, '0', $token, $start);
+                continue;
+            }
+
             if (\preg_match('/^[0-9\.]+$/', $token)) {
                 $out[] = new Token(TokenType::NUMERIC_CONSTANT, $token, $token, $start);
                 continue;

@@ -22,16 +22,22 @@ class Boolean extends \Vimeo\MysqlEngine\Schema\Column implements NumberColumn, 
         return 0;
     }
 
+    /**
+     * @return 'boolean'
+     */
     public function getPhpType(): string
     {
         return 'boolean';
     }
 
-    public function getPhpCode(): string
+    /**
+     * @return string
+     */
+    public function getPhpCode() : string
     {
         $default = '';
 
-        if ($this instanceof Defaultable && $this->hasDefault()) {
+        if ($this->hasDefault()) {
             $default = '->setDefault('
                 . ($this->getDefault() === null
                     ? 'null'
@@ -39,14 +45,9 @@ class Boolean extends \Vimeo\MysqlEngine\Schema\Column implements NumberColumn, 
                 . ')';
         }
 
-        $output = '(new \\' . static::class . '('
-            . ($this->unsigned ? 'true' : 'false')
-            . ', ' . $this->integer_display_width
+        return '(new \\' . static::class . '('
             . '))'
             . $default
             . $this->getNullablePhp();
-
-        var_export($output);
-        return $output;
     }
 }

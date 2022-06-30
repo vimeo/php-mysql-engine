@@ -204,6 +204,7 @@ final class DataIntegrity
         }
 
         switch ($php_type) {
+            case 'boolean':
             case 'int':
                 return (int) $value;
 
@@ -250,9 +251,6 @@ final class DataIntegrity
                 }
 
                 return (string) $value;
-
-            case 'boolean':
-                return (int) $value;
 
             default:
                 throw new \Exception(
