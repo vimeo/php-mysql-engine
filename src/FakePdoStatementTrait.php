@@ -331,6 +331,7 @@ trait FakePdoStatementTrait
      * @param int $cursor_orientation
      * @param int $cursor_offset
      */
+    #[\ReturnTypeWillChange]
     public function fetch(
         $fetch_style = -123,
         $cursor_orientation = \PDO::FETCH_ORI_NEXT,
@@ -391,6 +392,7 @@ trait FakePdoStatementTrait
      * @param int $column
      * @return null|scalar
      */
+    #[\ReturnTypeWillChange]
     public function fetchColumn($column = 0)
     {
         /** @var array<int, scalar>|false $row */
