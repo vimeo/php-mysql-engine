@@ -147,6 +147,7 @@ final class CreateProcessor
             case DataType::BIT:
             case DataType::MEDIUMINT:
             case DataType::BIGINT:
+            case DataType::BOOLEAN:
                 if ($stmt->null === null) {
                     $stmt->null = true;
                 }
@@ -248,6 +249,8 @@ final class CreateProcessor
         $display_width = (int) $stmt->length;
 
         switch (strtoupper($stmt->type)) {
+            case DataType::BOOLEAN:
+                return new Column\Boolean($unsigned, $display_width);
             case DataType::TINYINT:
                 return new Column\TinyInt($unsigned, $display_width);
 

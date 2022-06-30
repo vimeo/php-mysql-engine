@@ -28,6 +28,7 @@ CREATE TABLE `enemies` (
 	`id` int(10) NOT NULL AUTO_INCREMENT,
 	`character_id` int(10) NOT NULL,
 	`enemy_id` int(10) NOT NULL,
+	`enabled` boolean NOT NULL DEFAULT true,
 	PRIMARY KEY (`id`),
 	KEY `character_id` (`character_id`),
 	KEY `enemy_id` (`enemy_id`)

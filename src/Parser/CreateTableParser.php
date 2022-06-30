@@ -478,6 +478,7 @@ final class CreateTableParser
             case 'BLOB':
             case 'MEDIUMBLOB':
             case 'LONGBLOB':
+            case 'BOOLEAN':
                 break;
             case 'TINYINT':
             case 'SMALLINT':

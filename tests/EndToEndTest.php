@@ -1092,6 +1092,24 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testBoolean()
+    {
+        $pdo = self::getConnectionToFullDB(false, false);
+
+        $query = $pdo->prepare("SELECT `id`, `enabled` FROM `enemies`");
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['id' => 1, 'enabled' => 1],
+                ['id' => 2, 'enabled' => 0],
+                ['id' => 3, 'enabled' => 0],
+                ['id' => 4, 'enabled' => 1]
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     private static function getPdo(string $connection_string, bool $strict_mode = false) : \PDO
     {
         $options = $strict_mode ? [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="STRICT_ALL_TABLES"'] : [];

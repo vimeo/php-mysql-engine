@@ -251,6 +251,9 @@ final class DataIntegrity
 
                 return (string) $value;
 
+            case 'boolean':
+                return (int) $value;
+
             default:
                 throw new \Exception(
                     "DataIntegrity::coerceValueToSchema found unknown type for field: '{$php_type}'"
