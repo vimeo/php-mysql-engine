@@ -10,6 +10,7 @@ class FakePdoStatement extends \PDOStatement
      * @param ?array $params
      * @return bool
      */
+    #[\ReturnTypeWillChange]
     public function execute(?array $params = null)
     {
         return $this->universalExecute($params);
@@ -41,6 +42,7 @@ class FakePdoStatement extends \PDOStatement
      * @param    array|null $ctorArgs
      * @return   false|T
      */
+    #[\ReturnTypeWillChange]
     public function fetchObject(?string $class = \stdClass::class, ?array $ctorArgs = null)
     {
         return $this->universalFetchObject($class, $ctorArgs);
