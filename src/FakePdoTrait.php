@@ -67,7 +67,7 @@ trait FakePdoTrait
 
         $should_set_timezone = \array_key_exists(\PDO::MYSQL_ATTR_INIT_COMMAND, $options)
             && \strpos($options[\PDO::MYSQL_ATTR_INIT_COMMAND], 'SET time_zone = ') !== false;
-        if ($should_set_timezone && preg_match('/SET time_zone = \'((?:\\+|-)?\\d{1,2}:00)\';/', $options[\PDO::MYSQL_ATTR_INIT_COMMAND], $matches)) {
+        if ($should_set_timezone && preg_match('/SET time_zone = \'((?:\\+|-)?\\d{1,2}:\\d{2})\';/', $options[\PDO::MYSQL_ATTR_INIT_COMMAND], $matches)) {
             $this->timezone = new \DateTimeZone($matches[1]);
         }
 
