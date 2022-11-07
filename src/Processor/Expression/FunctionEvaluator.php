@@ -99,7 +99,7 @@ final class FunctionEvaluator
                 return self::sqlLastDay($conn, $scope, $expr, $row, $result);
             case 'CURDATE':
             case 'CURRENT_DATE':
-                return self::sqlCurDate($expr);
+                return self::sqlCurDate($conn, $expr);
             case 'WEEKDAY':
                 return self::sqlWeekDay($conn, $scope, $expr, $row, $result);
             case 'INET_ATON':
@@ -1038,7 +1038,7 @@ final class FunctionEvaluator
             return '0000-00-00';
         }
 
-        return (new \DateTimeImmutable($subject))->format('Y-m-d');
+        return (new \DateTimeImmutable($subject, $conn->getTimezone()))->format('Y-m-d');
     }
 
     /**
@@ -1063,13 +1063,13 @@ final class FunctionEvaluator
             return null;
         }
 
-        return (new \DateTimeImmutable($subject))->format('Y-m-t');
+        return (new \DateTimeImmutable($subject, $conn->getTimezone()))->format('Y-m-t');
     }
 
     /**
      * @param array<string, mixed> $row
      */
-    private static function sqlCurDate(FunctionExpression $expr): string
+    private static function sqlCurDate(FakePdoInterface $conn, FunctionExpression $expr): string
     {
         $args = $expr->args;
 
@@ -1077,7 +1077,7 @@ final class FunctionEvaluator
             throw new ProcessorException("MySQL CURDATE() function takes no arguments.");
         }
 
-        return (new \DateTimeImmutable())->format('Y-m-d');
+        return (new \DateTimeImmutable('now', $conn->getTimezone()))->format('Y-m-d');
     }
 
     /**
@@ -1106,7 +1106,7 @@ final class FunctionEvaluator
             return null;
         }
 
-        return (int)(new \DateTimeImmutable($subject))->format('N');
+        return (int)(new \DateTimeImmutable($subject, $conn->getTimezone()))->format('N');
     }
 
     /**
@@ -1144,7 +1144,7 @@ final class FunctionEvaluator
 
         $format = \str_replace('%', '', $format);
 
-        return (new \DateTimeImmutable($subject))->format($format);
+        return (new \DateTimeImmutable($subject, $conn->getTimezone()))->format($format);
     }
 
     /**
@@ -1177,7 +1177,7 @@ final class FunctionEvaluator
 
         $interval = self::getPhpIntervalFromExpression($conn, $scope, $args[1], $row, $result);
 
-        $first_date = new \DateTimeImmutable($first_arg);
+        $first_date = new \DateTimeImmutable($first_arg, $conn->getTimezone());
 
         $candidate = $first_date->sub($interval);
 
@@ -1225,7 +1225,7 @@ final class FunctionEvaluator
 
         $interval = self::getPhpIntervalFromExpression($conn, $scope, $args[1], $row, $result);
 
-        $first_date = new \DateTimeImmutable($first_arg);
+        $first_date = new \DateTimeImmutable($first_arg, $conn->getTimezone());
 
         $candidate = $first_date->add($interval);
 
@@ -1262,7 +1262,7 @@ final class FunctionEvaluator
         $first_arg = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
         $second_arg = Evaluator::evaluate($conn, $scope, $args[1], $row, $result);
 
-        return (new \DateTimeImmutable($first_arg))->diff(new \DateTimeImmutable($second_arg))->days;
+        return (new \DateTimeImmutable($first_arg, $conn->getTimezone()))->diff(new \DateTimeImmutable($second_arg, $conn->getTimezone()))->days;
     }
 
     /**
@@ -1283,7 +1283,7 @@ final class FunctionEvaluator
 
         $first_arg = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
 
-        return (int)(new \DateTimeImmutable($first_arg))->format('d');
+        return (int)(new \DateTimeImmutable($first_arg, $conn->getTimezone()))->format('d');
     }
 
     /**

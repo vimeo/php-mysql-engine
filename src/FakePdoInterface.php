@@ -19,4 +19,6 @@ interface FakePdoInterface
     public function lastInsertId($seqname = null) : string;
 
     public function useStrictMode() : bool;
+
+    public function getTimezone() : ?\DateTimeZone;
 }

@@ -1,6 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Tests;
 
+use DateTimeZone;
 use PDOException;
 
 class EndToEndTest extends \PHPUnit\Framework\TestCase
@@ -426,9 +427,12 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testDateArithhmetic()
+    /**
+     * @dataProvider timezoneOffsetProvider
+     */
+    public function testDateArithhmetic(?int $timezoneOffset)
     {
-        $pdo = self::getPdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo', false, $timezoneOffset);
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
         $query = $pdo->prepare(
@@ -442,7 +446,8 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
                     DATE_ADD(\'2020-02-29 12:31:00\', INTERVAL 4 YEAR) as `h`,
                     DATE_SUB(\'2020-03-30\', INTERVAL 1 MONTH) As `i`,
                     DATE_SUB(\'2020-03-01\', INTERVAL 1 MONTH) As `j`,
-                    WEEKDAY(\'2021-04-29\') AS `k`'
+                    WEEKDAY(\'2021-04-29\') AS `k`,
+                    DATE_SUB(\'2022-11-07 09:41:59\', INTERVAL 604800 SECOND) AS `l`'
         );
 
         $query->execute();
@@ -460,14 +465,18 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
                 'i' => '2020-02-29',
                 'j' => '2020-02-01',
                 'k' => 4,
+                'l' => '2022-10-31 09:41:59',
             ]],
             $query->fetchAll(\PDO::FETCH_ASSOC)
         );
     }
 
-    public function testCurDateFunction()
+    /**
+     * @dataProvider timezoneOffsetProvider
+     */
+    public function testCurDateFunction(?int $timezoneOffset)
     {
-        $pdo = self::getPdo('mysql:foo');
+        $pdo = self::getPdo('mysql:foo', false, $timezoneOffset);
 
         $query = $pdo->prepare('SELECT CURDATE() AS date, CURRENT_DATE() AS date1');
 
@@ -1092,9 +1101,16 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    private static function getPdo(string $connection_string, bool $strict_mode = false) : \PDO
+    private static function getPdo(string $connection_string, bool $strict_mode = false, int $timezoneOffset = null) : \PDO
     {
-        $options = $strict_mode ? [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="STRICT_ALL_TABLES"'] : [];
+        $options = [
+            $strict_mode ? 'SET sql_mode="STRICT_ALL_TABLES"' : '',
+            $timezoneOffset ? 'SET time_zone = ' . ($timezoneOffset / 60 * 60) . ':00;' : '',
+        ];
+        $options = array_filter($options, function (string $option) {
+            return !empty($option);
+        });
+        $options = [\PDO::MYSQL_ATTR_INIT_COMMAND => implode(';', $options)];
 
         if (\PHP_MAJOR_VERSION === 8) {
             return new \Vimeo\MysqlEngine\Php8\FakePdo($connection_string, '', '', $options);
@@ -1118,5 +1134,18 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $pdo->prepare(file_get_contents(__DIR__ . '/fixtures/bulk_tag_insert.sql'))->execute();
 
         return $pdo;
+    }
+
+    public function timezoneOffsetProvider(): array
+    {
+        $dstTimezone = new DateTimeZone('America/New_York');
+        $nonDstTimezone = new DateTimeZone('Asia/Kolkata');
+        return [
+            'no-timezone' => [null],
+            'with-daylight-saving-aware-timezone-with-dst-on' => [$dstTimezone->getOffset(new \DateTimeImmutable('2022-11-06 1:59'))],
+            'with-daylight-saving-aware-timezone-with-dst-off' => [$dstTimezone->getOffset(new \DateTimeImmutable('2022-11-06 2:00'))],
+            'with-daylight-saving-indifferent-timezone-with-dst-on' => [$nonDstTimezone->getOffset(new \DateTimeImmutable('2022-11-06 1:59'))],
+            'with-daylight-saving-indifferent-timezone-with-dst-off' => [$nonDstTimezone->getOffset(new \DateTimeImmutable('2022-11-06 2:00'))],
+        ];
     }
 }
