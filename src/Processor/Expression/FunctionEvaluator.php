@@ -11,6 +11,7 @@ use Vimeo\MysqlEngine\Query\Expression\Expression;
 use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
 use Vimeo\MysqlEngine\Query\Expression\IntervalOperatorExpression;
 use Vimeo\MysqlEngine\Schema\Column;
+use Vimeo\MysqlEngine\TokenType;
 
 final class FunctionEvaluator
 {
@@ -91,6 +92,11 @@ final class FunctionEvaluator
                 return self::sqlDateAdd($conn, $scope, $expr, $row, $result);
             case 'ROUND':
                 return self::sqlRound($conn, $scope, $expr, $row, $result);
+            case 'CEIL':
+            case 'CEILING':
+                return self::sqlCeiling($conn, $scope, $expr, $row, $result);
+            case 'FLOOR':
+                return self::sqlFloor($conn, $scope, $expr, $row, $result);
             case 'DATEDIFF':
                 return self::sqlDateDiff($conn, $scope, $expr, $row, $result);
             case 'DAY':
@@ -138,8 +144,34 @@ final class FunctionEvaluator
 
             case 'MOD':
                 return new Column\IntColumn(false, 10);
+
             case 'AVG':
                 return new Column\FloatColumn(10, 2);
+
+            case 'CEIL':
+            case 'CEILING':
+            case 'FLOOR':
+                // from MySQL docs: https://dev.mysql.com/doc/refman/5.6/en/mathematical-functions.html#function_ceil
+                // For exact-value numeric arguments, the return value has an exact-value numeric type. For string or
+                // floating-point arguments, the return value has a floating-point type.  But...
+                //
+                // mysql> CREATE TEMPORARY TABLE `temp` SELECT FLOOR(1.2);
+                // Query OK, 1 row affected (0.00 sec)
+                // Records: 1  Duplicates: 0  Warnings: 0
+                //
+                // mysql> describe temp;
+                // +------------+--------+------+-----+---------+-------+
+                // | Field      | Type   | Null | Key | Default | Extra |
+                // +------------+--------+------+-----+---------+-------+
+                // | FLOOR(1.2) | bigint | NO   |     | 0       | NULL  |
+                // +------------+--------+------+-----+---------+-------+
+                // 1 row in set (0.00 sec)
+                if ($expr->args[0]->getType() == TokenType::STRING_CONSTANT) {
+                    return new Column\DoubleColumn(10, 2);
+                }
+
+                return new Column\BigInt(false, 10);
+
             case 'IF':
                 $if = Evaluator::getColumnSchema($expr->args[1], $scope, $columns);
                 $else = Evaluator::getColumnSchema($expr->args[2], $scope, $columns);
@@ -1375,6 +1407,72 @@ final class FunctionEvaluator
         }
 
         return long2ip((int)$subject);
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return float|0
+     */
+    private static function sqlCeiling(
+        FakePdoInterface $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        QueryResult $result
+    ) {
+        $args = $expr->args;
+
+        if (\count($args) !== 1) {
+            throw new ProcessorException("MySQL CEILING function must be called with one argument (got " . count($args) . ")");
+        }
+
+        $subject = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
+
+        if (!is_numeric($subject)) {
+            // CEILING() returns 0 if it does not understand its argument.
+            return 0;
+        }
+
+        $value = ceil(floatval($subject));
+
+        if (!$value) {
+            return 0;
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return float|0
+     */
+    private static function sqlFloor(
+        FakePdoInterface $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        QueryResult $result
+    ) {
+        $args = $expr->args;
+
+        if (\count($args) !== 1) {
+            throw new ProcessorException("MySQL FLOOR function must be called with one argument");
+        }
+
+        $subject = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
+
+        if (!is_numeric($subject)) {
+            // FLOOR() returns 0 if it does not understand its argument.
+            return 0;
+        }
+
+        $value = floor(floatval($subject));
+
+        if (!$value) {
+            return 0;
+        }
+
+        return $value;
     }
 
     private static function getPhpIntervalFromExpression(
