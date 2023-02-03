@@ -61,3 +61,10 @@ CREATE TABLE `orders`
 	`modified_on` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
 	PRIMARY KEY (`id`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+
+CREATE TABLE `tweets` (
+	`id` int(10) UNSIGNED NOT NULL AUTO_INCREMENT,
+	`text` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci,
+	PRIMARY KEY (`id`)
+)
+ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
