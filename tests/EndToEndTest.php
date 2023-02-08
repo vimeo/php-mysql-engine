@@ -607,6 +607,52 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testCeil()
+    {
+        $pdo = self::getPdo('mysql:foo');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare('SELECT CEIL(3.1) AS a, CEILING(4.7) AS b, CEIL("abc") AS c, CEIL(5) AS d, CEIL("5.5") AS e');
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                [
+                    'a' => 4,
+                    'b' => 5,
+                    'c' => 0.0,
+                    'd' => 5,
+                    'e' => 6.0,
+                ],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testFloor()
+    {
+        $pdo = self::getPdo('mysql:foo');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare('SELECT FLOOR(3.1) AS a, FLOOR(4.7) AS b, FLOOR("abc") AS c, FLOOR(5) AS d, FLOOR("6.5") AS e');
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                [
+                    'a' => 3,
+                    'b' => 4,
+                    'c' => 0.0,
+                    'd' => 5,
+                    'e' => 6.0,
+                ],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     public function testIsInFullSubquery()
     {
         $pdo = self::getConnectionToFullDB(false);
