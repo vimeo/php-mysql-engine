@@ -277,8 +277,8 @@ final class CreateProcessor
      */
     private static function getTextDefinitionColumn(Query\MysqlColumnType $stmt)
     {
-        $collation = null;
-        $character_set = null;
+        $collation = $stmt->collation;
+        $character_set = $stmt->character_set;
 
         switch (strtoupper($stmt->type)) {
             case DataType::TEXT:
