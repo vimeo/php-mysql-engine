@@ -8,12 +8,13 @@ trait TextTrait
     public function getPhpCode() : string
     {
         $default = $this->getDefault() !== null ? '\'' . $this->getDefault() . '\'' : 'null';
-        
-        return '(new \\' . static::class . '('
-            . ($this->character_set !== null && $this->collation !== null
-                ? ', \'' . $this->character_set . '\'' . ', \'' . $this->collation . '\''
-                : '')
-            . '))'
+
+        $args = [
+            $this->character_set === null ? 'null' : "'{$this->character_set}'",
+            $this->collation === null ? 'null' : "'{$this->collation}'",
+        ];
+
+        return '(new \\' . static::class . '(' . implode(', ', $args) . '))'
             . ($this->hasDefault() ? '->setDefault(' . $default . ')' : '')
             . $this->getNullablePhp();
     }
