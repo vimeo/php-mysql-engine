@@ -34,7 +34,17 @@ class CreateTableParseTest extends \PHPUnit\Framework\TestCase
 
         // specific parsing checks
         $this->assertInstanceOf(TableDefinition::class, $table_defs['tweets']);
+        $this->assertEquals('utf8mb4', $table_defs['tweets']->columns['title']->getCharacterSet());
+        $this->assertEquals('utf8mb4_unicode_ci', $table_defs['tweets']->columns['title']->getCollation());
         $this->assertEquals('utf8mb4', $table_defs['tweets']->columns['text']->getCharacterSet());
         $this->assertEquals('utf8mb4_unicode_ci', $table_defs['tweets']->columns['text']->getCollation());
+
+        $this->assertInstanceOf(TableDefinition::class, $table_defs['texts']);
+        $this->assertEquals('utf8mb4', $table_defs['texts']->columns['title_char_col']->getCharacterSet());
+        $this->assertEquals('utf8mb4_unicode_ci', $table_defs['texts']->columns['title_char_col']->getCollation());
+        $this->assertNull($table_defs['texts']->columns['title_col']->getCharacterSet());
+        $this->assertEquals('utf8mb4_unicode_ci', $table_defs['texts']->columns['title_col']->getCollation());
+        $this->assertNull($table_defs['texts']->columns['title']->getCharacterSet());
+        $this->assertNull($table_defs['texts']->columns['title']->getCollation());
     }
 }

@@ -67,11 +67,13 @@ abstract class CharacterColumn extends \Vimeo\MysqlEngine\Schema\Column
             }
         }
 
-        return '(new \\' . static::class . '('
-            . $this->max_string_length
-            . ($this->character_set !== null ? ', \'' . $this->character_set . '\'' : '')
-            . ($this->collation !== null ? ', \'' . $this->collation . '\'' : '')
-            . '))'
+        $args = [
+            $this->max_string_length,
+            $this->character_set === null ? 'null' : "'{$this->character_set}'",
+            $this->collation === null ? 'null' : "'{$this->collation}'",
+        ];
+
+        return '(new \\' . static::class . '(' . implode(', ', $args) . '))'
             . $default
             . $this->getNullablePhp();
     }
