@@ -74,6 +74,7 @@ trait FakePdoStatementTrait
      * @param int $type
      * @return bool
      */
+    #[\ReturnTypeWillChange]
     public function bindValue($key, $value, $type = \PDO::PARAM_STR) : bool
     {
         if (\is_string($key) && $key[0] !== ':') {
@@ -99,6 +100,7 @@ trait FakePdoStatementTrait
      * @param mixed $driverOptions
      * @return bool
      */
+    #[\ReturnTypeWillChange]
     public function bindParam($key, &$value, $type = PDO::PARAM_STR, $maxLength = null, $driverOptions = null): bool
     {
         if (\is_string($key) && $key[0] !== ':') {
