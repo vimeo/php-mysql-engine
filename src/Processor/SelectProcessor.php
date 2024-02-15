@@ -301,7 +301,7 @@ final class SelectProcessor extends Processor
                             $parts = \explode(".%.", (string) $col);
 
                             if ($expr->tableName() !== null) {
-                                list($col_table_name, $col_name) = $parts;
+                                [$col_table_name, $col_name] = $parts;
                                 if ($col_table_name == $expr->tableName()) {
                                     if (!\array_key_exists($col, $formatted_row)) {
                                         $formatted_row[$col_name] = $val;
@@ -320,11 +320,15 @@ final class SelectProcessor extends Processor
                         continue;
                     }
 
+                    /**
+                     * Evaluator case \Vimeo\MysqlEngine\Query\Expression\SubqueryExpression::class:
+                     * should ensure the value of $val is never an array, and only the value of the
+                     * column requested, but we'll leave this code just to make sure of that.
+                     */
                     $val = Expression\Evaluator::evaluate($conn, $scope, $expr, $row, $group_result);
                     $name = $expr->name;
 
-                    if ($expr instanceof SubqueryExpression) {
-                        assert(\is_array($val), 'subquery results must be KeyedContainer');
+                    if ($expr instanceof SubqueryExpression && \is_array($val)) {
                         if (\count($val) > 1) {
                             throw new ProcessorException("Subquery returned more than one row");
                         }
@@ -477,7 +481,7 @@ final class SelectProcessor extends Processor
                     $parts = \explode(".", $column_id);
 
                     if ($expr_table_name = $expr->tableName()) {
-                        list($column_table_name) = $parts;
+                        [$column_table_name] = $parts;
 
                         if ($column_table_name === $expr_table_name) {
                             $columns[$column_id] = $from_column;
