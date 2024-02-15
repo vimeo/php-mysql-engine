@@ -226,8 +226,18 @@ final class BinaryOperatorEvaluator
                     case 'MOD':
                         return \fmod((double) $left_number, (double) $right_number);
                     case '/':
+                        // Ensure division by 0 cannot occur and 0 divided by anything is also 0
+                        if ($right_number === 0 || $left_number === 0) {
+                            return 0;
+                        }
+
                         return $left_number / $right_number;
                     case 'DIV':
+                        // Ensure division by 0 cannot occur and 0 divided by anything is also 0
+                        if ($right_number === 0 || $left_number === 0) {
+                            return 0;
+                        }
+
                         return (int) ($left_number / $right_number);
                     case '-':
                         return $left_number - $right_number;
