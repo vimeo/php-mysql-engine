@@ -1141,7 +1141,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
     public function testUpdateWithOrderAndPrimaryKey()
     {
         $pdo = self::getConnectionToFullDB(false);
-        $pdo->exec('UPDATE `video_game_characters` SET `bio_en` = "spiky boi" WHERE `id` = 7 ORDER BY `id` DESC LIMIT 1');
+        $pdo->exec('UPDATE `video_game_characters` SET `bio_en` = "spiky boi" WHERE `id` = 7 ORDER BY `id` DESC');
     }
 
 
