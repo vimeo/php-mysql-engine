@@ -66,6 +66,8 @@ final class FunctionEvaluator
                 return self::sqlConcatWS($conn, $scope, $expr, $row, $result);
             case 'CONCAT':
                 return self::sqlConcat($conn, $scope, $expr, $row, $result);
+            case 'GROUP_CONCAT':
+                return self::sqlGroupConcat($conn, $scope, $expr, $row, $result);
             case 'FIELD':
                 return self::sqlColumn($conn, $scope, $expr, $row, $result);
             case 'BINARY':
@@ -922,6 +924,27 @@ final class FunctionEvaluator
         if (\count($args) < 2) {
             throw new ProcessorException("MySQL CONCAT() function must be called with at least two arguments");
         }
+
+        $final_concat = "";
+        foreach ($args as $arg) {
+            $val = (string) Evaluator::evaluate($conn, $scope, $arg, $row, $result);
+            $final_concat .= $val;
+        }
+
+        return $final_concat;
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     */
+    private static function sqlGroupConcat(
+        FakePdoInterface $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        QueryResult $result
+    ): string {
+        $args = $expr->args;
 
         $final_concat = "";
         foreach ($args as $arg) {
