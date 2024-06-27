@@ -34,6 +34,24 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame([], $query->fetchAll(\PDO::FETCH_ASSOC));
     }
 
+    public function testSelectWithDefaultFetchAssoc()
+    {
+        $pdo = self::getConnectionToFullDB();
+        $pdo->setAttribute(\PDO::ATTR_DEFAULT_FETCH_MODE, \PDO::FETCH_ASSOC);
+
+        $query = $pdo->prepare("SELECT id FROM `video_game_characters` WHERE `id` > :id ORDER BY `id` ASC");
+        $query->bindValue(':id', 14);
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['id' => '15'],
+                ['id' => '16']
+            ],
+            $query->fetchAll()
+        );
+    }
+
     public function testSelectFetchDefault()
     {
         $pdo = self::getConnectionToFullDB();
