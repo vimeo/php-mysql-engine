@@ -54,6 +54,10 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
     public function testSelectFetchDefault()
     {
+        if (!defined('PDO::FETCH_DEFAULT')) {
+            $this->markTestSkipped('PHP version does not support PDO::FETCH_DEFAULT');
+        }
+
         $pdo = self::getConnectionToFullDB();
 
         $query = $pdo->prepare("SELECT id FROM `video_game_characters` WHERE `id` > :id ORDER BY `id` ASC");
