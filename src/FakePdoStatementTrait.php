@@ -339,7 +339,7 @@ trait FakePdoStatementTrait
         $cursor_orientation = \PDO::FETCH_ORI_NEXT,
         $cursor_offset = 0
     ) {
-        if ($fetch_style === -123 || $fetch_style === \PDO::FETCH_DEFAULT) {
+        if ($fetch_style === -123 || (defined('PDO::FETCH_DEFAULT') && $fetch_style === \PDO::FETCH_DEFAULT)) {
             $fetch_style = $this->fetchMode;
         }
 
@@ -415,7 +415,7 @@ trait FakePdoStatementTrait
      */
     public function universalFetchAll(int $fetch_style = -123, ...$args) : array
     {
-        if ($fetch_style === -123 || $fetch_style === \PDO::FETCH_DEFAULT) {
+        if ($fetch_style === -123 || (defined('PDO::FETCH_DEFAULT') && $fetch_style === \PDO::FETCH_DEFAULT)) {
             $fetch_style = $this->fetchMode;
             $fetch_argument = $this->fetchArgument;
             $ctor_args = $this->fetchConstructorArgs;
