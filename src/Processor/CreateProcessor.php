@@ -50,6 +50,7 @@ final class CreateProcessor
         'utf32' => 'utf32_general_ci',
         'utf8' => 'utf8_general_ci',
         'utf8mb4' => 'utf8mb4_general_ci',
+        'utf8mb3' => 'utf8mb3_general_ci'
     ];
 
     public static function makeTableDefinition(
