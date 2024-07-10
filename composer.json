@@ -1,5 +1,5 @@
 {
-  "name": "vimeo/php-mysql-engine",
+  "name": "jozefhornik/php-mysql-engine",
   "description": "A MySQL engine written in PHP for speeding up tests",
   "type": "library",
   "license": "MIT",
