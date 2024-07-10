@@ -805,6 +805,18 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testSelectWithOffset()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+        $query = $pdo->prepare("SELECT `id` FROM `video_game_characters` ORDER BY `id` LIMIT 10000 OFFSET 1");
+        $query->execute();
+
+        $this->assertSame(
+            ['id' => 2],
+            $query->fetch(\PDO::FETCH_ASSOC)
+        );
+    }
+
     public function testLastInsertIdAfterSkippingAutoincrement()
     {
         $pdo = self::getConnectionToFullDB(false);

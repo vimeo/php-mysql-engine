@@ -125,7 +125,7 @@ abstract class Processor
         }
 
         return new QueryResult(
-            \array_slice($result->rows, $offset, $rowcount, true),
+            \array_slice($result->rows, $offset, $rowcount),
             $result->columns
         );
     }
