@@ -28,7 +28,7 @@ abstract class Column
     }
 
     /**
-     * @return 'int'|'string'|'float'|'null'
+     * @return 'int'|'string'|'float'|'null'|'boolean'
      */
     abstract public function getPhpType() : string;
 
