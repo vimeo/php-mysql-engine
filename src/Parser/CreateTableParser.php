@@ -218,7 +218,13 @@ final class CreateTableParser
             \array_shift($tokens);
         }
 
-        $t = \array_shift($tokens);
+        // Extract [{database}.]{table}
+        if ($tokens[1] === '.') {
+            $t = \array_shift($tokens) . \array_shift($tokens) . \array_shift($tokens);
+        } else {
+            $t = \array_shift($tokens);
+        }
+
         $name = static::decodeIdentifier($t);
 
         if (static::nextTokenIs($tokens, 'LIKE')) {
