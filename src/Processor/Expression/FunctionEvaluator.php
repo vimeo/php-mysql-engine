@@ -903,7 +903,7 @@ final class FunctionEvaluator
                 }
                 return \strtotime($column) ?: null;
             default:
-                throw new ProcessorException("MySQL UNIX_TIMESTAPM() SQLFake only implemented for 0 or 1 argument");
+                throw new ProcessorException("MySQL UNIX_TIMESTAMP() SQLFake only implemented for 0 or 1 argument");
         }
     }
 
