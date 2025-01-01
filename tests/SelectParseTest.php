@@ -316,4 +316,13 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
     }
+
+    public function testMAKETIMEFunction()
+    {
+        // todo develop test
+    }
+    public function testTIMESTAMPFunction()
+    {
+        // todo develop test
+    }
 }
