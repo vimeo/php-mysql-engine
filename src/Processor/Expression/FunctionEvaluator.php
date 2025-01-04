@@ -1,5 +1,4 @@
 <?php
-
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
 use Vimeo\MysqlEngine\FakePdoInterface;
@@ -28,7 +27,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         switch ($expr->functionName) {
             case 'COUNT':
                 return self::sqlCount($conn, $scope, $expr, $result);
@@ -132,7 +132,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         Scope              $scope,
         array              $columns
-    ): Column {
+    ): Column
+    {
         switch ($expr->functionName) {
             case 'COUNT':
                 return new Column\IntColumn(true, 10);
@@ -319,7 +320,8 @@ final class FunctionEvaluator
         Scope              $scope,
         FunctionExpression $expr,
         QueryResult        $result
-    ) {
+    )
+    {
         $inner = $expr->getExpr();
 
         if ($expr->distinct) {
@@ -361,7 +363,8 @@ final class FunctionEvaluator
         Scope              $scope,
         FunctionExpression $expr,
         QueryResult        $result
-    ) {
+    )
+    {
         $expr = $expr->getExpr();
 
         $sum = 0;
@@ -425,7 +428,8 @@ final class FunctionEvaluator
         Scope              $scope,
         FunctionExpression $expr,
         QueryResult        $result
-    ) {
+    )
+    {
         $expr = $expr->getExpr();
         $values = [];
 
@@ -460,7 +464,8 @@ final class FunctionEvaluator
         Scope              $scope,
         FunctionExpression $expr,
         QueryResult        $result
-    ) {
+    )
+    {
         $expr = $expr->getExpr();
         $values = [];
 
@@ -497,7 +502,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -522,7 +528,8 @@ final class FunctionEvaluator
         Scope              $scope,
         FunctionExpression $expr,
         QueryResult        $result
-    ) {
+    )
+    {
         $expr = $expr->getExpr();
         $values = [];
 
@@ -558,7 +565,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 3) {
@@ -588,7 +596,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 2 && \count($args) !== 3) {
@@ -622,7 +631,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 3) {
@@ -663,7 +673,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -687,7 +698,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -710,7 +722,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -733,7 +746,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -755,7 +769,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -779,7 +794,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         if (!\count($expr->args)) {
             throw new ProcessorException("MySQL COALESCE() function must be called with at least one argument");
         }
@@ -806,7 +822,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) < 2) {
@@ -833,7 +850,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -855,7 +873,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): int {
+    ): int
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -874,7 +893,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): string {
+    ): string
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -895,7 +915,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): ?int {
+    ): ?int
+    {
         $args = $expr->args;
 
         switch (\count($args)) {
@@ -923,7 +944,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) < 2) {
@@ -948,7 +970,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): string {
+    ): string
+    {
         $args = $expr->args;
 
         $final_concat = "";
@@ -971,7 +994,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) < 2) {
@@ -1014,7 +1038,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
         $num_args = \count($args);
 
@@ -1052,7 +1077,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
         $num_args = \count($args);
 
@@ -1081,7 +1107,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): ?string {
+    ): ?string
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1110,7 +1137,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): ?string {
+    ): ?string
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1149,7 +1177,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): ?int {
+    ): ?int
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1180,7 +1209,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -1216,7 +1246,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): ?string {
+    ): ?string
+    {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -1264,7 +1295,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): ?string {
+    ): ?string
+    {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -1312,7 +1344,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): int {
+    ): int
+    {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -1334,7 +1367,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): int {
+    ): int
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1357,7 +1391,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1 && \count($args) !== 2) {
@@ -1385,7 +1420,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): ?float {
+    ): ?float
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1420,7 +1456,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): ?string {
+    ): ?string
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1447,7 +1484,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1480,7 +1518,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ) {
+    )
+    {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1509,7 +1548,8 @@ final class FunctionEvaluator
         IntervalOperatorExpression $expr,
         array                      $row,
         QueryResult                $result
-    ): \DateInterval {
+    ): \DateInterval
+    {
         $number = Evaluator::evaluate($conn, $scope, $expr->number, $row, $result);
 
         switch ($expr->unit) {
@@ -1554,7 +1594,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): mixed {
+    ): mixed
+    {
 
         if (\count($expr->args) != 3) {
             throw new ProcessorException("MySQL MAKETIME() function must be called with three argument");
@@ -1600,7 +1641,8 @@ final class FunctionEvaluator
         FunctionExpression $expr,
         array              $row,
         QueryResult        $result
-    ): mixed {
+    ): mixed
+    {
 
         if (\count($expr->args) > 2 || \count($expr->args) < 1) {
             throw new ProcessorException("MySQL TIMESTAMP() function must be called with maximum two argument");
