@@ -1221,4 +1221,46 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
         return $pdo;
     }
+
+
+    public function testMakeTimeFunction()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare('select MAKETIME(12,13,24) as time');
+
+        $query->execute();
+
+        $d = mktime(12, 13, 24, 1, 10, 2025);
+
+        $current_date = date("h:i:s", $d);
+
+        $this->assertSame(
+            [[
+                'time' => $current_date,
+            ]],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+
+    public function testTIMESTAMPFunction()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare("SELECT TIMESTAMP('2025-01-10','14:10:00') as date");
+
+        $query->execute();
+
+        $d = mktime(14, 10, 00, 1, 10, 2025);
+
+        $current_date = date("Y-m-d H:i:s", $d);
+
+        $this->assertSame(
+            [[
+                'date' => $current_date,
+            ]],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
 }

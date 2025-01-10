@@ -22,13 +22,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     public static function evaluate(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         switch ($expr->functionName) {
             case 'COUNT':
                 return self::sqlCount($conn, $scope, $expr, $result);
@@ -125,15 +124,14 @@ final class FunctionEvaluator
     }
 
     /**
-     * @param array<string, Column> $columns
+     * @param  array<string, Column> $columns
      * @return Column
      */
     public static function getColumnSchema(
         FunctionExpression $expr,
-        Scope              $scope,
-        array              $columns
-    ): Column
-    {
+        Scope $scope,
+        array $columns
+    ) : Column {
         switch ($expr->functionName) {
             case 'COUNT':
                 return new Column\IntColumn(true, 10);
@@ -316,12 +314,11 @@ final class FunctionEvaluator
      * @return int
      */
     private static function sqlCount(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        QueryResult        $result
-    )
-    {
+        QueryResult $result
+    ) {
         $inner = $expr->getExpr();
 
         if ($expr->distinct) {
@@ -359,12 +356,11 @@ final class FunctionEvaluator
      * @return ?numeric
      */
     private static function sqlSum(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        QueryResult        $result
-    )
-    {
+        QueryResult $result
+    ) {
         $expr = $expr->getExpr();
 
         $sum = 0;
@@ -378,7 +374,7 @@ final class FunctionEvaluator
                 throw new \TypeError('Failed assertion');
             })();
             $val = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
-            $num = \is_int($val) ? $val : (double)$val;
+            $num = \is_int($val) ? $val : (double) $val;
             $sum += $num;
         }
 
@@ -402,15 +398,15 @@ final class FunctionEvaluator
         if ($column) {
             switch ($column->getPhpType()) {
                 case 'int':
-                    return (int)$value;
+                    return (int) $value;
 
                 case 'float':
-                    return (float)$value;
+                    return (float) $value;
 
                 case 'string':
                     if ($column instanceof \Vimeo\MysqlEngine\Schema\Column\Decimal) {
                         /** @var numeric-string */
-                        return \number_format((float)$value, $column->getDecimalScale(), '.', '');
+                        return \number_format((float) $value, $column->getDecimalScale(), '.', '');
                     }
             }
         }
@@ -424,12 +420,11 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlMin(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        QueryResult        $result
-    )
-    {
+        QueryResult $result
+    ) {
         $expr = $expr->getExpr();
         $values = [];
 
@@ -460,12 +455,11 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlMax(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        QueryResult        $result
-    )
-    {
+        QueryResult $result
+    ) {
         $expr = $expr->getExpr();
         $values = [];
 
@@ -497,13 +491,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlMod(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -511,9 +504,9 @@ final class FunctionEvaluator
         }
 
         $n = $args[0];
-        $n_value = (int)Evaluator::evaluate($conn, $scope, $n, $row, $result);
+        $n_value = (int) Evaluator::evaluate($conn, $scope, $n, $row, $result);
         $m = $args[1];
-        $m_value = (int)Evaluator::evaluate($conn, $scope, $m, $row, $result);
+        $m_value = (int) Evaluator::evaluate($conn, $scope, $m, $row, $result);
 
         return $n_value % $m_value;
     }
@@ -524,12 +517,11 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlAvg(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        QueryResult        $result
-    )
-    {
+        QueryResult $result
+    ) {
         $expr = $expr->getExpr();
         $values = [];
 
@@ -560,13 +552,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlIf(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 3) {
@@ -576,7 +567,7 @@ final class FunctionEvaluator
         $condition = $args[0];
         $arg_to_evaluate = 2;
 
-        if ((bool)Evaluator::evaluate($conn, $scope, $condition, $row, $result)) {
+        if ((bool) Evaluator::evaluate($conn, $scope, $condition, $row, $result)) {
             $arg_to_evaluate = 1;
         }
 
@@ -591,13 +582,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlSubstring(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 2 && \count($args) !== 3) {
@@ -605,14 +595,14 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string)Evaluator::evaluate($conn, $scope, $subject, $row, $result);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row, $result);
         $position = $args[1];
-        $pos = (int)Evaluator::evaluate($conn, $scope, $position, $row, $result);
+        $pos = (int) Evaluator::evaluate($conn, $scope, $position, $row, $result);
         $pos -= 1;
         $length = $args[2] ?? null;
 
         if ($length !== null) {
-            $len = (int)Evaluator::evaluate($conn, $scope, $length, $row, $result);
+            $len = (int) Evaluator::evaluate($conn, $scope, $length, $row, $result);
             return \mb_substr($string, $pos, $len);
         }
 
@@ -626,13 +616,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlSubstringIndex(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 3) {
@@ -640,13 +629,13 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string)Evaluator::evaluate($conn, $scope, $subject, $row, $result);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row, $result);
         $delimiter = $args[1];
-        $delim = (string)Evaluator::evaluate($conn, $scope, $delimiter, $row, $result);
+        $delim = (string) Evaluator::evaluate($conn, $scope, $delimiter, $row, $result);
         $pos = $args[2];
 
         if ($pos !== null && $delim !== '') {
-            $count = (int)Evaluator::evaluate($conn, $scope, $pos, $row, $result);
+            $count = (int) Evaluator::evaluate($conn, $scope, $pos, $row, $result);
             $parts = \explode($delim, $string);
 
             if ($count < 0) {
@@ -668,13 +657,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlLower(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -682,7 +670,7 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string)Evaluator::evaluate($conn, $scope, $subject, $row, $result);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row, $result);
         return \strtolower($string);
     }
 
@@ -693,13 +681,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlUpper(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -707,7 +694,7 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string)Evaluator::evaluate($conn, $scope, $subject, $row, $result);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row, $result);
         return \strtoupper($string);
     }
 
@@ -717,13 +704,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlLength(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -731,7 +717,7 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string)Evaluator::evaluate($conn, $scope, $subject, $row, $result);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row, $result);
         return \strlen($string);
     }
 
@@ -741,13 +727,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlBinary(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -764,13 +749,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlCharLength(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -778,7 +762,7 @@ final class FunctionEvaluator
         }
 
         $subject = $args[0];
-        $string = (string)Evaluator::evaluate($conn, $scope, $subject, $row, $result);
+        $string = (string) Evaluator::evaluate($conn, $scope, $subject, $row, $result);
 
         return \mb_strlen($string);
     }
@@ -789,13 +773,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlCoalesce(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         if (!\count($expr->args)) {
             throw new ProcessorException("MySQL COALESCE() function must be called with at least one argument");
         }
@@ -817,13 +800,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlGreatest(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) < 2) {
@@ -845,13 +827,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlNullif(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -868,13 +849,12 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlIsNull(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): int
-    {
+        array $row,
+        QueryResult $result
+    ) : int {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -888,13 +868,12 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlFromUnixtime(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): string
-    {
+        array $row,
+        QueryResult $result
+    ) : string {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -903,20 +882,19 @@ final class FunctionEvaluator
 
         $column = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
 
-        return \date('Y-m-d H:i:s', (int)$column);
+        return \date('Y-m-d H:i:s', (int) $column);
     }
 
     /**
      * @param array<string, mixed> $row
      */
     private static function sqlUnixTimestamp(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): ?int
-    {
+        array $row,
+        QueryResult $result
+    ) : ?int {
         $args = $expr->args;
 
         switch (\count($args)) {
@@ -939,13 +917,12 @@ final class FunctionEvaluator
      * @return string
      */
     private static function sqlConcat(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) < 2) {
@@ -954,7 +931,7 @@ final class FunctionEvaluator
 
         $final_concat = "";
         foreach ($args as $arg) {
-            $val = (string)Evaluator::evaluate($conn, $scope, $arg, $row, $result);
+            $val = (string) Evaluator::evaluate($conn, $scope, $arg, $row, $result);
             $final_concat .= $val;
         }
 
@@ -965,18 +942,17 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlGroupConcat(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): string
-    {
+        array $row,
+        QueryResult $result
+    ): string {
         $args = $expr->args;
 
         $final_concat = "";
         foreach ($args as $arg) {
-            $val = (string)Evaluator::evaluate($conn, $scope, $arg, $row, $result);
+            $val = (string) Evaluator::evaluate($conn, $scope, $arg, $row, $result);
             $final_concat .= $val;
         }
 
@@ -989,13 +965,12 @@ final class FunctionEvaluator
      * @return string
      */
     private static function sqlConcatWS(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) < 2) {
@@ -1007,7 +982,7 @@ final class FunctionEvaluator
             throw new ProcessorException("MySQL CONCAT_WS() function required non null separator");
         }
 
-        $separator = (string)$separator;
+        $separator = (string) $separator;
         $final_concat = "";
 
         foreach ($args as $k => $arg) {
@@ -1015,7 +990,7 @@ final class FunctionEvaluator
                 continue;
             }
 
-            $val = (string)Evaluator::evaluate($conn, $scope, $arg, $row, $result);
+            $val = (string) Evaluator::evaluate($conn, $scope, $arg, $row, $result);
 
             if ($final_concat === '') {
                 $final_concat = $final_concat . $val;
@@ -1033,13 +1008,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlColumn(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
         $num_args = \count($args);
 
@@ -1072,13 +1046,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlValues(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
         $num_args = \count($args);
 
@@ -1102,13 +1075,12 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlDate(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): ?string
-    {
+        array $row,
+        QueryResult $result
+    ) : ?string {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1132,13 +1104,12 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlLastDay(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): ?string
-    {
+        array $row,
+        QueryResult $result
+    ) : ?string {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1172,13 +1143,12 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlWeekDay(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): ?int
-    {
+        array $row,
+        QueryResult $result
+    ) : ?int {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1204,13 +1174,12 @@ final class FunctionEvaluator
      * @return mixed
      */
     private static function sqlDateFormat(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -1241,13 +1210,12 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlDateSub(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): ?string
-    {
+        array $row,
+        QueryResult $result
+    ) : ?string {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -1274,7 +1242,7 @@ final class FunctionEvaluator
 
         // mimic behaviour of MySQL for leap years and other rollover dates
         if (($interval->m || $interval->y)
-            && (int)$first_date->format('d') >= 28
+            && (int) $first_date->format('d') >=28
             && ($candidate->format('d') !== $first_date->format('d'))
         ) {
             // remove a week
@@ -1290,13 +1258,12 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlDateAdd(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): ?string
-    {
+        array $row,
+        QueryResult $result
+    ) : ?string {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -1323,7 +1290,7 @@ final class FunctionEvaluator
 
         // mimic behaviour of MySQL for leap years and other rollover dates
         if (($interval->m || $interval->y)
-            && (int)$first_date->format('d') >= 28
+            && (int) $first_date->format('d') >= 28
             && ($candidate->format('d') !== $first_date->format('d'))
         ) {
             // remove a week
@@ -1339,13 +1306,12 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlDateDiff(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): int
-    {
+        array $row,
+        QueryResult $result
+    ) : int {
         $args = $expr->args;
 
         if (\count($args) !== 2) {
@@ -1362,13 +1328,12 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlDay(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): int
-    {
+        array $row,
+        QueryResult $result
+    ) : int {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1386,13 +1351,12 @@ final class FunctionEvaluator
      * @return float|int
      */
     private static function sqlRound(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 1 && \count($args) !== 2) {
@@ -1415,13 +1379,12 @@ final class FunctionEvaluator
      * @return float|null
      */
     private static function sqlInetAton(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): ?float
-    {
+        array $row,
+        QueryResult $result
+    ) : ?float {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1451,13 +1414,12 @@ final class FunctionEvaluator
      * @return string
      */
     private static function sqlInetNtoa(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    ): ?string
-    {
+        array $row,
+        QueryResult $result
+    ) : ?string {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1479,13 +1441,12 @@ final class FunctionEvaluator
      * @return float|0
      */
     private static function sqlCeiling(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1513,13 +1474,12 @@ final class FunctionEvaluator
      * @return float|0
      */
     private static function sqlFloor(
-        FakePdoInterface   $conn,
-        Scope              $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         FunctionExpression $expr,
-        array              $row,
-        QueryResult        $result
-    )
-    {
+        array $row,
+        QueryResult $result
+    ) {
         $args = $expr->args;
 
         if (\count($args) !== 1) {
@@ -1543,13 +1503,12 @@ final class FunctionEvaluator
     }
 
     private static function getPhpIntervalFromExpression(
-        FakePdoInterface           $conn,
-        Scope                      $scope,
+        FakePdoInterface $conn,
+        Scope $scope,
         IntervalOperatorExpression $expr,
-        array                      $row,
-        QueryResult                $result
-    ): \DateInterval
-    {
+        array $row,
+        QueryResult $result
+    ) : \DateInterval {
         $number = Evaluator::evaluate($conn, $scope, $expr->number, $row, $result);
 
         switch ($expr->unit) {
@@ -1578,6 +1537,7 @@ final class FunctionEvaluator
                 throw new ProcessorException('MySQL INTERVAL unit ' . $expr->unit . ' not supported yet');
         }
     }
+
 
     /**
      * @param FakePdoInterface $conn
@@ -1745,5 +1705,4 @@ final class FunctionEvaluator
 
         return self::castAggregate($first_date->format('Y-m-d H:i:s'), $expr, $result);
     }
-
 }
