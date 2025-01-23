@@ -295,7 +295,26 @@ final class FromParser
             }
         }
 
+        /*
+         * Unlike other clauses (e.g., FROM), the buildJoin advances the pointer to the specified keyword (e.g., FORCE).
+         * Therefore, the pointer needs to be adjusted.
+         * For instance, in "FROM a FORCE INDEX ...", processing for other clauses ends just before the identifier (a),
+         * but for the JOIN clause, the pointer advances to "FORCE".
+         * To address this issue, we adjusted the pointer before and after calling SQLParser::skipIndexHints(),
+         * and modified the code to advance the pointer to the closing parenthesis ')' if necessary.
+         */
+        $this->pointer--;
         $this->pointer = SQLParser::skipIndexHints($this->pointer, $this->tokens);
+        $this->pointer++;
+        if ($this->tokens[$this->pointer]->type === TokenType::SEPARATOR
+            && $this->tokens[$this->pointer]->value === ")") {
+            $this->pointer++;
+        }
+        $next = $this->tokens[$this->pointer] ?? null;
+        if ($next === null) {
+            /** @psalm-suppress LessSpecificReturnStatement */
+            return $table;
+        }
 
         if ($table['join_type'] === JoinType::NATURAL || $table['join_type'] === JoinType::CROSS) {
             return $table;

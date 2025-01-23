@@ -269,6 +269,27 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testLeftJoinSkipIndex()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            "SELECT `id`
+            FROM `video_game_characters` FORCE INDEX (`PRIMARY`)
+            LEFT JOIN `character_tags` FORCE INDEX (`PRIMARY`) 
+                ON `character_tags`.`character_id` = `video_game_characters`.`id`
+            LIMIT 1"
+        );
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['id' => 1]
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     public function testMaxValueAliasedToColumnName()
     {
         $pdo = self::getConnectionToFullDB(false);
