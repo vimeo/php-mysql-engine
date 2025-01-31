@@ -1,8 +1,8 @@
 <?php
+
 namespace Vimeo\MysqlEngine\Processor;
 
 use Vimeo\MysqlEngine\DataIntegrity;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
 use Vimeo\MysqlEngine\Query\InsertQuery;
 use Vimeo\MysqlEngine\Schema\Column\IntegerColumn;
 
@@ -106,6 +106,29 @@ final class InsertProcessor extends Processor
                 $stmt->setClause,
                 $table_definition
             );
+        }
+
+        if ($stmt->selectQuery) {
+            $selectResult = SelectProcessor::process(
+                $conn,
+                $scope,
+                $stmt->selectQuery
+            )->rows;
+
+            $row = [];
+            foreach ($selectResult as $value) {
+                foreach ($stmt->selectQuery->selectExpressions as $index => $expr) {
+                    if (key_exists($index, $stmt->insertColumns)
+                        && (is_string($value[$expr->name]) || is_int($value[$expr->name]))) {
+                        $row[$stmt->insertColumns[$index]] = $value[$expr->name];
+                    }
+                }
+            }
+
+            $table[] = $row;
+
+            $conn->getServer()->saveTable($database, $table_name, $table);
+            return count($selectResult);
         }
 
         return $rows_affected;
