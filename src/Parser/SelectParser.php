@@ -1,4 +1,5 @@
 <?php
+
 namespace Vimeo\MysqlEngine\Parser;
 
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
@@ -46,6 +47,11 @@ final class SelectParser
         $this->pointer = $pointer;
         $this->tokens = $tokens;
         $this->sql = $sql;
+    }
+
+    public function getPointer(): int
+    {
+        return $this->pointer;
     }
 
     public function parse() : SelectQuery
