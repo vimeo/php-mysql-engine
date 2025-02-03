@@ -918,13 +918,15 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
         $query = $pdo->prepare(
             "INSERT INTO `video_game_characters`
-                (`id`, `name`, `type`, `profession`, `console`, `is_alive`, `powerups`, `skills`, `created_on`)
+                (`name`, `type`, `profession`, `console`, `is_alive`, `powerups`, `skills`, `created_on`)
                 SELECT
-                    19+`id`, 'wario','villain','plumber','nes','1','3','{\"magic\":0, \"speed\":0, \"strength\":0, \"weapons\":0}', NOW(), 
+                    'wario','villain','plumber','nes','1','3','{\"magic\":0, \"speed\":0, \"strength\":0, \"weapons\":0}', NOW(), 
                 FROM `video_game_characters`"
         );
 
         $query->execute();
+
+        self::assertEquals($pdo->lastInsertId(), 32);
 
         $query = $pdo->prepare(
             'SELECT `id`, `name`
@@ -937,7 +939,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
         $this->assertSame(
             [
-                ['id' => 35, 'name' => 'wario'],
+                ['id' => 32, 'name' => 'wario'],
             ],
             $query->fetchAll(PDO::FETCH_ASSOC)
         );
