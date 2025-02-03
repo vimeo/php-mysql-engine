@@ -8,6 +8,11 @@ use Vimeo\MysqlEngine\Schema\Column\IntegerColumn;
 
 final class InsertProcessor extends Processor
 {
+    /**
+     * @throws SQLFakeUniqueKeyViolation
+     * @throws ProcessorException
+     * @throws \Exception
+     */
     public static function process(
         \Vimeo\MysqlEngine\FakePdoInterface $conn,
         Scope $scope,
@@ -115,19 +120,45 @@ final class InsertProcessor extends Processor
                 $stmt->selectQuery
             )->rows;
 
-            $row = [];
-            foreach ($selectResult as $value) {
+            foreach ($selectResult as $selected_param) {
+                $row = [];
                 foreach ($stmt->selectQuery->selectExpressions as $index => $expr) {
                     if (key_exists($index, $stmt->insertColumns)
-                        && (is_string($value[$expr->name]) || is_int($value[$expr->name]))) {
-                        $row[$stmt->insertColumns[$index]] = $value[$expr->name];
+                        && (is_string($selected_param[$expr->name]) || is_int($selected_param[$expr->name]))) {
+                        $row[$stmt->insertColumns[$index]] = $selected_param[$expr->name];
                     }
                 }
+
+                $row = DataIntegrity::coerceToSchema($conn, $row, $table_definition);
+
+                $result = DataIntegrity::checkUniqueConstraints($table, $row, $table_definition);
+
+                if ($result !== null) {
+                    throw new SQLFakeUniqueKeyViolation($result[0]);
+                }
+
+                /**
+                 * @psalm-suppress MixedAssignment
+                 */
+                foreach ($row as $column_name => $value) {
+                    $column = $table_definition->columns[$column_name];
+
+                    if ($column instanceof IntegerColumn && $column->isAutoIncrement() && is_int($value)) {
+                        $last_incremented_value = $conn->getServer()->addAutoIncrementMinValue(
+                            $database,
+                            $table_name,
+                            $column_name,
+                            $value
+                        );
+                    }
+                }
+
+                $table[] = $row;
             }
 
-            $table[] = $row;
-
             $conn->getServer()->saveTable($database, $table_name, $table);
+            $conn->setLastInsertId((string)($last_incremented_value ?? 0));
+
             return count($selectResult);
         }
 
