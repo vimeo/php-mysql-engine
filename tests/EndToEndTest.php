@@ -1242,4 +1242,36 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
         return $pdo;
     }
+
+    public function testStrToDateInSelectFunction()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+        $query = $pdo->prepare("SELECT STR_TO_DATE('01,5,2013', '%d,%m,%Y') AS date");
+
+        $query->execute();
+
+        $d = mktime(0, 0, 0, 5, 1, 2013);
+
+        $current_date = date('Y-m-d', $d);
+
+        $this->assertSame(
+            [[
+                'date' => $current_date,
+            ]],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testStrToDateInWhereFunction()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+        $query = $pdo->prepare("SELECT id FROM `video_game_characters` WHERE `created_on` = (STR_TO_DATE('26/3/2022', '%d/%m/%Y') - INTERVAL 2 MONTH)");
+
+        $query->execute();
+
+        $this->assertSame(
+            [['id' => 16,]],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
 }

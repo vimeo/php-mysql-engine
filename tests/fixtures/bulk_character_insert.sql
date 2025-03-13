@@ -16,4 +16,4 @@ VALUES
   ('13','pac man', 'Ms Pac Man’s worse three-quarters', 'hero','yellow circle','atari','1','0','{"magic":0, "speed":0, "strength":0, "weapons":0}', NOW()),
   ('14','yoshi', 'Green machine', 'hero','dinosaur','super nintendo','1','0','{"magic":0, "speed":1, "strength":0, "weapons":0}', NOW()),
   ('15','link', 'Zelda? I hardly knew her!', 'hero','not sure','nes','1','0','{"magic":1, "speed":0, "strength":0, "weapons":1}', NOW()),
-  ('16','dude', 'Duuuuuude', 'hero','sure','sega genesis','1','0','{"magic":1, "speed":0, "strength":0, "weapons":1}', NOW())
+  ('16','dude', 'Duuuuuude', 'hero','sure','sega genesis','1','0','{"magic":1, "speed":0, "strength":0, "weapons":1}', '2022-01-26 00:00:00')
