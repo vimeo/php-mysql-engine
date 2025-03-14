@@ -37,6 +37,7 @@ final class DataType
     const TIMESTAMP = 'TIMESTAMP';
     const DECIMAL = 'DECIMAL';
     const NUMERIC = 'NUMERIC';
+    const BOOLEAN = 'BOOLEAN';
 
     private function __construct()
     {
