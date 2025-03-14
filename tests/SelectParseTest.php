@@ -316,4 +316,17 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
     }
+
+    public function testStrToDateFunction()
+    {
+        $sql = "SELECT STR_TO_DATE('01,5,2013', '%d,%m,%Y')";
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+
+        $strToDateFunction = $select_query->selectExpressions[0];
+        $this->assertTrue(isset($strToDateFunction->args[0]));
+        $this->assertTrue(isset($strToDateFunction->args[1]));
+        $this->assertEquals('01,5,2013', $strToDateFunction->args[0]->value);
+        $this->assertEquals('%d,%m,%Y', $strToDateFunction->args[1]->value);
+    }
 }
