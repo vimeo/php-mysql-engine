@@ -1215,6 +1215,13 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testUpdateWithOrderAndPrimaryKey()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+        $pdo->exec('UPDATE `video_game_characters` SET `bio_en` = "spiky boi" WHERE `id` = 7 ORDER BY `id` DESC');
+    }
+
+
     private static function getPdo(string $connection_string, bool $strict_mode = false) : \PDO
     {
         $options = $strict_mode ? [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="STRICT_ALL_TABLES"'] : [];
