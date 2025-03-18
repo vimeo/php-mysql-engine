@@ -137,9 +137,13 @@ final class ExpressionParser
         $needs_comma = false;
         $args = [];
 
+        if (isset($tokens[0]) && $tokens[0]->value == "DISTINCT") {
+            $distinct = true;
+            $pos++;
+        }
+
         while ($pos < $token_count) {
             $arg = $tokens[$pos];
-
 
             if ($arg->value === ',') {
                 if ($needs_comma) {
@@ -151,6 +155,13 @@ final class ExpressionParser
                 }
             }
 
+
+            if ($arg->value === 'ORDER') {
+                $p = new OrderByParser($pos, $tokens);
+                [$pos, $order_by] = $p->parse();
+                continue;
+            }
+
             $p = new ExpressionParser($tokens, $pos - 1);
             list($pos, $expr) = $p->buildWithPointer();
             $args[] = $expr;
@@ -158,7 +169,7 @@ final class ExpressionParser
             $needs_comma = true;
         }
 
-        return [$distinct, $args];
+        return [$distinct, $args, $order_by ?? null];
     }
 
     /**

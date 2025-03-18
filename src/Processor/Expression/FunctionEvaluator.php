@@ -67,7 +67,7 @@ final class FunctionEvaluator
             case 'CONCAT':
                 return self::sqlConcat($conn, $scope, $expr, $row, $result);
             case 'GROUP_CONCAT':
-                return self::sqlGroupConcat($conn, $scope, $expr, $row, $result);
+                return self::sqlGroupConcat($conn, $scope, $expr, $result);
             case 'FIELD':
                 return self::sqlColumn($conn, $scope, $expr, $row, $result);
             case 'BINARY':
@@ -941,18 +941,23 @@ final class FunctionEvaluator
         FakePdoInterface $conn,
         Scope $scope,
         FunctionExpression $expr,
-        array $row,
         QueryResult $result
     ): string {
         $args = $expr->args;
 
-        $final_concat = "";
-        foreach ($args as $arg) {
-            $val = (string) Evaluator::evaluate($conn, $scope, $arg, $row, $result);
-            $final_concat .= $val;
+        $items = [];
+        foreach ($result->rows as $row) {
+            $tmp_str = "";
+            foreach ($args as $arg) {
+                $val = (string) Evaluator::evaluate($conn, $scope, $arg, $row, $result);
+                $tmp_str .= $val;
+            }
+            if ($tmp_str !== "" && (!$expr->distinct || !isset($items[$tmp_str]))) {
+                $items[$tmp_str] = $tmp_str;
+            }
         }
 
-        return $final_concat;
+        return implode(",", array_values($items));
     }
 
     /**
