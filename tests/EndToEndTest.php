@@ -917,7 +917,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $pdo = self::getConnectionToFullDB(false);
 
         $query = $pdo->prepare(
-            'SELECT `type`, GROUP_CONCAT(DISTINCT `profession`) as `profession_list`
+            'SELECT `type`, GROUP_CONCAT(DISTINCT `profession` ORDER BY `name` SEPARATOR \' \') as `profession_list`
             FROM `video_game_characters`
             GROUP BY `type`'
         );
@@ -928,11 +928,11 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
             [
                 [
                     "type" => "hero",
-                    "profession_list" => "plumber,hedgehog,earthworm,monkey,pokemon,princess,boxer,yellow circle,dinosaur,not sure,sure"
+                    "profession_list" => "monkey sure earthworm not sure boxer plumber yellow circle pokemon princess hedgehog dinosaur"
                 ],
                 [
                     "type" => "villain",
-                    "profession_list" => "evil dinosaur,evil doctor,throwing shit from clouds,evil chain dude"
+                    "profession_list" => "evil dinosaur evil chain dude evil doctor throwing shit from clouds"
                 ],
             ],
             $query->fetchAll(\PDO::FETCH_ASSOC)

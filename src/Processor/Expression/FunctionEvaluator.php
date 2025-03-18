@@ -938,26 +938,54 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlGroupConcat(
-        FakePdoInterface $conn,
-        Scope $scope,
+        FakePdoInterface   $conn,
+        Scope              $scope,
         FunctionExpression $expr,
-        QueryResult $result
-    ): string {
+        QueryResult        $result
+    ): string
+    {
         $args = $expr->args;
 
         $items = [];
         foreach ($result->rows as $row) {
             $tmp_str = "";
+            $orders = array_map(
+                function (array $order) use ($result, $row, $scope, $conn) {
+                    return Evaluator::evaluate($conn, $scope, $order["expression"], $row, $result);
+                },
+                $expr->order ?? []
+            );
             foreach ($args as $arg) {
-                $val = (string) Evaluator::evaluate($conn, $scope, $arg, $row, $result);
+                $val = (string)Evaluator::evaluate($conn, $scope, $arg, $row, $result);
                 $tmp_str .= $val;
             }
             if ($tmp_str !== "" && (!$expr->distinct || !isset($items[$tmp_str]))) {
-                $items[$tmp_str] = $tmp_str;
+                $items[$tmp_str] = ["val" => $tmp_str, "orders" => $orders];
             }
         }
 
-        return implode(",", array_values($items));
+        usort($items, function ($a, $b) use ($expr) {
+            for ($i = 0; $i < count($expr->order ?? []); $i++) {
+                $direction = $expr->order[$i]["direction"] ?? 'ASC';
+                $a_val = $a["orders"][$i];
+                $b_val = $b["orders"][$i];
+
+                if ($a_val < $b_val) {
+                    return ($direction === 'ASC') ? -1 : 1;
+                } elseif ($a_val > $b_val) {
+                    return ($direction === 'ASC') ? 1 : -1;
+                }
+            }
+            return 0;
+        });
+
+        if (isset($expr->separator)) {
+            $separator = (string)(Evaluator::evaluate($conn, $scope, $expr->separator, $row, $result));
+        } else {
+            $separator = ",";
+        }
+
+        return implode($separator, array_column(array_values($items), 'val'));
     }
 
     /**
