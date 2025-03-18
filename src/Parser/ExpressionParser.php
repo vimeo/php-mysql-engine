@@ -127,7 +127,12 @@ final class ExpressionParser
     /**
      * @param array<int, Token> $tokens
      *
-     * @return array{0: bool, 1: array<int, Expression>}
+     * @return array{
+     *     0: bool,
+     *     1: list<Expression>,
+     *     2: ?array<int, array{direction: 'ASC'|'DESC', expression: Expression}>,
+     *     3: ?Expression
+     * }
      */
     private function getListExpression(array $tokens)
     {
@@ -136,6 +141,9 @@ final class ExpressionParser
         $token_count = \count($tokens);
         $needs_comma = false;
         $args = [];
+
+        $order_by = null;
+        $separator = null;
 
         if (isset($tokens[0]) && $tokens[0]->value == "DISTINCT") {
             $distinct = true;
@@ -155,11 +163,18 @@ final class ExpressionParser
                 }
             }
 
-
             if ($arg->value === 'ORDER') {
                 $p = new OrderByParser($pos, $tokens);
                 [$pos, $order_by] = $p->parse();
+                $pos++; // ORDER BY の次の式の先頭に position を合わせる
                 continue;
+            }
+
+            if ($arg->value === 'SEPARATOR') {
+                $p = new ExpressionParser($tokens, $pos);
+                list(, $expr) = $p->buildWithPointer();
+                $separator = $expr;
+                break;
             }
 
             $p = new ExpressionParser($tokens, $pos - 1);
@@ -169,7 +184,7 @@ final class ExpressionParser
             $needs_comma = true;
         }
 
-        return [$distinct, $args, $order_by ?? null];
+        return [$distinct, $args, $order_by, $separator];
     }
 
     /**
@@ -283,8 +298,8 @@ final class ExpressionParser
 
                     $fn = new CastExpression($token, $expr, $type);
                 } else {
-                    list($distinct, $args) = $this->getListExpression($arg_tokens);
-                    $fn = new FunctionExpression($token, $args, $distinct);
+                    list($distinct, $args, $order, $separator) = $this->getListExpression($arg_tokens);
+                    $fn = new FunctionExpression($token, $args, $distinct, $order, $separator);
                 }
 
                 $this->pointer = $closing_paren_pointer;
