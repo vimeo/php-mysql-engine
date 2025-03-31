@@ -204,6 +204,7 @@ final class DataIntegrity
         }
 
         switch ($php_type) {
+            case 'boolean':
             case 'int':
                 return (int) $value;
 

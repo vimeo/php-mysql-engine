@@ -148,6 +148,7 @@ final class CreateProcessor
             case DataType::BIT:
             case DataType::MEDIUMINT:
             case DataType::BIGINT:
+            case DataType::BOOLEAN:
                 if ($stmt->null === null) {
                     $stmt->null = true;
                 }
@@ -240,7 +241,7 @@ final class CreateProcessor
     }
 
     /**
-     * @return Column\BigInt|Column\IntColumn|Column\MediumInt|Column\SmallInt|Column\TinyInt
+     * @return Column\BigInt|Column\IntColumn|Column\MediumInt|Column\SmallInt|Column\TinyInt|Column\Boolean
      */
     private static function getIntegerDefinitionColumn(Query\MysqlColumnType $stmt)
     {
@@ -249,6 +250,9 @@ final class CreateProcessor
         $display_width = (int) $stmt->length;
 
         switch (strtoupper($stmt->type)) {
+            case DataType::BOOLEAN:
+                return new Column\Boolean();
+
             case DataType::TINYINT:
                 return new Column\TinyInt($unsigned, $display_width);
 
