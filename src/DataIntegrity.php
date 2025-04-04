@@ -228,7 +228,7 @@ final class DataIntegrity
                 if ($column instanceof Schema\Column\Date) {
                     if (\strlen($value) === 19) {
                         $value = \substr($value, 0, 10);
-                    } elseif ($value[0] === '-' || $value === '') {
+                    } elseif ($value === '' || $value[0] === '-') {
                         $value = '0000-00-00';
                     } elseif (\preg_match('/^[0-9]+$/', (string) $value)) {
                         $value = (new \DateTime($value))->format('Y-m-d');
