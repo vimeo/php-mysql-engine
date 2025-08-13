@@ -1214,6 +1214,26 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
             $query->fetch(\PDO::FETCH_ASSOC)
         );
     }
+        
+    public function testNegateOperation()
+    {
+        // greater than
+        $pdo = self::getConnectionToFullDB(false);
+        $query = $pdo->prepare("SELECT COUNT(*) as 'count' FROM `video_game_characters` WHERE `console` = :console AND NOT (`powerups` > :powerups)");
+        $query->bindValue(':console', 'nes');
+        $query->bindValue(':powerups', 3);
+        $query->execute();
+
+        $this->assertSame([['count' => 8]], $query->fetchAll(\PDO::FETCH_ASSOC));
+
+        // equals
+        $query = $pdo->prepare("SELECT COUNT(*) as 'count' FROM `video_game_characters` WHERE `console` = :console AND NOT (`powerups` = :powerups)");
+        $query->bindValue(':console', 'nes');
+        $query->bindValue(':powerups', 0);
+        $query->execute();
+
+        $this->assertSame([['count' => 2]], $query->fetchAll(\PDO::FETCH_ASSOC));
+    }
 
     private static function getPdo(string $connection_string, bool $strict_mode = false) : \PDO
     {
