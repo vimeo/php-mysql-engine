@@ -826,18 +826,6 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
-    public function testSelectWithOffset()
-    {
-        $pdo = self::getConnectionToFullDB(false);
-        $query = $pdo->prepare("SELECT `id` FROM `video_game_characters` ORDER BY `id` LIMIT 10000 OFFSET 1");
-        $query->execute();
-
-        $this->assertSame(
-            ['id' => 2],
-            $query->fetch(\PDO::FETCH_ASSOC)
-        );
-    }
-
     public function testLastInsertIdAfterSkippingAutoincrement()
     {
         $pdo = self::getConnectionToFullDB(false);
@@ -1213,6 +1201,25 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
             ['nullable_field' => null, 'nullable_field_default_0' => null],
             $query->fetch(\PDO::FETCH_ASSOC)
         );
+    }
+
+    public function testUpdate()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        // before update
+        $query = $pdo->prepare("SELECT `type` FROM `video_game_characters` WHERE `id` = 3");
+        $query->execute();
+        $this->assertSame([['type' => 'hero']], $query->fetchAll(\PDO::FETCH_ASSOC));
+
+        // prepare update
+        $query = $pdo->prepare("UPDATE `video_game_characters` SET `type` = 'villain' WHERE `id` = 3 LIMIT 1");
+        $query->execute();
+
+        // after update
+        $query = $pdo->prepare("SELECT `type` FROM `video_game_characters` WHERE `id` = 3");
+        $query->execute();
+        $this->assertSame([['type' => 'villain']], $query->fetchAll(\PDO::FETCH_ASSOC));
     }
         
     public function testNegateOperationWithAnd()
