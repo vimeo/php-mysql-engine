@@ -316,4 +316,32 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
     }
+
+    public function testMAKETIMEFunction()
+    {
+        $sql = "select MAKETIME(12,13,24)";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+
+        $sum_function = $select_query->selectExpressions[0];
+
+        $this->assertTrue(isset($sum_function->args[0]));
+        $this->assertEquals(12, $sum_function->args[0]->value);
+    }
+
+    public function testTIMESTAMPFunction()
+    {
+        $sql = "SELECT TIMESTAMP('2025-01-10',  '14:10:00')";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+
+        $TIMESTAMP_function = $select_query->selectExpressions[0];
+
+        $this->assertTrue(isset($TIMESTAMP_function->args[0]));
+        $this->assertTrue(isset($TIMESTAMP_function->args[1]));
+        $this->assertEquals('2025-01-10', $TIMESTAMP_function->args[0]->value);
+        $this->assertEquals('14:10:00', $TIMESTAMP_function->args[1]->value);
+    }
 }
