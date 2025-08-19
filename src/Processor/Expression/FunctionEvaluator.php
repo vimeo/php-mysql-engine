@@ -114,6 +114,8 @@ final class FunctionEvaluator
                 return self::sqlInetAton($conn, $scope, $expr, $row, $result);
             case 'INET_NTOA':
                 return self::sqlInetNtoa($conn, $scope, $expr, $row, $result);
+            case 'STR_TO_DATE':
+                return self::sqlStrToDate($conn, $scope, $expr, $row, $result);
         }
 
         throw new ProcessorException("Function " . $expr->functionName . " not implemented yet");
@@ -1532,5 +1534,77 @@ final class FunctionEvaluator
             default:
                 throw new ProcessorException('MySQL INTERVAL unit ' . $expr->unit . ' not supported yet');
         }
+    }
+
+    /**
+     * @param array<string, mixed> $row
+     * @return string|null
+     */
+    private static function sqlStrToDate(
+        FakePdoInterface   $conn,
+        Scope              $scope,
+        FunctionExpression $expr,
+        array              $row,
+        QueryResult        $result
+    ) : ?string {
+        $args = $expr->args;
+
+        if (\count($args) !== 2) {
+            throw new ProcessorException("MySQL DATE_FORMAT() function must be called with one argument");
+        }
+
+        $subject = (string) Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
+        $format = (string) Evaluator::evaluate($conn, $scope, $args[1], $row, $result);
+
+        if (strpos($format, '%') === false) {
+            return null;
+        }
+
+        $date_format_list = [
+            "%b" => "M", "%c" => "n", "%d" => "d", "%D" => "jS", "%e" => "j",
+            "%m" => "m", "%M" => "F", "%y" => "y", "%Y" => "Y"
+        ];
+
+        $time_format_list = [
+            "%h" => "h", "%H" => "H", "%i" => "i", "%I" => "h", "%k" => "G",
+            "%l" => "g", "%r" => "h:i:s A", "%s" => "s", "%S" => "s", "%T" => "H:i:s"
+        ];
+
+        $has_date_format = false;
+        $has_time_format = false;
+        preg_match_all("/(?:%[a-zA-Z])/u", $format, $matches);
+        foreach ($matches[0] as $match) {
+            $has_date_format = $has_date_format || in_array($match, array_keys($date_format_list));
+            $has_time_format = $has_time_format || in_array($match, array_keys($time_format_list));
+        }
+
+
+        $format = \str_replace(
+            array_keys($date_format_list + $time_format_list),
+            array_values($date_format_list + $time_format_list),
+            $format
+        );
+
+        if ($has_date_format && $has_time_format) {
+            $time = \DateTimeImmutable::createFromFormat($format, $subject);
+            if($time !== false) {
+                return $time->format('Y-m-d G:i:s');
+            }
+        }
+
+        if ($has_date_format) {
+            $time = \DateTimeImmutable::createFromFormat($format, $subject);
+            if($time !== false) {
+                return $time->format('Y-m-d');
+            }
+        }
+
+        if ($has_time_format) {
+            $time = \DateTimeImmutable::createFromFormat($format, $subject);
+            if($time !== false) {
+                return $time->format('G:i:s');
+            }
+        }
+        return null;
     }
 }
