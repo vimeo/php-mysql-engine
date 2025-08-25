@@ -69,8 +69,8 @@ final class BinaryOperatorExpression extends Expression
      */
     public function negate()
     {
-        $this->negated = true;
-        $this->negatedInt = 1;
+        $this->negated = !$this->negated;
+        $this->negatedInt = $this->negated ? 1 : 0;
     }
 
     /**
