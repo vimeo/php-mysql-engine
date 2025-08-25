@@ -1262,6 +1262,42 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame([['count' => 9]], $query->fetchAll(\PDO::FETCH_ASSOC));
     }
 
+    public function testNullEvaluation()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        // case 1, where console value is null
+        $query = $pdo->prepare("SELECT COUNT(*) as 'count' FROM `video_game_characters` WHERE (:console IS NULL AND `console` = 'gameboy') OR NOT (:console IS NULL)");
+        $query->bindValue(':console', NULL);
+        $query->execute();
+        $this->assertSame([['count' => 1]], $query->fetchAll(\PDO::FETCH_ASSOC));
+
+        // case 2, where console value is not null
+        $query = $pdo->prepare("SELECT COUNT(*) as 'count' FROM `video_game_characters` WHERE (:console IS NULL AND `console` = 'gameboy') OR NOT (:console IS NULL)");
+        $query->bindValue(':console', 'all');
+        $query->execute();
+        $this->assertSame([['count' => 16]], $query->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
+    public function testNullWithDoubleNegativeEvaluation()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        //case 1, where console value is not null
+        $query = $pdo->prepare("SELECT COUNT(*) as 'count' FROM `video_game_characters` WHERE (:console IS NOT NULL AND `console` = :console) OR NOT (:console IS NOT NULL)");
+        $query->bindValue(':console', 'gameboy');
+        $query->execute();
+
+        $this->assertSame([['count' => 1]], $query->fetchAll(\PDO::FETCH_ASSOC));
+
+        //case 1, where console value is null
+        $query = $pdo->prepare("SELECT COUNT(*) as 'count' FROM `video_game_characters` WHERE (:console IS NOT NULL AND `console` = :console) OR NOT (:console IS NOT NULL)");
+        $query->bindValue(':console', NULL);
+        $query->execute();
+
+        $this->assertSame([['count' => 16]], $query->fetchAll(\PDO::FETCH_ASSOC));
+    }
+
     private static function getPdo(string $connection_string, bool $strict_mode = false) : \PDO
     {
         $options = $strict_mode ? [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="STRICT_ALL_TABLES"'] : [];
