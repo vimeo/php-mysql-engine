@@ -435,14 +435,20 @@ final class FunctionEvaluator
 
             $value = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            if (!\is_scalar($value)) {
+            if (!\is_scalar($value) && !\is_null($value)) {
                 throw new \TypeError('Bad min value');
             }
 
             $values[] = $value;
         }
 
-        return self::castAggregate(\min($values), $expr, $result);
+        $min_value = \min($values);
+
+        if ($min_value === null) {
+            return null;
+        }
+
+        return self::castAggregate($min_value, $expr, $result);
     }
 
     /**
@@ -470,14 +476,20 @@ final class FunctionEvaluator
 
             $value = Evaluator::evaluate($conn, $scope, $expr, $row, $result);
 
-            if (!\is_scalar($value)) {
+            if (!\is_scalar($value) && !\is_null($value)) {
                 throw new \TypeError('Bad max value');
             }
 
             $values[] = $value;
         }
 
-        return self::castAggregate(\max($values), $expr, $result);
+        $max_value = \max($values);
+
+        if ($max_value === null) {
+            return null;
+        }
+
+        return self::castAggregate($max_value, $expr, $result);
     }
 
     /**
