@@ -5,175 +5,118 @@ declare(strict_types=1);
 namespace Vimeo\MysqlEngine\Tests;
 
 use PHPUnit\Framework\TestCase;
-use Vimeo\MysqlEngine\FakePdoInterface;
-use Vimeo\MysqlEngine\Processor\Expression\FunctionEvaluator;
-use Vimeo\MysqlEngine\Processor\QueryResult;
-use Vimeo\MysqlEngine\Processor\Scope;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\Query\Expression\FunctionExpression;
 
 class FunctionEvaluatorTest extends TestCase
 {
 
-    public function dataFunction(): array
+    public function tearDown() : void
     {
-        return [
-            'numeric' => ['SELECT ?', 1],
-            ':field'  => ['SELECT :field', ':field'],
-            'field'   => ['SELECT :field', 'field'],
-        ];
+        \Vimeo\MysqlEngine\Server::reset();
     }
 
     /**
      * @dataProvider maxValueProvider
      */
-    public function testSqlMax(array $rows, ?int $expected) : void
+    public function testSqlMax(string $sql, ?string $expected, bool $is_db_number) : void
     {
-        $conn = $this->createMock(FakePdoInterface::class);
-        $scope = $this->createMock(Scope::class);
-        $queryResult = $this->createMock(QueryResult::class);
-        /** @var array<int, non-empty-array<string, mixed>> $rows */
-        $queryResult->rows = $rows;
+        $query = self::getConnectionToFullDB()->prepare($sql);
+        $query->execute();
+        /** @var array<array<string, string|null>> $result */
+        $result = $query->fetchAll(\PDO::FETCH_ASSOC);
 
-        $token = new \Vimeo\MysqlEngine\Parser\Token(
-            \Vimeo\MysqlEngine\TokenType::SQLFUNCTION,
-            'MAX',
-            'MAX',
-            0
-        );
-
-        $exp = new ColumnExpression(
-            new \Vimeo\MysqlEngine\Parser\Token(\Vimeo\MysqlEngine\TokenType::IDENTIFIER, "value", '', 0)
-        );
-
-        $functionExpr = new FunctionExpression(
-            $token,
-            [$exp],
-            false
-        );
-
-        $refMethod = new \ReflectionMethod(FunctionEvaluator::class, 'sqlMax');
-        $refMethod->setAccessible(true);
-
-        if ($expected === -1) {
-            $this->expectException(\TypeError::class);
-            $this->expectExceptionMessage('Bad max value');
-        }
-
-        /** @var int|null $actual */
-        $actual = $refMethod->invoke(null, $conn, $scope, $functionExpr, $queryResult);
-
-        if ($expected !== -1) {
-            $this->assertSame($expected, $actual);
+        if ($is_db_number) {
+            $this->assertNotEmpty($result);
+            $this->assertNotNull($result[0]['max']);
+        } else {
+            $this->assertSame([['max' => $expected]], $result);
         }
     }
-
-    /**
-     * @dataProvider minValueProvider
-     */
-    public function testSqlMin(array $rows, ?int $expected) : void
-    {
-        $conn = $this->createMock(FakePdoInterface::class);
-        $scope = $this->createMock(Scope::class);
-        $queryResult = $this->createMock(QueryResult::class);
-        /** @var array<int, non-empty-array<string, mixed>> $rows */
-        $queryResult->rows = $rows;
-
-        $token = new \Vimeo\MysqlEngine\Parser\Token(
-            \Vimeo\MysqlEngine\TokenType::SQLFUNCTION,
-            'MIN',
-            'MIN',
-            0
-        );
-
-        $exp = new ColumnExpression(
-            new \Vimeo\MysqlEngine\Parser\Token(\Vimeo\MysqlEngine\TokenType::IDENTIFIER, "value", '', 0)
-        );
-
-        $functionExpr = new FunctionExpression(
-            $token,
-            [$exp],
-            false
-        );
-
-        $refMethod = new \ReflectionMethod(FunctionEvaluator::class, 'sqlMin');
-        $refMethod->setAccessible(true);
-
-        if ($expected === -1) {
-            $this->expectException(\TypeError::class);
-            $this->expectExceptionMessage('Bad min value');
-        }
-
-        /** @var int|null $actual */
-        $actual = $refMethod->invoke(null, $conn, $scope, $functionExpr, $queryResult);
-
-        if ($expected !== -1) {
-            $this->assertSame($expected, $actual);
-        }
-    }
-
 
     public static function maxValueProvider(): array
     {
         return [
             'null when no rows' => [
-                'rows' => [],
+                'sql' => 'SELECT MAX(null) as `max` FROM `video_game_characters`',
                 'expected' => null,
+                'is_db_number' => false,
             ],
             'max of scalar values' => [
-                'rows' => [
-                    ['value' => 10],
-                    ['value' => 25],
-                    ['value' => 5],
-                ],
-                'expected' => 25,
+                'sql' => 'SELECT MAX(10) as `max` FROM `video_game_characters`',
+                'expected' => '10',
+                'is_db_number' => false,
             ],
-            'null values mixed in' => [
-                'rows' => [
-                    ['value' => null],
-                    ['value' => 7],
-                    ['value' => null],
-                ],
-                'expected' => 7,
-            ],
-            'non scalar values' => [
-                'rows' => [
-                    ['value' => ['test']],
-                ],
-                'expected' => -1,
+            'max in DB values' => [
+                'sql' => 'SELECT MAX(id) as `max` FROM `video_game_characters`',
+                'expected' => '',
+                'is_db_number' => true,
             ],
         ];
+    }
+
+    /**
+     * @dataProvider minValueProvider
+     */
+    public function testSqlMin(string $sql, ?string $expected, bool $is_db_number) : void
+    {
+        $query = self::getConnectionToFullDB()->prepare($sql);
+        $query->execute();
+        /** @var array<array<string, string|null>> $result */
+        $result = $query->fetchAll(\PDO::FETCH_ASSOC);
+
+        if ($is_db_number) {
+            $this->assertNotEmpty($result);
+            $this->assertNotNull($result[0]['min']);
+        } else {
+            $this->assertSame([['min' => $expected]], $result);
+        }
     }
 
     public static function minValueProvider(): array
     {
         return [
             'null when no rows' => [
-                'rows' => [],
+                'sql' => 'SELECT MIN(null) as `min` FROM `video_game_characters`',
                 'expected' => null,
+                'is_db_number' => false,
             ],
             'min of scalar values' => [
-                'rows' => [
-                    ['value' => 10],
-                    ['value' => 25],
-                    ['value' => 5],
-                ],
-                'expected' => 5,
+                'sql' => 'SELECT MIN(10) as `min` FROM `video_game_characters`',
+                'expected' => '10',
+                'is_db_number' => false,
             ],
-            'null values mixed in' => [
-                'rows' => [
-                    ['value' => null],
-                    ['value' => 7],
-                    ['value' => null],
-                ],
-                'expected' => null,
-            ],
-            'non scalar values' => [
-                'rows' => [
-                    ['value' => ['test']],
-                ],
-                'expected' => -1,
+            'min in DB values' => [
+                'sql' => 'SELECT MIN(id) as `min` FROM `video_game_characters`',
+                'expected' => '',
+                'is_db_number' => true,
             ],
         ];
+    }
+
+    private static function getPdo(string $connection_string, bool $strict_mode = false) : \PDO
+    {
+        $options = $strict_mode ? [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET sql_mode="STRICT_ALL_TABLES"'] : [];
+
+        if (\PHP_MAJOR_VERSION === 8) {
+            return new \Vimeo\MysqlEngine\Php8\FakePdo($connection_string, '', '', $options);
+        }
+
+        return new \Vimeo\MysqlEngine\Php7\FakePdo($connection_string, '', '', $options);
+    }
+
+    private static function getConnectionToFullDB(bool $emulate_prepares = true, bool $strict_mode = false) : \PDO
+    {
+        $pdo = self::getPdo('mysql:foo;dbname=test;', $strict_mode);
+
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, $emulate_prepares);
+
+        // create table
+        $pdo->prepare(file_get_contents(__DIR__ . '/fixtures/create_table.sql'))->execute();
+
+        // insertData
+        $pdo->prepare(file_get_contents(__DIR__ . '/fixtures/bulk_character_insert.sql'))->execute();
+        $pdo->prepare(file_get_contents(__DIR__ . '/fixtures/bulk_enemy_insert.sql'))->execute();
+        $pdo->prepare(file_get_contents(__DIR__ . '/fixtures/bulk_tag_insert.sql'))->execute();
+
+        return $pdo;
     }
 }
