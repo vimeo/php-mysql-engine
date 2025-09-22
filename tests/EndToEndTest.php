@@ -1,4 +1,5 @@
 <?php
+
 namespace Vimeo\MysqlEngine\Tests;
 
 use PDOException;
@@ -894,6 +895,33 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame(
             [
                 ['bio_en' => '', 'bio_fr' => null],
+            ],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testGroupConcat()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'SELECT `type`, GROUP_CONCAT(DISTINCT `profession` ORDER BY `name` SEPARATOR \' \') as `profession_list`
+            FROM `video_game_characters`
+            GROUP BY `type`'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                [
+                    "type" => "hero",
+                    "profession_list" => "monkey sure earthworm not sure boxer plumber yellow circle pokemon princess hedgehog dinosaur"
+                ],
+                [
+                    "type" => "villain",
+                    "profession_list" => "evil dinosaur evil chain dude evil doctor throwing shit from clouds"
+                ],
             ],
             $query->fetchAll(\PDO::FETCH_ASSOC)
         );

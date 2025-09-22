@@ -1,6 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Processor\Expression;
 
+use Closure;
 use Vimeo\MysqlEngine\FakePdoInterface;
 use Vimeo\MysqlEngine\Processor\ProcessorException;
 use Vimeo\MysqlEngine\Processor\QueryResult;
@@ -67,7 +68,7 @@ final class FunctionEvaluator
             case 'CONCAT':
                 return self::sqlConcat($conn, $scope, $expr, $row, $result);
             case 'GROUP_CONCAT':
-                return self::sqlGroupConcat($conn, $scope, $expr, $row, $result);
+                return self::sqlGroupConcat($conn, $scope, $expr, $result);
             case 'FIELD':
                 return self::sqlColumn($conn, $scope, $expr, $row, $result);
             case 'BINARY':
@@ -950,21 +951,62 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      */
     private static function sqlGroupConcat(
-        FakePdoInterface $conn,
-        Scope $scope,
+        FakePdoInterface   $conn,
+        Scope              $scope,
         FunctionExpression $expr,
-        array $row,
-        QueryResult $result
-    ): string {
+        QueryResult        $result
+    ): string
+    {
         $args = $expr->args;
 
-        $final_concat = "";
-        foreach ($args as $arg) {
-            $val = (string) Evaluator::evaluate($conn, $scope, $arg, $row, $result);
-            $final_concat .= $val;
+        $items = [];
+        foreach ($result->rows as $row) {
+            $tmp_str = "";
+            /** @var Closure(array{direction: "ASC"|"DESC", expression: Expression}): ?scalar $func */
+            /** @psalm-suppress MissingClosureReturnType */
+            $func = function (array $order) use ($result, $row, $scope, $conn) {
+                /** @var array{expression: Expression} $order */
+                return Evaluator::evaluate($conn, $scope, $order["expression"], $row, $result);
+            };
+            $orders = array_map(
+                $func,
+                $expr->order ?? []
+            );
+            foreach ($args as $arg) {
+                $val = (string)Evaluator::evaluate($conn, $scope, $arg, $row, $result);
+                $tmp_str .= $val;
+            }
+            if ($tmp_str !== "" && (!$expr->distinct || !isset($items[$tmp_str]))) {
+                $items[$tmp_str] = ["val" => $tmp_str, "orders" => $orders];
+            }
         }
 
-        return $final_concat;
+        usort($items, function ($a, $b) use ($expr): int {
+            /**
+             * @var array{val: string, orders: array<int, scalar>} $a
+             * @var array{val: string, orders: array<int, scalar>} $b
+             */
+            for ($i = 0; $i < count($expr->order ?? []); $i++) {
+                $direction = $expr->order[$i]["direction"] ?? 'ASC';
+                $a_val = $a["orders"][$i];
+                $b_val = $b["orders"][$i];
+
+                if ($a_val < $b_val) {
+                    return ($direction === 'ASC') ? -1 : 1;
+                } elseif ($a_val > $b_val) {
+                    return ($direction === 'ASC') ? 1 : -1;
+                }
+            }
+            return 0;
+        });
+
+        if (isset($expr->separator)) {
+            $separator = (string)(Evaluator::evaluate($conn, $scope, $expr->separator, [], $result));
+        } else {
+            $separator = ",";
+        }
+
+        return implode($separator, array_column($items, 'val'));
     }
 
     /**

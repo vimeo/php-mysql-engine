@@ -1,9 +1,8 @@
 <?php
+
 namespace Vimeo\MysqlEngine\Query\Expression;
 
 use Vimeo\MysqlEngine\Parser\Token;
-use Vimeo\MysqlEngine\TokenType;
-use Vimeo\MysqlEngine\Processor\ProcessorException;
 
 final class FunctionExpression extends Expression
 {
@@ -31,12 +30,23 @@ final class FunctionExpression extends Expression
      * @var bool
      */
     public $distinct;
+    /** @var ?array<int, array{expression: Expression, direction: 'ASC'|'DESC'}> $order */
+    public $order;
+    /** @var ?Expression $separator */
+    public $separator;
 
     /**
      * @param Token $token
-     * @param array<int, Expression>                                $args
+     * @param array<int, Expression> $args
+     * @param ?array<int, array{expression: Expression, direction: 'ASC'|'DESC'}> $order
      */
-    public function __construct(Token $token, array $args, bool $distinct)
+    public function __construct(
+        Token  $token,
+        array  $args,
+        bool   $distinct,
+        ?array  $order,
+        ?Expression $separator
+    )
     {
         $this->token = $token;
         $this->args = $args;
@@ -45,8 +55,10 @@ final class FunctionExpression extends Expression
         $this->precedence = 0;
         $this->functionName = $token->value;
         $this->name = $token->value;
-        $this->operator = (string) $this->type;
+        $this->operator = $this->type;
         $this->start = $token->start;
+        $this->separator = $separator;
+        $this->order = $order;
     }
 
     /**
@@ -57,7 +69,7 @@ final class FunctionExpression extends Expression
         return $this->functionName;
     }
 
-    public function hasAggregate() : bool
+    public function hasAggregate(): bool
     {
         if ($this->functionName === 'COUNT'
             || $this->functionName === 'SUM'
