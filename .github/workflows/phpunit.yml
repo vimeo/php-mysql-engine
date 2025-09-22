@@ -10,6 +10,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      XDEBUG_MODE: off
 
     steps:
     - uses: actions/checkout@v2
