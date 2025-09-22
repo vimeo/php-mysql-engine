@@ -141,7 +141,7 @@ final class ExpressionParser
             $arg = $tokens[$pos];
 
 
-            if ($arg->value === ',') {
+            if ($arg->value === ',' && $arg->type == "Separator") {
                 if ($needs_comma) {
                     $needs_comma = false;
                     $pos++;

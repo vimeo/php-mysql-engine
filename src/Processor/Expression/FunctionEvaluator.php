@@ -114,6 +114,10 @@ final class FunctionEvaluator
                 return self::sqlInetAton($conn, $scope, $expr, $row, $result);
             case 'INET_NTOA':
                 return self::sqlInetNtoa($conn, $scope, $expr, $row, $result);
+            case 'MAKETIME':
+                return self::sqlMAKETIME($conn, $scope, $expr, $row, $result);
+            case 'TIMESTAMP':
+                return self::sqlTimestamp($conn, $scope, $expr, $row, $result);
         }
 
         throw new ProcessorException("Function " . $expr->functionName . " not implemented yet");
@@ -1544,5 +1548,173 @@ final class FunctionEvaluator
             default:
                 throw new ProcessorException('MySQL INTERVAL unit ' . $expr->unit . ' not supported yet');
         }
+    }
+
+
+    /**
+     * @param FakePdoInterface $conn
+     * @param Scope $scope
+     * @param FunctionExpression $expr
+     * @param array $row
+     * @param QueryResult $result
+     * @return mixed
+     * @throws ProcessorException
+     */
+    private static function sqlMAKETIME(
+        FakePdoInterface   $conn,
+        Scope              $scope,
+        FunctionExpression $expr,
+        array              $row,
+        QueryResult        $result
+    ): mixed
+    {
+
+        if (\count($expr->args) != 3) {
+            throw new ProcessorException("MySQL MAKETIME() function must be called with three argument");
+        }
+        $created_time = "";
+        foreach ($expr->args as $index => $arg) {
+            $value = Evaluator::evaluate($conn, $scope, $arg, $row, $result);
+            switch ($index) {
+                case 0:
+                    if ($value > 839) {
+                        throw new ProcessorException("Hour cannot be greater than 839");
+                    }
+                    break;
+                case 1:
+                case 2:
+                    if ($value > 59) {
+                        throw new ProcessorException("Minute or second cannot be greater than 59");
+                    }
+            }
+
+            if ($value < 10) {
+                $value = "0" . $value;
+            }
+
+            $created_time .= $value . ":";
+        }
+
+        return self::castAggregate(\rtrim($created_time, ":"), $expr, $result);
+    }
+
+    /**
+     * @param FakePdoInterface $conn
+     * @param Scope $scope
+     * @param FunctionExpression $expr
+     * @param array $row
+     * @param QueryResult $result
+     * @return mixed
+     * @throws ProcessorException
+     */
+    private static function sqlTimestamp(
+        FakePdoInterface   $conn,
+        Scope              $scope,
+        FunctionExpression $expr,
+        array              $row,
+        QueryResult        $result
+    ): mixed
+    {
+
+        if (\count($expr->args) > 2 || \count($expr->args) < 1) {
+            throw new ProcessorException("MySQL TIMESTAMP() function must be called with maximum two argument");
+        }
+
+        $value = Evaluator::evaluate($conn, $scope, $expr->args[0], $row, $result);
+
+        $exploded_value = explode(" ", $value);
+
+        $date = $exploded_value[0];
+
+        $time_str = "00:00:00";
+
+        if (isset($exploded_value[1])) {
+            $time = explode(":", $exploded_value[1]);
+
+            if (count($time) < 1 || count($time) > 3) {
+                throw new ProcessorException("The given time format is incorrect !!!");
+            }
+
+            if ($time[0] < 10) {
+                $time[0] = "0" . $time[0];
+            }
+
+            if (isset($time[1])) {
+                if ($time[1] < 10) {
+                    $time[1] = "0" . $time[1];
+                }
+            } else {
+                $time[1] = "00";
+            }
+
+            if (isset($time[2])) {
+                if ($time[2] < 10) {
+                    $time[2] = "0" . $time[2];
+                }
+            } else {
+                $time[2] = "00";
+            }
+
+            $time_str = $time[0] . ":" . $time[1] . ":" . $time[2];
+        }
+
+        if (!$first_date = \DateTime::createFromFormat("Y-m-d H:i:s", $date . " " . $time_str)) {
+            throw new ProcessorException("The given datetime format is incorrect !!!");
+        };
+
+
+        if (isset($expr->args[1])) {
+            $value = Evaluator::evaluate($conn, $scope, $expr->args[1], $row, $result);
+            $given_time = explode(":", $value);
+
+            switch (count($given_time)) {
+                case 1:
+                    $processed_time = \array_map("strrev", \str_split(\strrev($given_time[0]), 2));
+                    $interval = new \DateInterval(
+                        'PT' . (isset($processed_time[2]) ? $processed_time[2] : '0') . 'H' .
+                        (isset($processed_time[1]) ? $processed_time[1] : '0') . 'M' .
+                        $processed_time[0] . 'S'
+                    );
+                    break;
+                case 2:
+                case 3:
+                    if ($given_time[0] < 10) {
+                        $processed_time[0] = "0" . $given_time[0];
+                    } else {
+                        $processed_time[0] = $given_time[0];
+                    }
+
+                    if (isset($given_time[1])) {
+                        if ($given_time[1] < 10) {
+                            $processed_time[1] = "0" . $given_time[1];
+                        } else {
+                            $processed_time[1] = $given_time[1];
+                        }
+                    } else {
+                        $processed_time[1] = "00";
+                    }
+
+                    if (isset($given_time[2])) {
+                        if ($given_time[2] < 10) {
+                            $processed_time[2] = "0" . $given_time[2];
+                        } else {
+                            $processed_time[2] = $given_time[2];
+                        }
+                    } else {
+                        $processed_time[2] = "00";
+                    }
+                    $interval = new \DateInterval(
+                        'PT' . $processed_time[0] . 'H' . $processed_time[1] . 'M' . $processed_time[2] . 'S'
+                    );
+                    break;
+                default:
+                    throw new ProcessorException("The given time format is incorrect !!!");
+            }
+
+            $first_date->add($interval);
+        }
+
+
+        return self::castAggregate($first_date->format('Y-m-d H:i:s'), $expr, $result);
     }
 }

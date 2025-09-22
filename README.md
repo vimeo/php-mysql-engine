@@ -12,7 +12,7 @@ Currently there are two ways to test code that reads and writes to a database:
 
 - Mock SQL query execution<br/>
   Mocks require an explicit list of queries that are expected to run and results to return. This leads to significant manual work setting up expectations, and tests which are fragile and must be updated even on benign changes to the code or queries. It also means the data access layer is not unit tested.
-  
+
 - Use an actual database<br />
   It might make sense to test with a separate database instance – this is what we have done in the past at Vimeo. But databases like MySQL are designed to be filled with lots of long-lasting data, whereas unit tests write small amounts of very short-lived data. This means that extra care has to be taken to make sure that test databases are truncated between tests, which creates a performance issue.
 
