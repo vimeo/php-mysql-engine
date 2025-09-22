@@ -99,6 +99,8 @@ final class FunctionEvaluator
                 return self::sqlCeiling($conn, $scope, $expr, $row, $result);
             case 'FLOOR':
                 return self::sqlFloor($conn, $scope, $expr, $row, $result);
+            case 'TIMESTAMPDIFF':
+                return self::sqlTimestampdiff($conn, $scope, $expr, $row, $result);
             case 'DATEDIFF':
                 return self::sqlDateDiff($conn, $scope, $expr, $row, $result);
             case 'DAY':
@@ -1543,6 +1545,77 @@ final class FunctionEvaluator
 
             default:
                 throw new ProcessorException('MySQL INTERVAL unit ' . $expr->unit . ' not supported yet');
+        }
+    }
+
+    /**
+     * @param FakePdoInterface $conn
+     * @param Scope $scope
+     * @param FunctionExpression $expr
+     * @param array<string, mixed> $row
+     * @param QueryResult $result
+     *
+     * @return int
+     * @throws ProcessorException
+     */
+    private static function sqlTimestampdiff(
+        FakePdoInterface $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        QueryResult $result
+    ) {
+        $args = $expr->args;
+
+        if (\count($args) !== 3) {
+            throw new ProcessorException("MySQL TIMESTAMPDIFF() function must be called with three arguments");
+        }
+
+        if (!$args[0] instanceof ColumnExpression) {
+            throw new ProcessorException("MySQL TIMESTAMPDIFF() function should be called with a unit for interval");
+        }
+
+        /** @var string|null $unit */
+        $unit = $args[0]->columnExpression;
+        /** @var string|int|float|null $start */
+        $start = Evaluator::evaluate($conn, $scope, $args[1], $row, $result);
+        /** @var string|int|float|null $end */
+        $end = Evaluator::evaluate($conn, $scope, $args[2], $row, $result);
+
+        try {
+            $dtStart = new \DateTime((string) $start);
+            $dtEnd   = new \DateTime((string) $end);
+        } catch (\Exception $e) {
+            throw new ProcessorException("Invalid datetime value passed to TIMESTAMPDIFF()");
+        }
+
+        $interval = $dtStart->diff($dtEnd);
+
+        // Calculate difference in seconds for fine-grained units
+        $seconds = $dtEnd->getTimestamp() - $dtStart->getTimestamp();
+
+        switch (strtoupper((string)$unit)) {
+            case 'MICROSECOND':
+                return $seconds * 1000000;
+            case 'SECOND':
+                return $seconds;
+            case 'MINUTE':
+                return (int) floor($seconds / 60);
+            case 'HOUR':
+                return (int) floor($seconds / 3600);
+            case 'DAY':
+                return (int) $interval->days * ($seconds < 0 ? -1 : 1);
+            case 'WEEK':
+                return (int) floor($interval->days / 7) * ($seconds < 0 ? -1 : 1);
+            case 'MONTH':
+                return ($interval->y * 12 + $interval->m) * ($seconds < 0 ? -1 : 1);
+            case 'QUARTER':
+                $months = $interval->y * 12 + $interval->m;
+                return (int) floor($months / 3) * ($seconds < 0 ? -1 : 1);
+            case 'YEAR':
+                return $interval->y * ($seconds < 0 ? -1 : 1);
+            default:
+                throw new ProcessorException("Unsupported unit '$unit' in TIMESTAMPDIFF()");
         }
     }
 }
