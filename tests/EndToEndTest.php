@@ -2,6 +2,9 @@
 namespace Vimeo\MysqlEngine\Tests;
 
 use PDOException;
+use Vimeo\MysqlEngine\Parser\Token;
+use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
+use Vimeo\MysqlEngine\TokenType;
 
 class EndToEndTest extends \PHPUnit\Framework\TestCase
 {
@@ -528,6 +531,113 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
             ]],
             $query->fetchAll(\PDO::FETCH_ASSOC)
         );
+    }
+
+    /**
+     * Test various timestamp differences using the TIMESTAMPDIFF function.
+     *
+     * This method verifies the calculation of differences in seconds, minutes,
+     * hours, days, months, and years.
+     */
+    public function testTimestampDiff(): void
+    {
+        // Get a PDO instance for MySQL.
+        $pdo = self::getPdo('mysql:host=localhost;dbname=testdb');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        // Prepare a single query with multiple TIMESTAMPDIFF calls.
+        $query = $pdo->prepare(
+            'SELECT
+                TIMESTAMPDIFF(SECOND, \'2020-01-01 00:00:00\', \'2020-01-01 00:01:40\') as `second_diff`,
+                TIMESTAMPDIFF(MINUTE, \'2020-01-01 00:00:00\', \'2020-01-01 01:30:00\') as `minute_diff`,
+                TIMESTAMPDIFF(HOUR, \'2020-01-02 00:00:00\', \'2020-01-01 00:00:00\') as `hour_diff`,
+                TIMESTAMPDIFF(DAY, \'2020-01-01\', \'2020-01-10\') as `day_diff`,
+                TIMESTAMPDIFF(MONTH, \'2019-01-01\', \'2020-04-01\') as `month_diff`,
+                TIMESTAMPDIFF(YEAR, \'2010-05-15\', \'2020-05-15\') as `year_diff`'
+        );
+
+        $query->execute();
+
+        $results = $query->fetchAll(\PDO::FETCH_ASSOC);
+        $castedResults = array_map(function($row) {
+            return array_map('intval', $row);
+        }, $results);
+
+        $this->assertSame(
+            [[
+                'second_diff' => 100,
+                'minute_diff' => 90,
+                'hour_diff' => -24,
+                'day_diff' => 9,
+                'month_diff' => 15,
+                'year_diff' => 10,
+            ]],
+            $castedResults
+        );
+    }
+
+    public function testTimestampDiffThrowsExceptionWithWrongArgumentCount(): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('MySQL TIMESTAMPDIFF() function must be called with three arguments');
+
+        $pdo = self::getPdo('mysql:host=localhost;dbname=testdb');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare(
+            'SELECT
+                TIMESTAMPDIFF(SECOND, \'2020-01-01 00:00:00\', \'2020-01-01 00:01:40\', \'2020-01-01 00:01:40\')',
+        );
+
+        $query->execute();
+    }
+
+    public function testTimestampDiffThrowsExceptionIfFirstArgNotColumnExpression(): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('MySQL TIMESTAMPDIFF() function should be called with a unit for interval');
+
+        $pdo = self::getPdo('mysql:host=localhost;dbname=testdb');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare(
+            'SELECT
+                TIMESTAMPDIFF(\'2020-01-01 00:00:00\', \'2020-01-01 00:01:40\', \'2020-01-01 00:01:40\')',
+        );
+
+        $query->execute();
+    }
+
+    public function testTimestampDiffThrowsExceptionWithWrongDates(): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Invalid datetime value passed to TIMESTAMPDIFF()');
+
+        $pdo = self::getPdo('mysql:host=localhost;dbname=testdb');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare(
+            'SELECT
+                TIMESTAMPDIFF(SECOND, \'2020-01-01 00:0140\', \'2020-01-01 00:01:40\')',
+        );
+
+        $query->execute();
+    }
+
+    public function testTimestampDiffThrowsExceptionWithWrongInterval(): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Unsupported unit \'CENTURY\' in TIMESTAMPDIFF()');
+
+        $pdo = self::getPdo('mysql:host=localhost;dbname=testdb');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare(
+            'SELECT
+                TIMESTAMPDIFF(CENTURY, \'2020-01-01 00:01:40\', \'2020-01-01 00:01:40\')',
+        );
+
+        $query->execute();
     }
 
     public function testCurDateFunction()
@@ -1221,7 +1331,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $query->execute();
         $this->assertSame([['type' => 'villain']], $query->fetchAll(\PDO::FETCH_ASSOC));
     }
-        
+
     public function testNegateOperationWithAnd()
     {
         // greater than
