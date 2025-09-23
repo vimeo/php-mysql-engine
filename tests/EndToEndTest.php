@@ -1479,6 +1479,18 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
             'args' => [1,2, "'null'", "'nulla'"],
             'expected_value' => '1'
         ];
+        yield 'Should properly work all string args' => [
+            'args' => ["'A'","'B'","'C'"],
+            'expected_value' => 'A'
+        ];
+        yield 'Should lexicographically compare #1' => [
+            'args' => ["'AA'","'AB'","'AC'"],
+            'expected_value' => 'AA'
+        ];
+        yield 'Should lexicographically compare #2' => [
+            'args' => ["'AA'","'AB'","'AC'", 1],
+            'expected_value' => '1'
+        ];
     }
 
     /** @dataProvider leastWithExceptionProvider */
