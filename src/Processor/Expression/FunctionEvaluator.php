@@ -99,6 +99,8 @@ final class FunctionEvaluator
                 return self::sqlCeiling($conn, $scope, $expr, $row, $result);
             case 'FLOOR':
                 return self::sqlFloor($conn, $scope, $expr, $row, $result);
+            case 'CONVERT_TZ':
+                return self::sqlConvertTz($conn, $scope, $expr, $row, $result);
             case 'TIMESTAMPDIFF':
                 return self::sqlTimestampdiff($conn, $scope, $expr, $row, $result);
             case 'DATEDIFF':
@@ -1547,6 +1549,49 @@ final class FunctionEvaluator
 
             default:
                 throw new ProcessorException('MySQL INTERVAL unit ' . $expr->unit . ' not supported yet');
+        }
+    }
+
+    /**
+     * @param FakePdoInterface $conn
+     * @param Scope $scope
+     * @param FunctionExpression $expr
+     * @param array<string, mixed> $row
+     * @param QueryResult $result
+     *
+     * @return string|null
+     * @throws ProcessorException
+     */
+    private static function sqlConvertTz(
+        FakePdoInterface $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        QueryResult $result)
+    {
+        $args = $expr->args;
+
+        if (count($args) !== 3) {
+            throw new \InvalidArgumentException("CONVERT_TZ() requires exactly 3 arguments");
+        }
+
+        /** @var string|null $dtValue */
+        $dtValue = Evaluator::evaluate($conn, $scope, $args[0], $row, $result);
+        /** @var string|null $fromTzValue */
+        $fromTzValue = Evaluator::evaluate($conn, $scope, $args[1], $row, $result);
+        /** @var string|null $toTzValue */
+        $toTzValue = Evaluator::evaluate($conn, $scope, $args[2], $row, $result);
+
+        if ($dtValue === null || $fromTzValue === null || $toTzValue === null) {
+            return null;
+        }
+
+        try {
+            $dt = new \DateTime($dtValue, new \DateTimeZone($fromTzValue));
+            $dt->setTimezone(new \DateTimeZone($toTzValue));
+            return $dt->format('Y-m-d H:i:s');
+        } catch (\Exception $e) {
+            return null;
         }
     }
 
