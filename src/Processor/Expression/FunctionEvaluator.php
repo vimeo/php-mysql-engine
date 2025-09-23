@@ -1647,7 +1647,7 @@ final class FunctionEvaluator
 
         $is_any_float = false;
         $is_any_string = false;
-        $precision = 1;
+        $precision = 0;
         $evaluated_args = [];
 
         foreach ($args as $arg) {
