@@ -1435,4 +1435,70 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
 
         return $pdo;
     }
+
+    /**
+     * @dataProvider leastArgumentsProvider
+     * @param array $args
+     * @param string|int|float|null $expected_value
+     */
+    public function testLeast($args, $expected_value): void
+    {
+        // Get a PDO instance for MySQL.
+        $pdo = self::getPdo('mysql:host=localhost;dbname=testdb');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $args_str = implode(', ', array_map(fn ($arg) => is_null($arg) ? 'null' : strval($arg), $args));
+        $query = $pdo->prepare(sprintf('SELECT LEAST(%s) as result', $args_str),);
+        $query->execute();
+
+        $result = $query->fetch(\PDO::FETCH_ASSOC);
+        $this->assertEquals(
+            ['result' => $expected_value],  $result,
+            sprintf('Actual result is does not match the expected. Actual is: %s', print_r($result, true)));
+    }
+
+    public function leastArgumentsProvider(): iterable
+    {
+        yield 'Should properly work with at least one \'null\' argument' => [
+            'args' => [1,2,null,42],
+            'expected_value' => null
+        ];
+        yield 'Should properly get the least integer argument' => [
+            'args' => [-1, 1,2,42],
+            'expected_value' => '-1'
+        ];
+        yield 'Should properly work with decimal argument' => [
+            'args' => [0.00, 0.1,2,42, -0.001],
+            'expected_value' => '-0.001'
+        ];
+        yield 'Should return proper precision if any argument is a float' => [
+            'args' => [1, 2.0001 , 42, 1.001],
+            'expected_value' => '1.0000'
+        ];
+        yield 'Should properly work with at least one string argument' => [
+            'args' => [1,2, "'null'", "'nulla'"],
+            'expected_value' => '1'
+        ];
+    }
+
+    /** @dataProvider leastWithExceptionProvider */
+    public function testLeastThrowsExceptionWithWrongArgumentCount(array $args): void
+    {
+        $this->expectException(\UnexpectedValueException::class);
+        $this->expectExceptionMessage('Incorrect parameter count in the call to native function \'LEAST\'');
+
+        $pdo = self::getPdo('mysql:host=localhost;dbname=testdb');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $args_str = implode(', ', array_map(fn ($arg) => strval($arg), $args));
+        $query = $pdo->prepare(sprintf('SELECT LEAST(%s)', $args_str),);
+
+        $query->execute();
+    }
+
+    public function leastWithExceptionProvider(): iterable
+    {
+        yield ['Should fail with single argument' => [1]];
+        yield ['Should fail without any arguments' => []];
+    }
 }
