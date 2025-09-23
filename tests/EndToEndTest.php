@@ -1447,8 +1447,11 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $pdo = self::getPdo('mysql:host=localhost;dbname=testdb');
         $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
 
-        $args_str = implode(', ', array_map(fn ($arg) => is_null($arg) ? 'null' : strval($arg), $args));
-        $query = $pdo->prepare(sprintf('SELECT LEAST(%s) as result', $args_str),);
+        $args_str = implode(', ', array_map(function ($arg) {
+            return is_null($arg) ? 'null' : (string) $arg;
+        }, $args));
+
+        $query = $pdo->prepare(sprintf('SELECT LEAST(%s) as result', $args_str));
         $query->execute();
 
         $result = $query->fetch(\PDO::FETCH_ASSOC);

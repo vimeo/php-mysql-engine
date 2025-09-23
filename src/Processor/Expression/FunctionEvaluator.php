@@ -1673,7 +1673,7 @@ final class FunctionEvaluator
      * @param array<string, mixed> $row
      * @param QueryResult $result
      *
-     * @return int
+     * @return mixed|null
      * @throws ProcessorException
      */
     private static function sqlLeast(
@@ -1696,6 +1696,7 @@ final class FunctionEvaluator
         $evaluated_args = [];
 
         foreach ($args as $arg) {
+            /** @var string|int|float|null $evaluated_arg */
             $evaluated_arg = Evaluator::evaluate($conn, $scope, $arg, $row, $result);
             if (is_null($evaluated_arg)) {
                 return null;
@@ -1703,7 +1704,7 @@ final class FunctionEvaluator
 
             if (is_float($evaluated_arg)) {
                 $is_any_float = true;
-                $precision = max($precision, strlen(substr(strrchr(strval($evaluated_arg), "."), 1)));
+                $precision = max($precision, strlen(substr(strrchr((string) $evaluated_arg, "."), 1)));
             }
 
             $is_any_string = $is_any_string || is_string($evaluated_arg);
@@ -1711,14 +1712,16 @@ final class FunctionEvaluator
         }
 
         if ($is_any_string) {
-            $evaluated_str_args = array_map(fn($evaluated_arg) => strval($evaluated_arg), $evaluated_args);
-            return min(...$evaluated_str_args);
+            $evaluated_str_args = array_map(function($arg) {
+                return (string) $arg;
+            }, $evaluated_args);
+            return min($evaluated_str_args);
         }
 
         if ($is_any_float) {
-            return number_format(min(...$evaluated_args), $precision);
+            return number_format((float) min($evaluated_args), $precision);
         }
 
-        return min(...$evaluated_args);
+        return min($evaluated_args);
     }
 }
