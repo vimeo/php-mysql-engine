@@ -116,6 +116,8 @@ final class FunctionEvaluator
                 return self::sqlInetAton($conn, $scope, $expr, $row, $result);
             case 'INET_NTOA':
                 return self::sqlInetNtoa($conn, $scope, $expr, $row, $result);
+            case 'LEAST':
+                return self::sqlLeast($conn, $scope, $expr, $row, $result);
         }
 
         throw new ProcessorException("Function " . $expr->functionName . " not implemented yet");
@@ -1617,5 +1619,61 @@ final class FunctionEvaluator
             default:
                 throw new ProcessorException("Unsupported unit '$unit' in TIMESTAMPDIFF()");
         }
+    }
+
+    /**
+     * @param FakePdoInterface $conn
+     * @param Scope $scope
+     * @param FunctionExpression $expr
+     * @param array<string, mixed> $row
+     * @param QueryResult $result
+     *
+     * @return int
+     * @throws ProcessorException
+     */
+    private static function sqlLeast(
+        FakePdoInterface $conn,
+        Scope $scope,
+        FunctionExpression $expr,
+        array $row,
+        QueryResult $result
+    )
+    {
+        $args = $expr->args;
+
+        if (\count($args) < 2) {
+            throw new ProcessorException("Incorrect parameter count in the call to native function 'LEAST'");
+        }
+
+        $is_any_float = false;
+        $is_any_string = false;
+        $precision = 0;
+        $evaluated_args = [];
+
+        foreach ($args as $arg) {
+            $evaluated_arg = Evaluator::evaluate($conn, $scope, $arg, $row, $result);
+            if (is_null($evaluated_arg)) {
+                return null;
+            }
+
+            if (is_float($evaluated_arg)) {
+                $is_any_float = true;
+                $precision = max($precision, strlen(substr(strrchr(strval($evaluated_arg), "."), 1)));
+            }
+
+            $is_any_string = $is_any_string || is_string($evaluated_arg);
+            $evaluated_args[] = $evaluated_arg;
+        }
+
+        if ($is_any_string) {
+            $evaluated_str_args = array_map(fn($evaluated_arg) => strval($evaluated_arg), $evaluated_args);
+            return min(...$evaluated_str_args);
+        }
+
+        if ($is_any_float) {
+            return number_format(min(...$evaluated_args), $precision);
+        }
+
+        return min(...$evaluated_args);
     }
 }
