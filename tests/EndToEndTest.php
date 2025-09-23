@@ -1,6 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Tests;
 
+use PDO;
 use PDOException;
 use Vimeo\MysqlEngine\Parser\Token;
 use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
@@ -1006,6 +1007,39 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
                 ['bio_en' => '', 'bio_fr' => null],
             ],
             $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testInsertWithSelect(): void
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            "INSERT INTO `video_game_characters`
+                (`name`, `type`, `profession`, `console`, `is_alive`, `powerups`, `skills`, `created_on`)
+                SELECT
+                    'wario','villain','plumber','nes','1','3','{\"magic\":0, \"speed\":0, \"strength\":0, \"weapons\":0}', NOW(), 
+                FROM `video_game_characters`"
+        );
+
+        $query->execute();
+
+        self::assertEquals($pdo->lastInsertId(), 32);
+
+        $query = $pdo->prepare(
+            'SELECT `id`, `name`
+            FROM `video_game_characters`
+            ORDER BY `id` DESC
+            LIMIT 1'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['id' => 32, 'name' => 'wario'],
+            ],
+            $query->fetchAll(PDO::FETCH_ASSOC)
         );
     }
 
