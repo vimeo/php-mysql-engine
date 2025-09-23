@@ -103,6 +103,47 @@ class FunctionEvaluatorTest extends TestCase
         return new \Vimeo\MysqlEngine\Php7\FakePdo($connection_string, '', '', $options);
     }
 
+    /**
+     * @dataProvider convertTzProvider
+     */
+    public function testConvertTz(string $sql, ?string $expected)
+    {
+        $query = self::getConnectionToFullDB()->prepare($sql);
+        $query->execute();
+
+        $this->assertSame($expected, $query->fetch(\PDO::FETCH_COLUMN));
+    }
+
+    private static function convertTzProvider(): array
+    {
+        return [
+            'normal conversion' => [
+                'sql' => "SELECT CONVERT_TZ('2025-09-23 02:30:00', 'UTC', 'Europe/Kyiv');",
+                'expected' => "2025-09-23 05:30:00",
+            ],
+            'same tz' => [
+                'sql' => "SELECT CONVERT_TZ('2025-12-31 23:59:59', 'Europe/Kyiv', 'Europe/Kyiv');",
+                'expected' => "2025-12-31 23:59:59",
+            ],
+            'crossing DST' => [
+                'sql' => "SELECT CONVERT_TZ('2025-07-01 12:00:00', 'America/New_York', 'UTC');",
+                'expected' => "2025-07-01 16:00:00",
+            ],
+            'null date' => [
+                'sql' => "SELECT CONVERT_TZ(NULL, 'UTC', 'Europe/Kyiv');",
+                'expected' => null,
+            ],
+            'invalid timezone' => [
+                'sql' => "SELECT CONVERT_TZ('2025-09-23 02:30:00', 'Invalid/Zone', 'UTC');",
+                'expected' => null,
+            ],
+            'invalid date' => [
+                'sql' => "SELECT CONVERT_TZ('not-a-date', 'UTC', 'UTC');",
+                'expected' => null,
+            ]
+        ];
+    }
+
     private static function getConnectionToFullDB(bool $emulate_prepares = true, bool $strict_mode = false) : \PDO
     {
         $pdo = self::getPdo('mysql:foo;dbname=test;', $strict_mode);
