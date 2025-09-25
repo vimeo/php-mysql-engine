@@ -372,7 +372,8 @@ final class FunctionEvaluator
         $sum = 0;
 
         if (!$result->rows) {
-            if ($expr instanceof FunctionExpression) {
+            $isQueryWithoutFromClause = empty($result->columns);
+            if ($expr instanceof FunctionExpression && $isQueryWithoutFromClause) {
                 return self::evaluate($conn, $scope, $expr, [], $result);
             }
 

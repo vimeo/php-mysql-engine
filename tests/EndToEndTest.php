@@ -2,15 +2,35 @@
 namespace Vimeo\MysqlEngine\Tests;
 
 use PDOException;
-use Vimeo\MysqlEngine\Parser\Token;
-use Vimeo\MysqlEngine\Query\Expression\ColumnExpression;
-use Vimeo\MysqlEngine\TokenType;
 
 class EndToEndTest extends \PHPUnit\Framework\TestCase
 {
     public function tearDown() : void
     {
         \Vimeo\MysqlEngine\Server::reset();
+    }
+
+    public function testSumWithEmptyResultSetReturnsNull()
+    {
+        $sql = "
+           SELECT
+                SUM(
+                  IF(
+                    id > 1,
+                    0,
+                    1
+                  )
+                )
+            FROM
+              video_game_characters
+            WHERE
+              id > 100;
+           ";
+
+        $pdo = self::getConnectionToFullDB();
+        $query= $pdo->query($sql);
+
+        $this->assertNull($query->fetchColumn());
     }
 
     public function testSelectEmptyResults()
