@@ -1516,4 +1516,44 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         yield ['Should fail with single argument' => [1]];
         yield ['Should fail without any arguments' => []];
     }
+
+    public function testNestedFunctions()
+    {
+        $pdo = self::getConnectionToFullDB();
+
+        $query = $pdo->prepare("
+            SELECT 
+                SUM(
+                    TIMESTAMPDIFF(
+                        SECOND,
+                        CONVERT_TZ('2025-12-31 22:59:59', 'Europe/Kyiv', 'Europe/Kyiv'),
+                        CONVERT_TZ('2025-12-31 23:59:59', 'Europe/Kyiv', 'Europe/Kyiv')
+                    )
+                )
+        ");
+        $query->execute();
+
+        $this->assertSame(3600, (int)$query->fetchColumn());
+    }
+
+    public function testNestedFunctionsFromDB()
+    {
+        $pdo = self::getConnectionToFullDB();
+        $count = $pdo->query("SELECT COUNT(*) FROM video_game_characters")->fetchColumn();
+
+        $query = $pdo->prepare("
+            SELECT SUM(
+                    TIMESTAMPDIFF(
+                        SECOND,
+                        CONVERT_TZ(`created_on`, 'Europe/Kyiv', 'Europe/Kyiv'),
+                        CONVERT_TZ(`created_on` + INTERVAL 1 SECOND, 'Europe/Kyiv', 'Europe/Kyiv')
+                    )
+                )
+            FROM `video_game_characters`
+        ");
+
+        $query->execute();
+
+        $this->assertSame((int)$count, (int)$query->fetchColumn());
+    }
 }
