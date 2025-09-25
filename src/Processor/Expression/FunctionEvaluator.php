@@ -353,9 +353,13 @@ final class FunctionEvaluator
     }
 
     /**
-     * @param array<string, Column> $columns
+     * @param FakePdoInterface $conn
+     * @param Scope $scope
+     * @param FunctionExpression $expr
+     * @param QueryResult $result
      *
-     * @return ?numeric
+     * @return float|int|mixed|string|null
+     * @throws ProcessorException
      */
     private static function sqlSum(
         FakePdoInterface $conn,
@@ -368,6 +372,10 @@ final class FunctionEvaluator
         $sum = 0;
 
         if (!$result->rows) {
+            if ($expr instanceof FunctionExpression) {
+                return self::evaluate($conn, $scope, $expr, [], $result);
+            }
+
             return null;
         }
 
@@ -1573,6 +1581,10 @@ final class FunctionEvaluator
 
         if (count($args) !== 3) {
             throw new \InvalidArgumentException("CONVERT_TZ() requires exactly 3 arguments");
+        }
+
+        if ($args[0] instanceof ColumnExpression && empty($row)) {
+            return null;
         }
 
         /** @var string|null $dtValue */
