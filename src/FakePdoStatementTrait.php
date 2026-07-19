@@ -139,16 +139,42 @@ trait FakePdoStatementTrait
             $create_queries = (new Parser\CreateTableParser())->parse($sql);
 
             foreach ($create_queries as $create_query) {
+                if (strpos($create_query->name, '.')) {
+                    list($databaseName, $tableName) = explode('.', $create_query->name, 2);
+                } else {
+                    $databaseName = $this->conn->getDatabaseName();
+                    $tableName = $create_query->name;
+                }
                 $this->conn->getServer()->addTableDefinition(
-                    $this->conn->getDatabaseName(),
-                    $create_query->name,
+                    $databaseName,
+                    $tableName,
                     Processor\CreateProcessor::makeTableDefinition(
                         $create_query,
-                        $this->conn->getDatabaseName()
+                        $databaseName
                     )
                 );
             }
 
+            return true;
+        }
+
+        // Check that there are multiple INSERT commands in the sql.
+        $insertPos1 = stripos($sql, 'INSERT INTO');
+        $insertPos2 = strripos($sql, 'INSERT INTO');
+        if (false !== $insertPos1 && $insertPos1 !== $insertPos2) {
+            $insert_queries = (new Parser\InsertMultipleParser())->parse($sql);
+            foreach ($insert_queries as $insert_query) {
+                $this->affectedRows += Processor\InsertProcessor::process(
+                    $this->conn,
+                    new Processor\Scope($this->boundValues),
+                    $insert_query
+                );
+            }
+
+            return true;
+        }
+
+        if(false !== stripos($sql, 'SET')){
             return true;
         }
 
@@ -284,6 +310,31 @@ trait FakePdoStatementTrait
                         $parsed_query
                     )
                 );
+
+                break;
+
+            case Query\ShowColumnsQuery::class:
+                $this->result = self::processResult(
+                    $this->conn,
+                    Processor\ShowColumnsProcessor::process(
+                        $this->conn,
+                        new Processor\Scope(array_merge($params ?? [], $this->boundValues)),
+                        $parsed_query
+                    )
+                );
+
+                break;
+
+            case Query\AlterTableAutoincrementQuery::class:
+                [$databaseName, $tableName] = Processor\Processor::parseTableName($this->conn, $parsed_query->table);
+                $td = $this->conn->getServer()->getTableDefinition($databaseName, $tableName);
+
+                foreach ($td->columns as $columnName => $column) {
+                    if ($column instanceof Schema\Column\IntegerColumn && $column->isAutoIncrement()) {
+                        $td->autoIncrementOffsets[$columnName] = $parsed_query->value - 1;
+                    }
+                }
+
                 break;
 
             default:
