@@ -373,7 +373,11 @@ final class CreateTableParser
                 $indexes[] = $index;
                 return;
             case 'CHECK':
-                return;
+            case 'FOREIGN KEY':
+            // TODO: Implement full parsing logic for FOREIGN KEY constraints.
+            // Currently, we are just skipping/ignoring the constraint to avoid
+            // the "Unsupported field type: (" parser error.
+                return; // Ignore the constraint for now
         }
 
         $fields[] = static::parseField($tokens);
