@@ -118,6 +118,46 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testSelectFetchKeyPair()
+    {
+        $pdo = self::getConnectionToFullDB();
+
+        $query = $pdo->prepare("SELECT id, name FROM `video_game_characters` WHERE `id` > :id ORDER BY `id` ASC");
+        $query->bindValue(':id', 14);
+        $query->execute();
+
+        $this->assertSame(
+            [
+                '15' => 'link',
+                '16' => 'dude'
+            ],
+            $query->fetchAll(\PDO::FETCH_KEY_PAIR)
+        );
+    }
+
+    public function testSelectFetchKeyPairWithVariousKeyTypes()
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            "SELECT 1.5, 'foo'
+            UNION ALL SELECT NULL, 'bar'
+            UNION ALL SELECT false, 'baz'
+            UNION ALL SELECT 2, 'qux'"
+        );
+        $query->execute();
+
+        $this->assertEqualsCanonicalizing(
+            [
+                1 => 'foo', // 1.5 -> 1
+                '' => 'bar', // NULL -> ''
+                0 => 'baz', // false -> 0
+                2 => 'qux', // 2 -> 2
+            ],
+            $query->fetchAll(\PDO::FETCH_KEY_PAIR)
+        );
+    }
+
     public function testSelectFetchAssocConverted()
     {
         $pdo = self::getConnectionToFullDB(false);
