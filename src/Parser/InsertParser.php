@@ -1,9 +1,10 @@
 <?php
+
 namespace Vimeo\MysqlEngine\Parser;
 
 use Vimeo\MysqlEngine\Query\Expression\Expression;
-use Vimeo\MysqlEngine\TokenType;
 use Vimeo\MysqlEngine\Query\InsertQuery;
+use Vimeo\MysqlEngine\TokenType;
 
 final class InsertParser
 {
@@ -130,6 +131,12 @@ final class InsertParser
                             list($this->pointer, $query->setClause) = $p->parse();
                             break;
 
+                        case 'SELECT':
+                            $select_parser = new SelectParser($this->pointer, $this->tokens, $this->sql);
+                            $query->selectQuery = $select_parser->parse();
+                            $this->pointer = $select_parser->getPointer();
+                            break;
+
                         default:
                             throw new ParserException("Unexpected clause {$token->value}");
                     }
@@ -168,7 +175,7 @@ final class InsertParser
                     } else {
                         if ($this->currentClause === 'COLUMN_LIST' && $needs_comma && $token->value === ')') {
                             $needs_comma = false;
-                            if (($this->tokens[$this->pointer + 1]->value ?? null) !== 'VALUES') {
+                            if (!in_array($this->tokens[$this->pointer + 1]->value ?? null, ['VALUES', 'SELECT'])) {
                                 throw new ParserException("Expected VALUES after insert column list");
                             }
                             break;
@@ -203,7 +210,7 @@ final class InsertParser
 
             $this->pointer++;
         }
-        if ((!$query->insertColumns || !$query->values) && !$query->setClause) {
+        if ((!$query->insertColumns || !$query->values) && !$query->setClause && !$query->selectQuery) {
             throw new ParserException("Missing values to insert");
         }
         return $query;
