@@ -514,6 +514,7 @@ trait FakePdoStatementTrait
     /**
      * @param  int $fetch_style
      * @param  mixed      $args
+     * @return true
      */
     public function universalSetFetchMode(int $mode, ...$args) : bool
     {

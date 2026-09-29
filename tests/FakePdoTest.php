@@ -28,6 +28,21 @@ class FakePdoTest extends \PHPUnit\Framework\TestCase
         self::assertFalse($pdo->inTransaction());
     }
 
+    public function testSetFetchMode(): void
+    {
+        $pdo = self::getPdo('mysql:foo;dbname=test;');
+        $pdo->prepare('CREATE TABLE `foo` (`id` INT NOT NULL, PRIMARY KEY (`id`)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci')->execute();
+        $pdo->prepare('INSERT INTO `foo` (`id`) VALUES (1)')->execute();
+
+        $statement = $pdo->prepare('SELECT `id` FROM `foo`');
+
+        self::assertTrue($statement->setFetchMode(\PDO::FETCH_ASSOC));
+
+        $statement->execute();
+
+        self::assertSame([['id' => '1']], $statement->fetchAll());
+    }
+
     /**
      * @dataProvider quotationStringProvider
      */

@@ -28,7 +28,9 @@ class FakePdoStatement extends \PDOStatement
     /**
      * @param  int $fetch_style
      * @param  mixed      $args
+     * @return true
      */
+    #[\ReturnTypeWillChange]
     public function setFetchMode(int $mode, ...$args) : bool
     {
         return $this->universalSetFetchMode($mode, ...$args);
