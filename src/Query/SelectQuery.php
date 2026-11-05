@@ -49,6 +49,20 @@ final class SelectQuery
     public $multiQueries = [];
 
     /**
+     * ORDER BY applied to the whole union, not to a single branch
+     *
+     * @var array<int, array{expression: Expression, direction: string}>|null
+     */
+    public $unionOrderBy = null;
+
+    /**
+     * LIMIT applied to the whole union, not to a single branch
+     *
+     * @var LimitClause|null
+     */
+    public $unionLimitClause = null;
+
+    /**
      * @var array
      */
     public $options = [];

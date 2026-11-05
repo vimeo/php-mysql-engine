@@ -613,7 +613,7 @@ final class SelectProcessor extends Processor
                     break;
 
                 case MultiOperand::UNION_ALL:
-                    $rows = \array_merge($subquery_result->rows, $rows);
+                    $rows = \array_merge($rows, $subquery_result->rows);
                     foreach ($columns as $column_name => $column) {
                         if (isset($subquery_result->columns[$column_name])
                             && (\get_class($subquery_result->columns[$column_name])
@@ -650,6 +650,18 @@ final class SelectProcessor extends Processor
             }
         }
 
-        return new QueryResult($rows, $columns);
+        $result = new QueryResult($rows, $columns);
+
+        // ORDER BY / LIMIT written after the last branch apply to the merged rows
+        return self::applyLimit(
+            $stmt->unionLimitClause,
+            $scope,
+            self::applyOrderBy(
+                $conn,
+                $scope,
+                $stmt->unionOrderBy,
+                $result
+            )
+        );
     }
 }
