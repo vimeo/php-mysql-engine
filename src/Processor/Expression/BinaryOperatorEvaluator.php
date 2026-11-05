@@ -66,7 +66,9 @@ final class BinaryOperatorEvaluator
                         $left,
                         $right,
                     ],
-                    false
+                    false,
+                    null,
+                    null
                 ),
                 $row,
                 $result
