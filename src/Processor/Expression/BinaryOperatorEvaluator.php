@@ -113,6 +113,7 @@ final class BinaryOperatorEvaluator
             case '>=':
             case '<':
             case '<=':
+            case '<=>':
                 $l_value = Evaluator::evaluate($conn, $scope, $left, $row, $result);
                 $r_value = Evaluator::evaluate($conn, $scope, $right, $row, $result);
 
@@ -138,11 +139,18 @@ final class BinaryOperatorEvaluator
                 }
 
                 if ($l_value === null || $r_value === null) {
+                    // The null-safe equal operator never returns NULL: it yields 1 when both
+                    // operands are NULL and 0 when exactly one of them is NULL.
+                    if ($expr->operator === '<=>') {
+                        return (($l_value === null && $r_value === null) ? 1 : 0) ^ $expr->negatedInt;
+                    }
+
                     return null;
                 }
 
                 switch ($expr->operator) {
                     case '=':
+                    case '<=>':
                         if ($as_string) {
                             return (\strtolower((string) $l_value) === \strtolower((string) $r_value) ? 1 : 0)
                                 ^ $expr->negatedInt;
@@ -327,7 +335,6 @@ final class BinaryOperatorEvaluator
             case 'BINARY':
             case 'COLLATE':
             case '^':
-            case '<=>':
             case '||':
             case 'XOR':
             case 'SOUNDS':
@@ -385,6 +392,7 @@ final class BinaryOperatorEvaluator
             case '>=':
             case '<':
             case '<=':
+            case '<=>':
             case 'LIKE':
             case 'IS':
             case 'RLIKE':
