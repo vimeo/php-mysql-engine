@@ -1582,7 +1582,7 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $pdo = self::getConnectionToFullDB();
 
         $query = $pdo->prepare("
-            SELECT 
+            SELECT
                 SUM(
                     TIMESTAMPDIFF(
                         SECOND,
@@ -1615,5 +1615,41 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $query->execute();
 
         $this->assertSame((int)$count, (int)$query->fetchColumn());
+    }
+
+    public function testNullSafeEqualOperator(): void
+    {
+        $pdo = self::getPdo('mysql:host=localhost;dbname=testdb');
+        $pdo->setAttribute(\PDO::ATTR_EMULATE_PREPARES, false);
+
+        $query = $pdo->prepare(
+            'SELECT
+                1 <=> 1 AS `equal_ints`,
+                1 <=> 2 AS `unequal_ints`,
+                NULL <=> NULL AS `both_null`,
+                1 <=> NULL AS `left_not_null`,
+                NULL <=> 1 AS `right_not_null`,
+                \'a\' <=> \'a\' AS `equal_strings`,
+                \'a\' <=> \'b\' AS `unequal_strings`'
+        );
+
+        $query->execute();
+
+        $results = array_map(function ($row) {
+            return array_map('intval', $row);
+        }, $query->fetchAll(\PDO::FETCH_ASSOC));
+
+        $this->assertSame(
+            [[
+                'equal_ints' => 1,
+                'unequal_ints' => 0,
+                'both_null' => 1,
+                'left_not_null' => 0,
+                'right_not_null' => 0,
+                'equal_strings' => 1,
+                'unequal_strings' => 0,
+            ]],
+            $results
+        );
     }
 }
