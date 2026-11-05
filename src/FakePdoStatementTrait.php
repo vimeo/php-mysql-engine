@@ -508,6 +508,40 @@ trait FakePdoStatementTrait
             );
         }
 
+        if ($fetch_style === \PDO::FETCH_KEY_PAIR) {
+            if (!$this->result) {
+                return [];
+            }
+
+            /** @var array<array-key, mixed> $output */
+            $output = [];
+
+            foreach ($this->result as $row) {
+                if ($this->conn->shouldStringifyResult()) {
+                    $row = self::stringify($row);
+                }
+
+                /** @var list<?scalar> $values */
+                $values = \array_values($row);
+
+                if (\count($values) < 2) {
+                    throw new \PDOException('PDO::FETCH_KEY_PAIR requires at least two columns');
+                }
+
+                $key = $values[0];
+
+                if (\is_int($key) || \is_string($key)) {
+                    $output[$key] = $values[1];
+                } elseif ($key === null) {
+                    $output[''] = $values[1];
+                } else {
+                    $output[(int) $key] = $values[1];
+                }
+            }
+
+            return $output;
+        }
+
         throw new \Exception('Fetch style not implemented');
     }
 
