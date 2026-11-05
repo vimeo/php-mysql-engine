@@ -164,10 +164,16 @@ final class SQLParser
         $tokens = (new SQLLexer())->lex($sql);
         $tokens = self::buildTokenListFromLexemes($tokens);
         $token = $tokens[0];
-        if ($token->value === TokenType::PAREN) {
+        if ($token->type === TokenType::PAREN) {
             $close = self::findMatchingParen(0, $tokens);
-            $tokens = \array_slice($tokens, 1, $close - 1);
-            $token = $tokens[0];
+            if ($close === \count($tokens) - 1) {
+                // the whole statement is wrapped, so the parentheses can be dropped
+                $tokens = \array_slice($tokens, 1, $close - 1);
+                $token = $tokens[0];
+            } else {
+                // a parenthesized branch of a UNION: let SelectParser handle the parentheses
+                $token = $tokens[1];
+            }
         }
         if ($token->type !== TokenType::CLAUSE) {
             throw new ParserException("Unexpected {$token->value}");

@@ -311,9 +311,49 @@ class SelectParseTest extends \PHPUnit\Framework\TestCase
 
     public function testBracketedFirstSelect()
     {
-        $this->markTestSkipped('Broken');
         $sql = "(SELECT * FROM `foo`) UNION ALL (SELECT * FROM `bar`)";
 
         $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+        $this->assertCount(1, $select_query->multiQueries);
+        $this->assertSame('UNION_ALL', $select_query->multiQueries[0]['type']);
+    }
+
+    public function testBracketedSelectsWithUnionLevelOrderByAndLimit()
+    {
+        $sql = "(SELECT * FROM `foo` ORDER BY `id` DESC LIMIT 5)
+                UNION ALL
+                (SELECT * FROM `bar` ORDER BY `id` DESC LIMIT 5)
+                ORDER BY `id` DESC
+                LIMIT 1, 2";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+        $this->assertCount(1, $select_query->multiQueries);
+
+        // each branch keeps the ORDER BY / LIMIT written inside its parentheses
+        $this->assertNotNull($select_query->limitClause);
+        $this->assertSame('5', $select_query->limitClause->rowcount->name);
+        $this->assertNotNull($select_query->multiQueries[0]['query']->limitClause);
+        $this->assertSame('5', $select_query->multiQueries[0]['query']->limitClause->rowcount->name);
+
+        // the trailing ORDER BY / LIMIT applies to the whole union
+        $this->assertNotNull($select_query->unionOrderBy);
+        $this->assertNotNull($select_query->unionLimitClause);
+        $this->assertSame('1', $select_query->unionLimitClause->offset->name);
+        $this->assertSame('2', $select_query->unionLimitClause->rowcount->name);
+    }
+
+    public function testUnionWithoutBracketsPutsTrailingOrderByOnTheUnion()
+    {
+        $sql = "SELECT * FROM `foo` UNION ALL SELECT * FROM `bar` ORDER BY `id` DESC";
+
+        $select_query = \Vimeo\MysqlEngine\Parser\SQLParser::parse($sql);
+
+        $this->assertInstanceOf(SelectQuery::class, $select_query);
+        $this->assertNotNull($select_query->unionOrderBy);
+        $this->assertNull($select_query->multiQueries[0]['query']->orderBy);
     }
 }

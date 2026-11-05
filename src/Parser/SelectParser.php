@@ -39,6 +39,11 @@ final class SelectParser
     private $sql;
 
     /**
+     * @var bool
+     */
+    private $lastBranchWasParenthesized = false;
+
+    /**
      * @param array<int, Token> $tokens
      */
     public function __construct(int $pointer, array $tokens, string $sql)
@@ -50,8 +55,57 @@ final class SelectParser
 
     public function parse() : SelectQuery
     {
-        // if the first part of this query is nested, we should be able to unwrap it safely
-        while ($this->tokens[$this->pointer]->value === '(') {
+        $query = $this->parseBranch();
+        $last_branch_was_parenthesized = $this->lastBranchWasParenthesized;
+
+        $next = $this->tokens[$this->pointer] ?? null;
+        while ($next !== null
+            && ($next->value === 'UNION' || $next->value === 'INTERSECT' || $next->value === 'EXCEPT')
+        ) {
+            $type = $next->value;
+            if ($next->value === 'UNION') {
+                $next_plus = $this->tokens[$this->pointer + 1] ?? null;
+                if ($next_plus !== null && $next_plus->value === 'ALL') {
+                    $type = 'UNION_ALL';
+                    $this->pointer++;
+                }
+            }
+            $this->pointer++;
+            $select = new SelectParser($this->pointer, $this->tokens, $this->sql);
+            // every branch is attached to the first query, so the branches stay in written order
+            $q = $select->parseBranch();
+            $this->pointer = $select->pointer;
+            $last_branch_was_parenthesized = $select->lastBranchWasParenthesized;
+            $query->addMultiQuery($type, $q);
+            $next = $this->tokens[$this->pointer] ?? null;
+        }
+
+        if ($query->multiQueries && !$last_branch_was_parenthesized) {
+            // without parentheses the trailing ORDER BY / LIMIT belongs to the union, not to the last branch
+            $last = $query->multiQueries[\array_key_last($query->multiQueries)]['query'];
+            $query->unionOrderBy = $last->orderBy;
+            $query->unionLimitClause = $last->limitClause;
+            $last->orderBy = null;
+            $last->limitClause = null;
+        }
+
+        $this->parseUnionClauses($query);
+
+        return $query;
+    }
+
+    /**
+     * Parses a single branch, which may be wrapped in parentheses carrying its own ORDER BY / LIMIT.
+     */
+    private function parseBranch() : SelectQuery
+    {
+        $token = $this->tokens[$this->pointer] ?? null;
+
+        if ($token === null) {
+            throw new ParserException("Parser error: expected SELECT");
+        }
+
+        if ($token->value === '(') {
             $close = SQLParser::findMatchingParen($this->pointer, $this->tokens);
 
             $subquery_tokens = \array_slice(
@@ -60,38 +114,46 @@ final class SelectParser
                 $close - $this->pointer - 1
             );
 
-            array_splice($this->tokens, $this->pointer, $close - $this->pointer + 1, $subquery_tokens);
+            $parser = new SelectParser(0, $subquery_tokens, $this->sql);
+            $query = $parser->parse();
+            $this->pointer = $close + 1;
+            $this->lastBranchWasParenthesized = true;
+
+            return $query;
         }
 
-        if ($this->tokens[$this->pointer]->value !== 'SELECT') {
+        if ($token->value !== 'SELECT') {
             throw new ParserException("Parser error: expected SELECT");
         }
 
-        $query = $this->parseMainSelect();
+        $this->lastBranchWasParenthesized = false;
 
-        if (\array_key_exists($this->pointer, $this->tokens)) {
-            $next = $this->tokens[$this->pointer] ?? null;
-            while ($next !== null
-                && ($next->value === 'UNION' || $next->value === 'INTERSECT' || $next->value === 'EXCEPT')
-            ) {
-                $type = $next->value;
-                if ($next->value === 'UNION') {
-                    $next_plus = $this->tokens[$this->pointer + 1];
-                    if ($next_plus->value === 'ALL') {
-                        $type = 'UNION_ALL';
-                        $this->pointer++;
-                    }
-                }
-                $this->pointer++;
-                $select = new SelectParser($this->pointer, $this->tokens, $this->sql);
-                $q = $select->parse();
-                $this->pointer = $select->pointer;
-                $query->addMultiQuery($type, $q);
-                $next = $this->tokens[$this->pointer] ?? null;
+        return $this->parseMainSelect();
+    }
+
+    /**
+     * Parses the ORDER BY / LIMIT that follow the last branch and apply to the whole union.
+     *
+     * @return void
+     */
+    private function parseUnionClauses(SelectQuery $query)
+    {
+        $next = $this->tokens[$this->pointer] ?? null;
+
+        while ($next !== null
+            && $next->type === TokenType::CLAUSE
+            && ($next->value === 'ORDER' || $next->value === 'LIMIT')
+        ) {
+            if ($next->value === 'ORDER') {
+                $p = new OrderByParser($this->pointer, $this->tokens, $query->selectExpressions);
+                list($this->pointer, $query->unionOrderBy) = $p->parse();
+            } else {
+                $p = new LimitParser($this->pointer, $this->tokens);
+                list($this->pointer, $query->unionLimitClause) = $p->parse();
             }
+            $this->pointer++;
+            $next = $this->tokens[$this->pointer] ?? null;
         }
-
-        return $query;
     }
 
     private function parseMainSelect() : SelectQuery

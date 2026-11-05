@@ -57,6 +57,46 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         $this->assertSame([], $query->fetchAll(\PDO::FETCH_ASSOC));
     }
 
+    public function testBracketedUnionAllAppliesUnionLevelOrderByAndLimit()
+    {
+        $pdo = self::getConnectionToFullDB();
+
+        $query = $pdo->prepare(
+            "(SELECT `id` FROM `video_game_characters` WHERE `id` < 4 ORDER BY `id` ASC LIMIT 2)
+             UNION ALL
+             (SELECT `id` FROM `video_game_characters` WHERE `id` > 14 ORDER BY `id` ASC LIMIT 2)
+             ORDER BY `id` DESC
+             LIMIT 1, 2"
+        );
+        $query->execute();
+
+        // each branch takes its own two rows (1, 2 and 15, 16), then the union
+        // orders all four descending and skips the first one.
+        // array_values() because LIMIT with an offset keeps the original keys,
+        // which it already does for a plain SELECT ... LIMIT 1, 2
+        $this->assertSame(
+            [['id' => '15'], ['id' => '2']],
+            \array_values($query->fetchAll(\PDO::FETCH_ASSOC))
+        );
+    }
+
+    public function testBracketedUnionAllKeepsBranchOrderWithoutOrderBy()
+    {
+        $pdo = self::getConnectionToFullDB();
+
+        $query = $pdo->prepare(
+            "(SELECT `id` FROM `video_game_characters` WHERE `id` = 2)
+             UNION ALL
+             (SELECT `id` FROM `video_game_characters` WHERE `id` = 1)"
+        );
+        $query->execute();
+
+        $this->assertSame(
+            [['id' => '2'], ['id' => '1']],
+            $query->fetchAll(\PDO::FETCH_ASSOC)
+        );
+    }
+
     public function testSelectWithDefaultFetchAssoc()
     {
         $pdo = self::getConnectionToFullDB();
