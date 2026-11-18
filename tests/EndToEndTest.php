@@ -1309,6 +1309,20 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    /**
+     * An empty table still exists, so SHOW TABLES must not look at the row data.
+     */
+    public function testShowTablesFindsEmptyTable(): void
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $pdo->exec('DELETE FROM `video_game_characters`');
+
+        $this->assertNotFalse(
+            $pdo->query('SHOW TABLES LIKE "video_game_characters"')->fetchColumn(0)
+        );
+    }
+
     public function testSelectNullableFields()
     {
         $pdo = self::getConnectionToFullDB(false);

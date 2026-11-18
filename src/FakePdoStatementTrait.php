@@ -264,10 +264,10 @@ trait FakePdoStatementTrait
                 break;
 
             case Query\ShowTablesQuery::class:
-                if ($this->conn->getServer()->getTable(
+                if ($this->conn->getServer()->getTableDefinition(
                     $this->conn->getDatabaseName(),
                     $parsed_query->pattern
-                )) {
+                ) !== null) {
                     $this->result = [[$parsed_query->sql => $parsed_query->pattern]];
                 } else {
                     $this->result = [];
