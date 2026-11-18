@@ -206,6 +206,7 @@ final class Server
         static::$snapshot_names = [];
         $this->snapshots = [];
         unset($this->databases[$database_name][$name]);
+        unset($this->tableDefinitions[$database_name][$name]);
     }
 
     public function getNextAutoIncrementValue(
