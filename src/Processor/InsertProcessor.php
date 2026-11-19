@@ -134,7 +134,11 @@ final class InsertProcessor extends Processor
                 $result = DataIntegrity::checkUniqueConstraints($table, $row, $table_definition);
 
                 if ($result !== null) {
-                    throw new SQLFakeUniqueKeyViolation($result[0]);
+                    if (!$stmt->ignoreDupes) {
+                        throw new SQLFakeUniqueKeyViolation($result[0]);
+                    }
+
+                    continue;
                 }
 
                 /**
@@ -154,12 +158,13 @@ final class InsertProcessor extends Processor
                 }
 
                 $table[] = $row;
+                $rows_affected++;
             }
 
             $conn->getServer()->saveTable($database, $table_name, $table);
             $conn->setLastInsertId((string)($last_incremented_value ?? 0));
 
-            return count($selectResult);
+            return $rows_affected;
         }
 
         return $rows_affected;

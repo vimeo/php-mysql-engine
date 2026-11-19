@@ -1063,6 +1063,43 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testInsertIgnoreWithSelectSkipsDuplicatedRows(): void
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $count_before = (int) $pdo->query('SELECT COUNT(*) FROM `character_tags`')->fetchColumn(0);
+
+        $query = $pdo->prepare(
+            'INSERT IGNORE INTO `character_tags` (`id`, `character_id`, `tag`)
+                SELECT `id` + 1 AS `id`, `character_id`, `tag`
+                FROM `character_tags`'
+        );
+
+        $query->execute();
+
+        // Every shifted id but the last one collides with an existing primary key.
+        $this->assertSame(1, $query->rowCount());
+
+        $this->assertSame(
+            $count_before + 1,
+            (int) $pdo->query('SELECT COUNT(*) FROM `character_tags`')->fetchColumn(0)
+        );
+    }
+
+    public function testInsertWithSelectThrowsOnDuplicatedRows(): void
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'INSERT INTO `character_tags` (`id`, `character_id`, `tag`)
+                SELECT `id` AS `id`, `character_id`, `tag`
+                FROM `character_tags`'
+        );
+
+        $this->expectException(\Vimeo\MysqlEngine\Processor\SQLFakeUniqueKeyViolation::class);
+
+        $query->execute();
+    }
     public function testOrderBySecondDimensionAliased()
     {
         $pdo = self::getConnectionToFullDB(false);
