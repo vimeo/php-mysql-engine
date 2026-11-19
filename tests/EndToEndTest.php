@@ -1,6 +1,7 @@
 <?php
 namespace Vimeo\MysqlEngine\Tests;
 
+use PDO;
 use PDOException;
 
 class EndToEndTest extends \PHPUnit\Framework\TestCase
@@ -1029,6 +1030,76 @@ class EndToEndTest extends \PHPUnit\Framework\TestCase
         );
     }
 
+    public function testInsertWithSelect(): void
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            "INSERT INTO `video_game_characters`
+                (`name`, `type`, `profession`, `console`, `is_alive`, `powerups`, `skills`, `created_on`)
+                SELECT
+                    'wario','villain','plumber','nes','1','3','{\"magic\":0, \"speed\":0, \"strength\":0, \"weapons\":0}', NOW(), 
+                FROM `video_game_characters`"
+        );
+
+        $query->execute();
+
+        self::assertEquals($pdo->lastInsertId(), 32);
+
+        $query = $pdo->prepare(
+            'SELECT `id`, `name`
+            FROM `video_game_characters`
+            ORDER BY `id` DESC
+            LIMIT 1'
+        );
+
+        $query->execute();
+
+        $this->assertSame(
+            [
+                ['id' => 32, 'name' => 'wario'],
+            ],
+            $query->fetchAll(PDO::FETCH_ASSOC)
+        );
+    }
+
+    public function testInsertIgnoreWithSelectSkipsDuplicatedRows(): void
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $count_before = (int) $pdo->query('SELECT COUNT(*) FROM `character_tags`')->fetchColumn(0);
+
+        $query = $pdo->prepare(
+            'INSERT IGNORE INTO `character_tags` (`id`, `character_id`, `tag`)
+                SELECT `id` + 1 AS `id`, `character_id`, `tag`
+                FROM `character_tags`'
+        );
+
+        $query->execute();
+
+        // Every shifted id but the last one collides with an existing primary key.
+        $this->assertSame(1, $query->rowCount());
+
+        $this->assertSame(
+            $count_before + 1,
+            (int) $pdo->query('SELECT COUNT(*) FROM `character_tags`')->fetchColumn(0)
+        );
+    }
+
+    public function testInsertWithSelectThrowsOnDuplicatedRows(): void
+    {
+        $pdo = self::getConnectionToFullDB(false);
+
+        $query = $pdo->prepare(
+            'INSERT INTO `character_tags` (`id`, `character_id`, `tag`)
+                SELECT `id` AS `id`, `character_id`, `tag`
+                FROM `character_tags`'
+        );
+
+        $this->expectException(\Vimeo\MysqlEngine\Processor\SQLFakeUniqueKeyViolation::class);
+
+        $query->execute();
+    }
     public function testOrderBySecondDimensionAliased()
     {
         $pdo = self::getConnectionToFullDB(false);

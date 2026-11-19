@@ -1,4 +1,5 @@
 <?php
+
 namespace Vimeo\MysqlEngine\Query;
 
 use Vimeo\MysqlEngine\Query\Expression\BinaryOperatorExpression;
@@ -40,6 +41,9 @@ final class InsertQuery
      * @var array<int, BinaryOperatorExpression>|null
      */
     public $setClause = null;
+
+    /** @var SelectQuery|null $selectExpression */
+    public $selectQuery = null;
 
     public function __construct(string $table, string $sql, bool $ignoreDupes)
     {
